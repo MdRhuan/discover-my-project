@@ -1,82 +1,119 @@
 
 
-## Plano: portar a primeira tela do HubVanzak para React e ver seu webapp funcionando
+## Plano: Migrar todas as 16 páginas restantes para React + Lovable Cloud
 
-### Objetivo
-Substituir o placeholder do template por uma versão React mínima do HubVanzak — login + dashboard vazio — para você finalmente ver "seu" app no preview, e estabelecer o esqueleto onde as próximas páginas serão portadas.
+### Situação atual
+- **Portados**: Dashboard, Companies, Employees, Documents, Tasks, OrgChart (6 páginas)
+- **Faltam**: 16 páginas referenciadas na sidebar que ainda levam a 404
 
-### Escopo desta fase (Fase 1 — MVP visual + Auth)
+### Estratégia de banco de dados
 
-**1. Ativar Lovable Cloud**
-- Cria backend gerenciado (banco + autenticação) sem você precisar de conta Supabase externa.
-- Substitui a necessidade do `supabase_migration.sql` por enquanto (criamos só as tabelas conforme cada página é portada).
+As páginas legadas usam IndexedDB (`db.config.get('chave')`) como key-value store. Para migrar sem criar 16 tabelas individuais, vou usar uma **tabela genérica `user_config`** para as páginas que guardam dados em JSON (seguros, imóveis, valuations, personal docs, health plans, assessores, despesas, investimentos), e tabelas dedicadas para fiscal/legal/billing que têm estrutura relacional.
 
-**2. Criar autenticação (login + signup)**
-- Página `/auth` com email + senha (igual ao `src/layout/auth.js` legado).
-- Sessão persistente via Supabase Auth.
-- Auto-confirmação de email habilitada para acelerar testes.
-
-**3. Layout base do app (Sidebar + Topbar + área principal)**
-- Portar `src/layout/nav.js` → componente `<AppSidebar>` usando shadcn `sidebar.tsx`.
-- Portar `src/layout/topbar.js` → componente `<Topbar>` (título da página, troca de idioma/moeda).
-- Wrapper `<AppLayout>` que envolve as rotas autenticadas.
-
-**4. Dashboard placeholder funcional**
-- Portar estrutura básica de `src/pages/dashboard/DashboardPage.js` para `src/pages/Dashboard.tsx`.
-- Por enquanto só os cards/skeletons (sem dados reais ainda).
-
-**5. Roteamento e proteção**
-- `/` → redireciona para `/dashboard` se logado, senão `/auth`.
-- `/auth` → tela de login/signup.
-- `/dashboard` → tela principal protegida.
-- `<ProtectedRoute>` que verifica sessão Supabase.
-
-**6. i18n mínimo**
-- Portar `src/core/i18n.js` (TRANSLATIONS pt-BR / en-US) para `src/lib/i18n.ts` + hook `useTranslation`.
-
-### Fora do escopo desta fase (vem depois, uma a uma)
-Companies, Employees, Documents, Billing, OrgChart, Backup, AuditLog, Fiscal, Legal, Personal, Tasks, Tools — cada uma será portada como fase própria, lendo o `.js` legado correspondente.
-
-### Estrutura de arquivos resultante
-
-```text
-src/
-├── App.tsx                    (atualizado: novas rotas)
-├── pages/
-│   ├── Auth.tsx               (NOVO — login/signup)
-│   ├── Dashboard.tsx          (NOVO — porta DashboardPage.js)
-│   ├── Index.tsx              (atualizado: redireciona)
-│   └── NotFound.tsx           (mantido)
-├── components/
-│   ├── layout/
-│   │   ├── AppLayout.tsx      (NOVO — sidebar+topbar wrapper)
-│   │   ├── AppSidebar.tsx     (NOVO — porta nav.js)
-│   │   └── Topbar.tsx         (NOVO — porta topbar.js)
-│   └── auth/
-│       └── ProtectedRoute.tsx (NOVO)
-├── lib/
-│   ├── i18n.ts                (NOVO — porta core/i18n.js)
-│   └── supabase.ts            (auto-criado pelo Cloud)
-└── hooks/
-    └── useAuth.ts             (NOVO — sessão Supabase)
+**Migração 1 — tabela `user_config`** (key-value JSONB por usuário):
+```sql
+CREATE TABLE user_config (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  chave text NOT NULL,
+  value jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, chave)
+);
+-- RLS: user_id = auth.uid()
 ```
 
-### Detalhes técnicos
-- Lovable Cloud precisa ser ativado pelo usuário (1 clique) — sem ele, não dá para fazer Auth.
-- `roles` em tabela separada (`user_roles` + `app_role` enum + função `has_role`) seguindo as regras de segurança — preparado já agora mesmo se houver multi-tenant no HubVanzak.
-- Arquivos legados (`src/layout/*.js`, `src/pages/**/*.js`, `src/core/*.js`, `app.js`, `main.js`, `style.css`) **continuam intactos como referência** — apago um a um conforme cada página é portada e validada por você.
-- Estilo: usar tokens semânticos do `index.css` + `tailwind.config.ts` em vez das CSS vars antigas (`--brand`, `--surface`); mapeio uma para a outra na fase de polish visual.
+**Migração 2 — tabela `fiscal_docs`** (para Fiscal Tax, Jurídico, Trademarks, Acordo Gaveta, Tax Planning, CheckBox):
+```sql
+CREATE TABLE fiscal_docs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  nome text NOT NULL,
+  subcategoria text NOT NULL,
+  jurisdicao text DEFAULT 'BR',
+  ano text,
+  status text DEFAULT 'ativo',
+  descricao text,
+  file_path text,
+  file_size bigint,
+  file_type text,
+  notas text,
+  vencimento date,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+```
 
-### O que você verá no preview ao final desta fase
-1. Acessa `/` → é redirecionado para `/auth`.
-2. Cria conta com email/senha → entra automaticamente.
-3. Vê o layout do HubVanzak (sidebar à esquerda com itens do menu, topbar com troca de idioma) e o dashboard com cards vazios.
-4. Pode dar logout pela sidebar.
+**Migração 3 — tabela `transacoes`** (para Billing):
+```sql
+CREATE TABLE transacoes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  company_id uuid,
+  tipo text NOT NULL DEFAULT 'receita',
+  descricao text,
+  valor numeric DEFAULT 0,
+  moeda text DEFAULT 'BRL',
+  data date,
+  categoria text,
+  notas text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+```
 
-### Próximas fases (resumo)
-- **Fase 2**: Companies (CRUD completo + tabela `companies` no Cloud)
-- **Fase 3**: Employees (CRUD + relação com companies)
-- **Fase 4**: Documents + upload (Storage do Cloud)
-- **Fase 5+**: Billing, Finance, Fiscal, Legal, Personal, Tasks, Tools (uma por fase)
-- **Fase final**: remover pasta legada, polish visual, testes
+### Páginas a criar (agrupadas em batches)
+
+**Batch 1 — Personal (7 páginas)**
+| Rota | Arquivo | Dados via |
+|------|---------|-----------|
+| `/personal/docs` | `PersonalDocs.tsx` | `user_config` (chaves: pessoas, assessores, proximas_obrigacoes, healthPlan) |
+| `/personal/life` | `LifeInsurance.tsx` | `user_config` (chave: lifeInsurance_data) |
+| `/personal/car` | `CarInsurance.tsx` | `user_config` (chave: carInsurance_data) |
+| `/personal/apt` | `AptInsurance.tsx` | `user_config` (chave: aptInsurance_data) |
+| `/personal/investments` | `Investments.tsx` | `user_config` (chave: investments) |
+| `/personal/realestate` | `RealEstate.tsx` | `user_config` (chave: imoveis) |
+| `/valuations` | `Valuations.tsx` | `user_config` (chave: valuations) |
+
+**Batch 2 — Fiscal + Legal (5 páginas)**
+| Rota | Arquivo | Dados via |
+|------|---------|-----------|
+| `/fiscal/tax` | `FiscalTax.tsx` | `fiscal_docs` |
+| `/fiscal/planning` | `TaxPlanning.tsx` | `fiscal_docs` |
+| `/fiscal/checkbox` | `CheckBox.tsx` | `fiscal_docs` |
+| `/legal/juridico` | `Juridico.tsx` | `fiscal_docs` |
+| `/legal/acordo` | `AcordoGaveta.tsx` | `fiscal_docs` |
+| `/legal/trademarks` | `Trademarks.tsx` | `fiscal_docs` |
+
+**Batch 3 — Finance + Tools (3 páginas)**
+| Rota | Arquivo | Dados via |
+|------|---------|-----------|
+| `/finance/fixed` | `FixedExpenses.tsx` | `user_config` (chave: despesas_fixas) |
+| `/tools/backup` | `Backup.tsx` | export/import via Supabase |
+| `/tools/audit` | `AuditLog.tsx` | `user_config` ou tabela dedicada |
+
+### Para cada página
+1. Criar `src/features/{domain}/api.ts` com funções CRUD usando Supabase
+2. Criar `src/pages/{PageName}.tsx` portando a UI legada para React + shadcn + Tailwind
+3. Registrar rota protegida em `App.tsx`
+
+### Padrão de componente
+Cada página segue o padrão já estabelecido:
+- `AppLayout` wrapper com título
+- `useQuery` / `useMutation` do React Query
+- Dialog do shadcn para formulários
+- Table ou Card grid para listagem
+- Toast para feedback
+
+### Ordem de execução
+1. Criar as 3 migrações SQL (user_config, fiscal_docs, transacoes)
+2. Criar helper genérico `src/features/config/api.ts` para CRUD no user_config
+3. Batch 1 — 7 páginas personal
+4. Batch 2 — 5 páginas fiscal/legal
+5. Batch 3 — 3 páginas finance/tools
+6. Atualizar `App.tsx` com todas as 16 rotas
+
+### Nota sobre o build error
+O erro `dist upload failed: generate R2 credentials` é um timeout temporário do serviço de deploy (Cloudflare R2), não do código. Se resolver sozinho na próxima build; não requer alteração de código.
 
