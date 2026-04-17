@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          arquivada: boolean
+          cfc_flag: boolean
+          created_at: string
+          data_abertura: string | null
+          data_encerramento: string | null
+          documento: string | null
+          estado: string | null
+          id: string
+          nome: string
+          notas: string | null
+          pais: string
+          setor: string | null
+          socios: Json
+          status: string
+          tags: string[]
+          tipo_juridico: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          arquivada?: boolean
+          cfc_flag?: boolean
+          created_at?: string
+          data_abertura?: string | null
+          data_encerramento?: string | null
+          documento?: string | null
+          estado?: string | null
+          id?: string
+          nome: string
+          notas?: string | null
+          pais?: string
+          setor?: string | null
+          socios?: Json
+          status?: string
+          tags?: string[]
+          tipo_juridico?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          arquivada?: boolean
+          cfc_flag?: boolean
+          created_at?: string
+          data_abertura?: string | null
+          data_encerramento?: string | null
+          documento?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string
+          notas?: string | null
+          pais?: string
+          setor?: string | null
+          socios?: Json
+          status?: string
+          tags?: string[]
+          tipo_juridico?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
