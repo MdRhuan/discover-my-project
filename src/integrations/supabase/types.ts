@@ -77,6 +77,74 @@ export type Database = {
         }
         Relationships: []
       }
+      funcionarios: {
+        Row: {
+          admissao: string | null
+          arquivado: boolean
+          cargo: string | null
+          company_id: string | null
+          created_at: string
+          departamento: string | null
+          documento: string | null
+          email: string | null
+          id: string
+          moeda_salario: string
+          nome: string
+          pais: string
+          salario: number | null
+          status: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admissao?: string | null
+          arquivado?: boolean
+          cargo?: string | null
+          company_id?: string | null
+          created_at?: string
+          departamento?: string | null
+          documento?: string | null
+          email?: string | null
+          id?: string
+          moeda_salario?: string
+          nome: string
+          pais?: string
+          salario?: number | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admissao?: string | null
+          arquivado?: boolean
+          cargo?: string | null
+          company_id?: string | null
+          created_at?: string
+          departamento?: string | null
+          documento?: string | null
+          email?: string | null
+          id?: string
+          moeda_salario?: string
+          nome?: string
+          pais?: string
+          salario?: number | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
