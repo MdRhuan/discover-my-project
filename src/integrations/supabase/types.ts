@@ -142,6 +142,60 @@ export type Database = {
           },
         ]
       }
+      fiscal_docs: {
+        Row: {
+          ano: string | null
+          created_at: string
+          descricao: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string
+          jurisdicao: string | null
+          nome: string
+          notas: string | null
+          status: string | null
+          subcategoria: string
+          updated_at: string
+          user_id: string
+          vencimento: string | null
+        }
+        Insert: {
+          ano?: string | null
+          created_at?: string
+          descricao?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          jurisdicao?: string | null
+          nome: string
+          notas?: string | null
+          status?: string | null
+          subcategoria: string
+          updated_at?: string
+          user_id: string
+          vencimento?: string | null
+        }
+        Update: {
+          ano?: string | null
+          created_at?: string
+          descricao?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          jurisdicao?: string | null
+          nome?: string
+          notas?: string | null
+          status?: string | null
+          subcategoria?: string
+          updated_at?: string
+          user_id?: string
+          vencimento?: string | null
+        }
+        Relationships: []
+      }
       funcionarios: {
         Row: {
           admissao: string | null
@@ -268,6 +322,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transacoes: {
+        Row: {
+          categoria: string | null
+          company_id: string | null
+          created_at: string
+          data: string | null
+          descricao: string | null
+          id: string
+          moeda: string | null
+          notas: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+          valor: number | null
+        }
+        Insert: {
+          categoria?: string | null
+          company_id?: string | null
+          created_at?: string
+          data?: string | null
+          descricao?: string | null
+          id?: string
+          moeda?: string | null
+          notas?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id: string
+          valor?: number | null
+        }
+        Update: {
+          categoria?: string | null
+          company_id?: string | null
+          created_at?: string
+          data?: string | null
+          descricao?: string | null
+          id?: string
+          moeda?: string | null
+          notas?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number | null
+        }
+        Relationships: []
+      }
+      user_config: {
+        Row: {
+          chave: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          value: Json
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          value?: Json
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          value?: Json
+        }
+        Relationships: []
       }
     }
     Views: {
