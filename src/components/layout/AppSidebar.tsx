@@ -52,6 +52,7 @@ export function AppSidebar() {
   const top: Item[] = [
     { title: t.dashboard, url: "/dashboard", icon: Gauge },
     { title: t.tasks, url: "/tasks", icon: ListChecks },
+    { title: t.documents, url: "/documents", icon: FileText },
   ];
 
   const companies: Item[] = [
