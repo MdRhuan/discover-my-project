@@ -16,7 +16,7 @@ import {
   Handshake,
   BadgeCheck,
   Receipt,
-  ChessKnight,
+  Castle,
   CheckSquare,
   FileText,
   Database,
@@ -72,7 +72,7 @@ export function AppSidebar() {
     { title: t.acordoGaveta, url: "/legal/acordo", icon: Handshake },
     { title: t.trademarks, url: "/legal/trademarks", icon: BadgeCheck },
     { title: t.fiscalTax, url: "/fiscal/tax", icon: Receipt },
-    { title: t.taxPlanning, url: "/fiscal/planning", icon: Coins },
+    { title: t.taxPlanning, url: "/fiscal/planning", icon: Castle },
     { title: t.checkBox, url: "/fiscal/checkbox", icon: CheckSquare },
     { title: t.fixedExpenses, url: "/finance/fixed", icon: FileText },
   ];

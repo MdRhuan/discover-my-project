@@ -117,12 +117,14 @@ export const TRANSLATIONS = {
 
 export type TranslationKey = keyof (typeof TRANSLATIONS)["pt-BR"];
 
+type Translation = Record<keyof (typeof TRANSLATIONS)["pt-BR"], string>;
+
 interface I18nContextValue {
   lang: Lang;
   setLang: (l: Lang) => void;
   currency: Currency;
   setCurrency: (c: Currency) => void;
-  t: (typeof TRANSLATIONS)["pt-BR"];
+  t: Translation;
 }
 
 export const I18nContext = createContext<I18nContextValue | null>(null);
