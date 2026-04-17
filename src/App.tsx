@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
+import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Companies />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/personal/employees"
+              element={
+                <ProtectedRoute>
+                  <Employees />
                 </ProtectedRoute>
               }
             />
