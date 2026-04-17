@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
 import Employees from "./pages/Employees";
 import Documents from "./pages/Documents";
+import Tasks from "./pages/Tasks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Documents />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <ProtectedRoute>
+                  <Tasks />
                 </ProtectedRoute>
               }
             />

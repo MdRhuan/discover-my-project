@@ -210,6 +210,65 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          arquivada: boolean
+          company_id: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          notas: string | null
+          prioridade: string
+          responsavel: string | null
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          user_id: string
+          vencimento: string | null
+        }
+        Insert: {
+          arquivada?: boolean
+          company_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          notas?: string | null
+          prioridade?: string
+          responsavel?: string | null
+          status?: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+          vencimento?: string | null
+        }
+        Update: {
+          arquivada?: boolean
+          company_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          notas?: string | null
+          prioridade?: string
+          responsavel?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
