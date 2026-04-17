@@ -1,8 +1,10 @@
+import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-const Index = () => {
+export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center text-muted-foreground">
@@ -10,7 +12,7 @@ const Index = () => {
       </div>
     );
   }
-  return <Navigate to={session ? "/dashboard" : "/auth"} replace />;
-};
 
-export default Index;
+  if (!session) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
