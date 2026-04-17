@@ -102,7 +102,7 @@ export default function TasksPage() {
   async function load() {
     setLoading(true);
     try {
-      const [tk, emp] = await Promise.all([listTasks(showArchived), listCompanies(true)]);
+      const [tk, emp] = await Promise.all([listTasks(showArchived), listCompanies(false)]);
       setTasks(tk);
       setCompanies(emp);
     } catch (e) {
