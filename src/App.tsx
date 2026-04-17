@@ -12,6 +12,7 @@ import Companies from "./pages/Companies";
 import Employees from "./pages/Employees";
 import Documents from "./pages/Documents";
 import Tasks from "./pages/Tasks";
+import OrgChart from "./pages/OrgChart";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Tasks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orgchart"
+              element={
+                <ProtectedRoute>
+                  <OrgChart />
                 </ProtectedRoute>
               }
             />
