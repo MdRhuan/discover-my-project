@@ -1,26 +1,173 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Hub." />
+  <meta name="theme-color" content="#4a6cf7" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="Referrer-Policy" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://cdn.sheetjs.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data: https://vitals.vercel-insights.com https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <title>Hub Empresarial</title>
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  <!-- Tailwind Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+  <!-- Dexie removido: dados agora no Supabase -->
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- D3.js (Organograma) -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+  <!-- jsPDF -->
+  <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- Babel (JSX no browser) -->
+  <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+
+  <!-- Vercel Analytics -->
+  <script defer src="/_vercel/insights/script.js"></script>
+
+  <link rel="stylesheet" href="style.css?v=4" />
+
+  <script>
+    // Tailwind config — cores mapeadas para CSS variables (tema dinamico)
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Lexend', 'sans-serif'],
+            body: ['Lexend', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#f0f4ff',
+              100: '#e0eaff',
+              200: '#c7d7fe',
+              300: '#a5b9fc',
+              400: '#8194f8',
+              500: '#6470f1',
+              600: '#4f52e6',
+              700: '#3f3fca',
+              800: '#3535a3',
+              900: '#2f3181',
+            },
+            surface: {
+              DEFAULT: 'var(--surface)',
+              card:    'var(--surface-card)',
+              border:  'var(--surface-border)',
+              hover:   'var(--surface-hover)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-body antialiased">
+  <div id="root"></div>
+
+  <!-- Loader: busca todos os módulos em ordem e transpila em bloco único -->
+  <script>
+    (async function loadApp() {
+      const FILES = [
+        'src/core/globals.js',
+        'src/core/i18n.js',
+        'src/core/db.js',
+        'src/core/seed.js',
+        'src/core/context.js',
+        'src/layout/auth.js',
+        'src/layout/nav.js',
+        'src/layout/topbar.js',
+        'src/pages/dashboard/DashboardPage.js',
+        'src/pages/companies/CompaniesPage.js',
+        'src/pages/employees/EmployeesPage.js',
+        'src/pages/documents/DocumentsPage.js',
+        'src/pages/billing/BillingPage.js',
+        'src/pages/orgchart/OrgChartPage.js',
+        'src/pages/personal/LifeInsurancePage.js',
+        'src/pages/personal/CarInsurancePage.js',
+        'src/pages/personal/AptInsurancePage.js',
+        'src/pages/personal/RealEstatePage.js',
+        'src/pages/personal/ValuationsPage.js',
+        'src/pages/personal/PersonalDocsPage.js',
+        'src/pages/tasks/TasksPage.js',
+        'src/pages/fiscal/FiscalTaxPage.js',
+        'src/pages/fiscal/TaxPlanningPage.js',
+        'src/pages/fiscal/CheckBoxPage.js',
+        'src/pages/legal/JuridicoPage.js',
+        'src/pages/legal/AcordoGavetaPage.js',
+        'src/pages/legal/TrademarksPage.js',
+        'src/pages/finance/FixedExpensesPage.js',
+        'src/pages/finance/InvestmentsPage.js',
+        'src/pages/tools/BackupPage.js',
+        'src/pages/tools/AuditLogPage.js',
+        'main.js',
+      ];
+
+      try {
+        // Busca todos os arquivos em paralelo
+        const v = Date.now();
+        const texts = await Promise.all(
+          FILES.map(f => fetch(f + '?v=' + v).then(r => {
+            if (!r.ok) throw new Error('Falha ao carregar: ' + f + ' (' + r.status + ')');
+            return r.text();
+          }))
+        );
+
+        // Concatena com separadores de comentário para facilitar debug
+        const combined = texts.map((code, i) =>
+          '// ===== ' + FILES[i] + ' =====\n' + code
+        ).join('\n\n');
+
+        // Transpila com Babel de uma vez só
+        const result = Babel.transform(combined, {
+          presets: ['react'],
+          filename: 'app-bundle.jsx',
+        });
+
+        // Captura erros de runtime no bundle
+        window.onerror = function(msg, src, line, col, error) {
+          document.getElementById('root').innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:#0f1117;font-family:sans-serif;padding:32px">' +
+            '<div style="font-size:22px;font-weight:800;color:#f1f3f9">Hub<span style="color:#6470f1">.</span></div>' +
+            '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:16px 24px;max-width:700px;width:100%">' +
+            '<div style="color:#ef4444;font-weight:700;margin-bottom:8px">Erro de runtime</div>' +
+            '<pre style="color:#fca5a5;font-size:12px;white-space:pre-wrap;word-break:break-all">' + msg + '\nLinha: ' + line + ':' + col + '\n' + (error ? error.stack : '') + '</pre>' +
+            '</div></div>';
+        };
+
+        // Executa o código transpilado
+        const script = document.createElement('script');
+        script.textContent = result.code;
+        document.body.appendChild(script);
+
+      } catch (err) {
+        document.getElementById('root').innerHTML =
+          '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:#0f1117;font-family:sans-serif;padding:32px">' +
+          '<div style="font-size:22px;font-weight:800;color:#f1f3f9">Hub<span style="color:#6470f1">.</span></div>' +
+          '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:16px 24px;max-width:600px;width:100%">' +
+          '<div style="color:#ef4444;font-weight:700;margin-bottom:8px">Erro ao inicializar</div>' +
+          '<pre style="color:#fca5a5;font-size:12px;white-space:pre-wrap;word-break:break-all">' + err + '</pre>' +
+          '</div></div>';
+      }
+    })();
+  </script>
+</body>
 </html>
