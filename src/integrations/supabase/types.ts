@@ -77,6 +77,71 @@ export type Database = {
         }
         Relationships: []
       }
+      documentos: {
+        Row: {
+          ano_fiscal: string | null
+          categoria: string
+          company_id: string | null
+          created_at: string
+          data_upload: string
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string
+          mime_type: string | null
+          nome: string
+          notas: string | null
+          status_doc: string
+          updated_at: string
+          user_id: string
+          versao: string
+        }
+        Insert: {
+          ano_fiscal?: string | null
+          categoria?: string
+          company_id?: string | null
+          created_at?: string
+          data_upload?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          mime_type?: string | null
+          nome: string
+          notas?: string | null
+          status_doc?: string
+          updated_at?: string
+          user_id: string
+          versao?: string
+        }
+        Update: {
+          ano_fiscal?: string | null
+          categoria?: string
+          company_id?: string | null
+          created_at?: string
+          data_upload?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          mime_type?: string | null
+          nome?: string
+          notas?: string | null
+          status_doc?: string
+          updated_at?: string
+          user_id?: string
+          versao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcionarios: {
         Row: {
           admissao: string | null

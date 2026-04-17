@@ -26,6 +26,7 @@ export const TRANSLATIONS = {
     // Nav
     dashboard: "Dashboard",
     tasks: "Tasks & Deadlines",
+    documents: "Documentos",
     companies: "Empresas",
     orgchart: "Organograma",
     valuations: "Valuations",
@@ -80,6 +81,7 @@ export const TRANSLATIONS = {
 
     dashboard: "Dashboard",
     tasks: "Tasks & Deadlines",
+    documents: "Documents",
     companies: "Companies",
     orgchart: "Org Chart",
     valuations: "Valuations",
