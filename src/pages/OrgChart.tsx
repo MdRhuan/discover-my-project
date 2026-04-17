@@ -164,8 +164,8 @@ function OrgTree({ root }: { root: OrgNode }) {
                   <span className="text-sm font-bold">{initials(node.label)}</span>
                 )}
                 {isCompany && (
-                  <div className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500">
-                    <Crown className="h-2.5 w-2.5 text-white" />
+                  <div className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                    <Crown className="h-2.5 w-2.5 text-primary-foreground" />
                   </div>
                 )}
               </div>
