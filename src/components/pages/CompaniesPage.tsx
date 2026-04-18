@@ -124,35 +124,71 @@ export function CompaniesPage() {
   }
 
   async function saveDetailDoc() {
-    if (!detail?.id) return
     if (!docForm.nome?.trim()) { toast('Nome é obrigatório.', 'error'); return }
+    const empresaId = docForm.empresaId ?? detail?.id
     try {
       setUploading(true)
-      let arquivoPath: string | undefined
+      let arquivoPath: string | undefined = docForm.arquivoPath
       if (docFile) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { toast('Usuário não autenticado.', 'error'); setUploading(false); return }
         const safeName = docFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-        arquivoPath = `${user.id}/${detail.id}/${Date.now()}-${safeName}`
+        const folder = empresaId ? `${user.id}/${empresaId}` : `${user.id}/_geral`
+        const newPath = `${folder}/${Date.now()}-${safeName}`
         const { error: upErr } = await supabase.storage
           .from(DOC_BUCKET)
-          .upload(arquivoPath, docFile, { contentType: docFile.type || undefined, upsert: false })
+          .upload(newPath, docFile, { contentType: docFile.type || undefined, upsert: false })
         if (upErr) { console.error(upErr); toast('Falha ao enviar arquivo.', 'error'); setUploading(false); return }
+        // remove arquivo antigo se substituindo
+        if (editingDocId && docForm.arquivoPath && docForm.arquivoPath !== newPath) {
+          await supabase.storage.from(DOC_BUCKET).remove([docForm.arquivoPath])
+        }
+        arquivoPath = newPath
       }
-      await db.documentos.add({
+      const payload: Partial<Documento> = {
         ...docForm,
-        empresaId: detail.id,
+        empresaId,
         arquivoPath,
         dataUpload: docForm.dataUpload || new Date().toISOString().slice(0, 10),
-      } as Documento)
-      await db.auditLog.add({ acao: `Documento adicionado a ${detail.nome}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      }
+      if (editingDocId) {
+        await db.documentos.update(editingDocId, payload)
+        await db.auditLog.add({ acao: `Documento editado: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      } else {
+        await db.documentos.add(payload as Documento)
+        await db.auditLog.add({ acao: `Documento adicionado${detail ? ` a ${detail.nome}` : ''}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      }
       toast(t.saved)
-      setDocModal(false); setDocForm({}); setDocFile(null)
-      await loadDetailDocs(detail.id)
+      closeDocModal()
+      if (detail?.id) await loadDetailDocs(detail.id)
       await loadAllDocs()
     } catch (e) {
       console.error(e); toast(t.errorSave, 'error')
     } finally { setUploading(false) }
+  }
+
+  async function removeDetailDoc(id: number) {
+    const doc = [...detailDocs, ...allDocs].find(d => d.id === id)
+    if (doc?.arquivoPath) {
+      await supabase.storage.from(DOC_BUCKET).remove([doc.arquivoPath])
+    }
+    await db.documentos.delete(id)
+    toast(t.deleted)
+    if (detail?.id) await loadDetailDocs(detail.id)
+    await loadAllDocs()
+  }
+
+  async function downloadDoc(doc: Documento) {
+    if (!doc.arquivoPath) { toast('Sem arquivo anexado.', 'info'); return }
+    const { data, error } = await supabase.storage
+      .from(DOC_BUCKET)
+      .createSignedUrl(doc.arquivoPath, 60)
+    if (error || !data?.signedUrl) { toast('Erro ao gerar link.', 'error'); return }
+    window.open(data.signedUrl, '_blank', 'noopener')
+  }
+
+  async function loadAllDocs() {
+    setAllDocs(await db.documentos.toArray())
   }
 
   async function removeDetailDoc(id: number) {
