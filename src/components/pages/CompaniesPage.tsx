@@ -70,6 +70,9 @@ export function CompaniesPage() {
   const [detailDocs, setDetailDocs] = useState<Documento[]>([])
   const [docModal, setDocModal] = useState(false)
   const [docForm, setDocForm] = useState<Partial<Documento>>({})
+  const [docFile, setDocFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   async function loadDetailDocs(empresaId: number) {
     const all = await db.documentos.where('empresaId').equals(empresaId).toArray()
@@ -81,26 +84,67 @@ export function CompaniesPage() {
     if (e.id) await loadDetailDocs(e.id)
   }
 
+  function handleFilePicked(file: File | null) {
+    setDocFile(file)
+    if (file) {
+      setDocForm(p => ({
+        ...p,
+        nome: p.nome || file.name.replace(/\.[^.]+$/, ''),
+        tipo: p.tipo || inferDocType(file),
+        tamanho: fmtBytes(file.size),
+      }))
+    }
+  }
+
   async function saveDetailDoc() {
     if (!detail?.id) return
     if (!docForm.nome?.trim()) { toast('Nome é obrigatório.', 'error'); return }
     try {
+      setUploading(true)
+      let arquivoPath: string | undefined
+      if (docFile) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { toast('Usuário não autenticado.', 'error'); setUploading(false); return }
+        const safeName = docFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        arquivoPath = `${user.id}/${detail.id}/${Date.now()}-${safeName}`
+        const { error: upErr } = await supabase.storage
+          .from(DOC_BUCKET)
+          .upload(arquivoPath, docFile, { contentType: docFile.type || undefined, upsert: false })
+        if (upErr) { console.error(upErr); toast('Falha ao enviar arquivo.', 'error'); setUploading(false); return }
+      }
       await db.documentos.add({
         ...docForm,
         empresaId: detail.id,
+        arquivoPath,
         dataUpload: docForm.dataUpload || new Date().toISOString().slice(0, 10),
       } as Documento)
       await db.auditLog.add({ acao: `Documento adicionado a ${detail.nome}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
-      toast(t.saved); setDocModal(false); setDocForm({})
+      toast(t.saved)
+      setDocModal(false); setDocForm({}); setDocFile(null)
       await loadDetailDocs(detail.id)
-    } catch { toast(t.errorSave, 'error') }
+    } catch (e) {
+      console.error(e); toast(t.errorSave, 'error')
+    } finally { setUploading(false) }
   }
 
   async function removeDetailDoc(id: number) {
     if (!detail?.id) return
+    const doc = detailDocs.find(d => d.id === id)
+    if (doc?.arquivoPath) {
+      await supabase.storage.from(DOC_BUCKET).remove([doc.arquivoPath])
+    }
     await db.documentos.delete(id)
     toast(t.deleted)
     await loadDetailDocs(detail.id)
+  }
+
+  async function downloadDoc(doc: Documento) {
+    if (!doc.arquivoPath) { toast('Sem arquivo anexado.', 'info'); return }
+    const { data, error } = await supabase.storage
+      .from(DOC_BUCKET)
+      .createSignedUrl(doc.arquivoPath, 60)
+    if (error || !data?.signedUrl) { toast('Erro ao gerar link.', 'error'); return }
+    window.open(data.signedUrl, '_blank', 'noopener')
   }
 
   useEffect(() => { load() }, [])
