@@ -169,8 +169,8 @@ function ShapeNode({ id, data, selected }: NodeProps<ShapeNodeData>) {
       <div
         onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
         style={{
-          width: width || '100%',
-          height: height || '100%',
+          width: '100%',
+          height: '100%',
           background: data.corFundo === 'transparent' ? 'transparent' : (data.corFundo || 'transparent'),
           border: `${data.espessuraBorda || 2}px ${data.estiloBorda || 'dashed'} ${data.corBorda || '#94a3b8'}`,
           borderRadius: data.raio ?? 12,
