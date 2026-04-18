@@ -646,15 +646,54 @@ export function CompaniesPage() {
       {docModal && detail && (
         <Modal
           title={`Novo Documento — ${detail.nome}`}
-          onClose={() => { setDocModal(false); setDocForm({}) }}
+          onClose={() => { setDocModal(false); setDocForm({}); setDocFile(null) }}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}) }}>{t.cancel}</button>
-              <button className="btn btn-primary" onClick={saveDetailDoc}><i className="fas fa-check" />{t.save}</button>
+              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}); setDocFile(null) }} disabled={uploading}>{t.cancel}</button>
+              <button className="btn btn-primary" onClick={saveDetailDoc} disabled={uploading}>
+                {uploading ? <><i className="fas fa-spinner fa-spin" /> Enviando...</> : <><i className="fas fa-check" />{t.save}</>}
+              </button>
             </>
           }
         >
           <div className="form-grid">
+            {/* Upload */}
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Arquivo</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={e => handleFilePicked(e.target.files?.[0] || null)}
+              />
+              {!docFile ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    width: '100%', padding: '24px', border: '2px dashed var(--surface-border)',
+                    borderRadius: 8, background: 'transparent', color: 'var(--text-secondary)',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 8,
+                  }}
+                >
+                  <i className="fas fa-cloud-arrow-up" style={{ fontSize: 28, color: 'var(--brand)' }} />
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>Clique para anexar um arquivo</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>PDF, DOCX, XLSX, imagens...</div>
+                </button>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--surface-border)' }}>
+                  <i className="fas fa-file" style={{ fontSize: 22, color: 'var(--brand)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docFile.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBytes(docFile.size)}</div>
+                  </div>
+                  <button className="btn-icon" onClick={() => fileInputRef.current?.click()} title="Trocar"><i className="fas fa-rotate" /></button>
+                  <button className="btn-icon danger" onClick={() => setDocFile(null)} title="Remover"><i className="fas fa-times" /></button>
+                </div>
+              )}
+            </div>
+
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label">Nome do Documento *</label>
               <input className="form-input" value={docForm.nome || ''} onChange={e => setDocForm(p => ({ ...p, nome: e.target.value }))} placeholder="Contrato Social, Ata..." />
