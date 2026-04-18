@@ -426,6 +426,52 @@ export function PersonalDocsPage() {
               <label className="form-label">Data / Prazo</label>
               <input className="form-input" type="date" value={obForm.data || ''} onChange={e => setObForm(f => ({ ...f, data: e.target.value }))} />
             </div>
+
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Pessoas vinculadas</label>
+              {pessoas.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--yellow)', padding: 8, background: 'rgba(245,158,11,.1)', borderRadius: 6 }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: 6 }} />
+                  Nenhuma pessoa cadastrada. Crie um documento com pessoa primeiro.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: 8, background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)', maxHeight: 120, overflowY: 'auto' }}>
+                  {pessoas.map(p => {
+                    const sel = (obForm.pessoas || []).includes(p)
+                    return (
+                      <button key={p} type="button"
+                        onClick={() => setObForm(f => ({ ...f, pessoas: sel ? (f.pessoas || []).filter(x => x !== p) : [...(f.pessoas || []), p] }))}
+                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 12, border: `1px solid ${sel ? 'var(--brand)' : 'var(--surface-border)'}`, background: sel ? 'var(--brand-dim)' : 'var(--surface-card)', color: sel ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                        {sel && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 10 }} />}{p}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Categorias vinculadas</label>
+              {categorias.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--yellow)', padding: 8, background: 'rgba(245,158,11,.1)', borderRadius: 6 }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: 6 }} />
+                  Nenhuma categoria cadastrada. Crie um documento primeiro.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: 8, background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)', maxHeight: 120, overflowY: 'auto' }}>
+                  {categorias.map(c => {
+                    const sel = (obForm.categorias || []).includes(c)
+                    return (
+                      <button key={c} type="button"
+                        onClick={() => setObForm(f => ({ ...f, categorias: sel ? (f.categorias || []).filter(x => x !== c) : [...(f.categorias || []), c] }))}
+                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 12, border: `1px solid ${sel ? 'var(--brand)' : 'var(--surface-border)'}`, background: sel ? 'var(--brand-dim)' : 'var(--surface-card)', color: sel ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                        {sel && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 10 }} />}{c}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </Modal>
       )}
