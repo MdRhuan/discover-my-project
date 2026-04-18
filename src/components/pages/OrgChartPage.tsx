@@ -410,12 +410,36 @@ function OrgChartEditor() {
             Arraste para mover · Conecte arrastando das bordas · Delete/Backspace remove · Ctrl+D duplica
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })}>
-            <i className="fas fa-expand" /> Centralizar
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={() => setAddModal(true)} title="Adicionar bloco vinculado a uma empresa cadastrada">
+            <i className="fas fa-plus" /> Adicionar
           </button>
-          <button className="btn btn-primary" onClick={() => setAddModal(true)}>
-            <i className="fas fa-plus" /> Adicionar empresa
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              const sel = nodes.find(n => n.selected)
+              if (!sel) { toast('Selecione um bloco para editar', 'info'); return }
+              setEditNodeId(sel.id)
+            }}
+            title="Editar o bloco selecionado (ícone, cores, borda)"
+          >
+            <i className="fas fa-pen" /> Editar
+          </button>
+          <button className="btn btn-secondary" onClick={duplicateSelection} title="Duplicar bloco(s) selecionado(s) — Ctrl+D">
+            <i className="fas fa-clone" /> Duplicar
+          </button>
+          <button className="btn btn-danger" onClick={deleteSelection} title="Excluir blocos/conexões selecionados — Delete">
+            <i className="fas fa-trash" /> Excluir
+          </button>
+          <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          <button className="btn btn-secondary" onClick={() => zoomIn({ duration: 200 })} title="Zoom in">
+            <i className="fas fa-magnifying-glass-plus" />
+          </button>
+          <button className="btn btn-secondary" onClick={() => zoomOut({ duration: 200 })} title="Zoom out">
+            <i className="fas fa-magnifying-glass-minus" />
+          </button>
+          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })} title="Centralizar e ajustar">
+            <i className="fas fa-expand" /> Ajustar
           </button>
         </div>
       </div>
