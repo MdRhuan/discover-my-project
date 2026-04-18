@@ -56,6 +56,7 @@ export interface Documento {
   vencimento?: string
   tags?: string[]
   statusDoc?: string
+  arquivoPath?: string
 }
 
 export interface Transacao {
