@@ -373,7 +373,7 @@ function OrgChartEditor() {
       data: { cor: ed.cor || '#94a3b8', espessura: ed.espessura || 2, estilo: ed.estilo || 'solid' },
     }))
 
-    setNodes([...shapeNodes, ...companyNodes, ...textNodes])
+    setNodes([...shapeNodes, ...companyNodes, ...iconNodes, ...textNodes])
     setEdges(flowEdges)
     setLoading(false)
   }, [setNodes, setEdges])
@@ -391,6 +391,11 @@ function OrgChartEditor() {
     db.orgShapes.update(dbId, { largura: w, altura: h }).catch(console.error)
   }, [])
 
+  const handleIconResize = useCallback((id: string, w: number, h: number) => {
+    const { dbId } = parseId(id)
+    db.orgIcons.update(dbId, { largura: w, altura: h }).catch(console.error)
+  }, [])
+
   useEffect(() => {
     setNodes(curr => curr.map(n => {
       if (n.type === 'company') {
@@ -398,10 +403,11 @@ function OrgChartEditor() {
       }
       if (n.type === 'freetext') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid) } }
       if (n.type === 'shape') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize } }
+      if (n.type === 'icon') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleIconResize } }
       return n
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleOpenEmpresa, handleShapeResize])
+  }, [handleOpenEmpresa, handleShapeResize, handleIconResize])
 
   // ============ Auto-save positions ============
   const scheduleSave = useCallback(() => {
@@ -416,6 +422,7 @@ function OrgChartEditor() {
           if (kind === 'company') return db.orgNodes.update(dbId, { posX: n.position.x, posY: n.position.y })
           if (kind === 'text') return db.orgTextsCanvas.update(dbId, { posX: n.position.x, posY: n.position.y })
           if (kind === 'shape') return db.orgShapes.update(dbId, { posX: n.position.x, posY: n.position.y })
+          if (kind === 'icon') return db.orgIcons.update(dbId, { posX: n.position.x, posY: n.position.y })
           return Promise.resolve()
         }))
       } catch (err) { console.error('autosave', err) }
