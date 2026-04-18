@@ -57,18 +57,23 @@ export function CompaniesPage() {
   async function save() {
     if (!form.nome?.trim()) { toast('Nome é obrigatório.', 'error'); return }
     try {
+      const payload: Partial<Empresa> = { ...form, notas: serializeNotas(extra) }
       if (editing) {
-        await db.empresas.update(editing, form)
+        await db.empresas.update(editing, payload)
         await db.auditLog.add({ acao: `Empresa editada: ${form.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
         toast(t.saved)
       } else {
-        await db.empresas.add(form as Empresa)
+        await db.empresas.add(payload as Empresa)
         await db.auditLog.add({ acao: `Empresa criada: ${form.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
         toast(t.saved)
       }
-      setModal(false); setForm(EMPTY_EMPRESA); setEditing(null)
+      closeModal()
       load()
     } catch { toast(t.errorSave, 'error') }
+  }
+
+  function closeModal() {
+    setModal(false); setForm(EMPTY_EMPRESA); setExtra(EMPTY_EXTRA); setEditing(null); setTab('gerais'); setTagInput('')
   }
 
   async function remove(id: number) {
@@ -81,10 +86,11 @@ export function CompaniesPage() {
   }
 
   function openEdit(e: Empresa) {
-    setForm({ ...e }); setEditing(e.id!); setModal(true)
+    const { extra: ex } = parseNotas(e.notas)
+    setForm({ ...e }); setExtra(ex); setEditing(e.id!); setTab('gerais'); setModal(true)
   }
   function openNew() {
-    setForm(EMPTY_EMPRESA); setEditing(null); setModal(true)
+    setForm(EMPTY_EMPRESA); setExtra(EMPTY_EXTRA); setEditing(null); setTab('gerais'); setModal(true)
   }
 
   const filtered = empresas.filter(e => {
