@@ -9,6 +9,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   obrigacoesAcessorias: 'obrigacoes_acessorias', anoCalendario: 'ano_calendario',
   moedaSalario: 'moeda_salario', statusDoc: 'status_doc', anoFiscal: 'ano_fiscal',
   dataUpload: 'data_upload', nomeArq: 'nome_arquivo', mimeType: 'mime_type',
+  arquivoPath: 'arquivo_path',
   dataNasc: 'data_nasc', estadoCivil: 'estado_civil', conjugeNome: 'conjuge_nome',
   passaporteBR: 'passaporte_br', passaporteUS: 'passaporte_us',
   residenteFiscal: 'residente_fiscal', enderecoBR: 'endereco_br',
