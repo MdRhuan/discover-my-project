@@ -45,7 +45,7 @@ function Shell() {
   )
 
   let content: React.ReactNode = null
-  switch (page) {
+  switch (effectivePage) {
     case 'dashboard':      content = <DashboardPage />; break
     case 'tasks':          content = <TasksPage />; break
     case 'companies':      content = <CompaniesPage />; break
