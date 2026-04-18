@@ -92,11 +92,21 @@ export function PersonalDocsPage() {
 
   async function saveDoc() {
     if (!form.nome?.trim()) { toast('Nome obrigatório.', 'error'); return }
+    if (!form.pessoa?.trim()) { toast('Pessoa obrigatória.', 'error'); return }
+    if (!form.categoria?.trim()) { toast('Categoria obrigatória.', 'error'); return }
+    if (!form.subcategoria?.trim()) { toast('Subcategoria obrigatória.', 'error'); return }
     try {
-      if (form.id) await db.docsPessoais.update(form.id, form)
-      else await db.docsPessoais.add(form as DocPessoal)
+      const payload = { ...form }
+      const editingId = payload.id
+      delete payload.id
+      if (editingId) await db.docsPessoais.update(editingId, payload)
+      else await db.docsPessoais.add(payload as DocPessoal)
       toast('Salvo com sucesso!', 'success'); setDocModal(false); setForm(EMPTY_DOC); load()
-    } catch { toast('Erro ao salvar.', 'error') }
+    } catch (err) {
+      console.error('[PersonalDocs] saveDoc error:', err)
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar.'
+      toast(msg, 'error')
+    }
   }
 
   async function deleteDoc(id: number) {
