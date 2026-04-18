@@ -474,31 +474,152 @@ export function CompaniesPage() {
       )}
 
       {/* Detail Modal */}
-      {detail && (
-        <Modal title={detail.nome} onClose={() => setDetail(null)} large>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px' }}>
-            {[
-              ['País', detail.pais === 'BR' ? '🇧🇷 Brasil' : '🇺🇸 EUA'],
-              ['Status', detail.status],
-              [detail.pais === 'BR' ? 'CNPJ' : 'EIN', detail.pais === 'BR' ? detail.cnpj || '—' : detail.ein || '—'],
-              ['Tipo Jurídico', detail.legalType || '—'],
-              ['Regime Tributário', detail.taxRegime || '—'],
-              ['Setor', detail.setor || '—'],
-              ['Cidade/Estado', `${detail.cidade || '—'}${detail.estado ? ', '+detail.estado : ''}`],
-              ['Fundação', fmt.date(detail.fundacao, lang)],
-              ['Website', detail.website || '—'],
-            ].map(([k, v]) => (
-              <div key={k} style={{ padding: '8px 0', borderBottom: '1px solid var(--surface-border)' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 2 }}>{k}</div>
-                <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{v}</div>
+      {detail && (() => {
+        const { extra: detailExtra, legacy: detailNotas } = parseNotas(detail.notas)
+        const today = new Date().toISOString().slice(0, 10)
+        const vencBadge = (v?: string) => {
+          if (!v) return null
+          if (v < today) return <span className="badge badge-red" style={{ fontSize: 10 }}>Vencido</span>
+          if (v <= new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)) return <span className="badge badge-yellow" style={{ fontSize: 10 }}>Vence em breve</span>
+          return <span className="badge badge-green" style={{ fontSize: 10 }}>Válido</span>
+        }
+        return (
+          <Modal title={detail.nome} onClose={() => { setDetail(null); setDetailDocs([]) }} large>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px' }}>
+              {[
+                ['País', detail.pais === 'BR' ? '🇧🇷 Brasil' : '🇺🇸 EUA'],
+                ['Status', detail.status],
+                [detail.pais === 'BR' ? 'CNPJ' : 'EIN', detail.pais === 'BR' ? detail.cnpj || '—' : detail.ein || '—'],
+                ['Tipo Jurídico', detail.legalType || '—'],
+                ['Regime Tributário', detail.taxRegime || '—'],
+                ['Setor', detail.setor || '—'],
+                ['Cidade/Estado', `${detail.cidade || '—'}${detail.estado ? ', '+detail.estado : ''}`],
+                ['Fundação', fmt.date(detail.fundacao, lang)],
+                ['Website', detail.website || '—'],
+                ['E-mail', detailExtra.email || '—'],
+                ['Telefone', detailExtra.telefone || '—'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ padding: '8px 0', borderBottom: '1px solid var(--surface-border)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 2 }}>{k}</div>
+                  <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{v}</div>
+                </div>
+              ))}
+              {detailExtra.tags.length > 0 && (
+                <div style={{ gridColumn: '1/-1', padding: '8px 0' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Tags</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {detailExtra.tags.map((tg, i) => <span key={i} className="badge badge-brand">{tg}</span>)}
+                  </div>
+                </div>
+              )}
+              {detailNotas && (
+                <div style={{ gridColumn: '1/-1', padding: '8px 0' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 2 }}>Observações</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{detailNotas}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Documentos da Empresa */}
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <i className="fas fa-folder-open" style={{ marginRight: 8, color: 'var(--brand)' }} />
+                    Documentos Gerais da Empresa
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {detailDocs.length} documento{detailDocs.length === 1 ? '' : 's'} vinculado{detailDocs.length === 1 ? '' : 's'}
+                  </div>
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={() => { setDocForm({ categoria: 'Outros', tipo: 'PDF', versao: '1' }); setDocModal(true) }}>
+                  <i className="fas fa-plus" /> Adicionar Documento
+                </button>
               </div>
-            ))}
-            {detail.notas && (
-              <div style={{ gridColumn: '1/-1', padding: '8px 0' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 2 }}>Observações</div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{detail.notas}</div>
-              </div>
-            )}
+
+              {detailDocs.length === 0 ? (
+                <div className="empty-state" style={{ padding: 24 }}>
+                  <i className="fas fa-file" /><p>Nenhum documento vinculado</p>
+                </div>
+              ) : (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead><tr><th>Documento</th><th>Categoria</th><th>Versão</th><th>Upload</th><th>Vencimento</th><th>{t.actions}</th></tr></thead>
+                    <tbody>
+                      {detailDocs.map(d => (
+                        <tr key={d.id}>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <i className={`fas ${d.tipo === 'PDF' ? 'fa-file-pdf' : d.tipo === 'XLSX' ? 'fa-file-excel' : 'fa-file'}`} style={{ color: d.tipo === 'PDF' ? 'var(--red)' : d.tipo === 'XLSX' ? 'var(--green)' : 'var(--brand)', fontSize: 16 }} />
+                              <div>
+                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{d.nome}</div>
+                                {d.descricao && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.descricao}</div>}
+                              </div>
+                            </div>
+                          </td>
+                          <td><span className="badge badge-brand" style={{ fontSize: 10 }}>{d.categoria}</span></td>
+                          <td style={{ fontSize: 12 }}>v{d.versao || '1'}</td>
+                          <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
+                          <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
+                          <td>
+                            <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </Modal>
+        )
+      })()}
+
+      {/* Add Document to Empresa Modal */}
+      {docModal && detail && (
+        <Modal
+          title={`Novo Documento — ${detail.nome}`}
+          onClose={() => { setDocModal(false); setDocForm({}) }}
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}) }}>{t.cancel}</button>
+              <button className="btn btn-primary" onClick={saveDetailDoc}><i className="fas fa-check" />{t.save}</button>
+            </>
+          }
+        >
+          <div className="form-grid">
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Nome do Documento *</label>
+              <input className="form-input" value={docForm.nome || ''} onChange={e => setDocForm(p => ({ ...p, nome: e.target.value }))} placeholder="Contrato Social, Ata..." />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Categoria</label>
+              <select className="form-select" value={docForm.categoria || 'Outros'} onChange={e => setDocForm(p => ({ ...p, categoria: e.target.value }))}>
+                {DOC_CATS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tipo</label>
+              <select className="form-select" value={docForm.tipo || 'PDF'} onChange={e => setDocForm(p => ({ ...p, tipo: e.target.value }))}>
+                {['PDF','DOCX','XLSX','TXT','IMG','Outro'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Versão</label>
+              <input className="form-input" value={docForm.versao || ''} onChange={e => setDocForm(p => ({ ...p, versao: e.target.value }))} placeholder="1" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Data de Upload</label>
+              <input className="form-input" type="date" value={docForm.dataUpload || ''} onChange={e => setDocForm(p => ({ ...p, dataUpload: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Vencimento</label>
+              <input className="form-input" type="date" value={docForm.vencimento || ''} onChange={e => setDocForm(p => ({ ...p, vencimento: e.target.value }))} />
+            </div>
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Descrição</label>
+              <textarea className="form-textarea" value={docForm.descricao || ''} onChange={e => setDocForm(p => ({ ...p, descricao: e.target.value }))} />
+            </div>
           </div>
         </Modal>
       )}
