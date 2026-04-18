@@ -131,14 +131,14 @@ export function CompaniesPage() {
   }
 
   async function removeDetailDoc(id: number) {
-    if (!detail?.id) return
-    const doc = detailDocs.find(d => d.id === id)
+    const doc = (detail ? detailDocs : allDocs).find(d => d.id === id)
     if (doc?.arquivoPath) {
       await supabase.storage.from(DOC_BUCKET).remove([doc.arquivoPath])
     }
     await db.documentos.delete(id)
     toast(t.deleted)
-    await loadDetailDocs(detail.id)
+    if (detail?.id) await loadDetailDocs(detail.id)
+    await loadAllDocs()
   }
 
   async function downloadDoc(doc: Documento) {
@@ -150,10 +150,16 @@ export function CompaniesPage() {
     window.open(data.signedUrl, '_blank', 'noopener')
   }
 
+  async function loadAllDocs() {
+    setAllDocs(await db.documentos.toArray())
+  }
+
   useEffect(() => { load() }, [])
 
   async function load() {
-    setEmpresas(await db.empresas.toArray())
+    const [emps, docs] = await Promise.all([db.empresas.toArray(), db.documentos.toArray()])
+    setEmpresas(emps)
+    setAllDocs(docs)
   }
 
   async function save() {
