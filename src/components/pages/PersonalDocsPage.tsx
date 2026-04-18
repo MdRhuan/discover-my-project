@@ -68,12 +68,19 @@ export function PersonalDocsPage() {
 
   useEffect(() => { load() }, [load])
 
-  const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))]
+  const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
+  const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
   const filtered = docs.filter(d =>
     (!filterPessoa || d.pessoa === filterPessoa) &&
     (!filterCat || d.categoria === filterCat) &&
     (!search || d.nome?.toLowerCase().includes(search.toLowerCase()) || d.pessoa?.toLowerCase().includes(search.toLowerCase()))
   )
+
+  const obFiltered = obList.filter(ob => {
+    const okP = obFilterPessoas.length === 0 || (ob.pessoas || []).some(p => obFilterPessoas.includes(p))
+    const okC = obFilterCats.length === 0 || (ob.categorias || []).some(c => obFilterCats.includes(c))
+    return okP && okC
+  })
 
   function alertColor(v?: string) {
     if (!v) return null
