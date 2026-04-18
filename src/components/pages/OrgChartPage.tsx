@@ -830,6 +830,10 @@ function OrgChartEditor() {
         <EditShapeModal node={editNode as Node<ShapeNodeData>} onClose={() => setEditNodeId(null)} onSave={saveShapeEdit}
           onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'shape' })} />
       )}
+      {editNode && editNode.type === 'icon' && (
+        <EditIconModal node={editNode as Node<IconNodeData>} onClose={() => setEditNodeId(null)} onSave={saveIconEdit}
+          onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'icon' })} />
+      )}
 
       {confirmDelete && (
         <ConfirmDialog
