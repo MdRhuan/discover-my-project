@@ -446,35 +446,113 @@ export type Database = {
           },
         ]
       }
-      org_nodes: {
+      org_edges: {
         Row: {
-          cargo: string
+          cor: string | null
           created_at: string
           empresa_id: number | null
+          espessura: number | null
+          estilo: string | null
+          id: number
+          label: string | null
+          owner_id: string
+          source_id: number
+          target_id: number
+          updated_at: string
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          espessura?: number | null
+          estilo?: string | null
+          id?: number
+          label?: string | null
+          owner_id?: string
+          source_id: number
+          target_id: number
+          updated_at?: string
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          espessura?: number | null
+          estilo?: string | null
+          id?: number
+          label?: string | null
+          owner_id?: string
+          source_id?: number
+          target_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_edges_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "org_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_edges_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "org_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_nodes: {
+        Row: {
+          cargo: string | null
+          cor_borda: string | null
+          cor_fundo: string | null
+          created_at: string
+          empresa_id: number | null
+          espessura_borda: number | null
+          estilo_borda: string | null
+          icon: string | null
           id: number
           nome: string
           owner_id: string
           parent_id: number | null
+          pos_x: number | null
+          pos_y: number | null
           updated_at: string
         }
         Insert: {
-          cargo: string
+          cargo?: string | null
+          cor_borda?: string | null
+          cor_fundo?: string | null
           created_at?: string
           empresa_id?: number | null
+          espessura_borda?: number | null
+          estilo_borda?: string | null
+          icon?: string | null
           id?: number
           nome: string
           owner_id?: string
           parent_id?: number | null
+          pos_x?: number | null
+          pos_y?: number | null
           updated_at?: string
         }
         Update: {
-          cargo?: string
+          cargo?: string | null
+          cor_borda?: string | null
+          cor_fundo?: string | null
           created_at?: string
           empresa_id?: number | null
+          espessura_borda?: number | null
+          estilo_borda?: string | null
+          icon?: string | null
           id?: number
           nome?: string
           owner_id?: string
           parent_id?: number | null
+          pos_x?: number | null
+          pos_y?: number | null
           updated_at?: string
         }
         Relationships: [
