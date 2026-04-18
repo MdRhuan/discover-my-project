@@ -274,51 +274,127 @@ export function CompaniesPage() {
         )}
       </div>
 
-      {/* Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Empresa</th><th>País</th><th>CNPJ / EIN</th>
-                <th>Tipo Jurídico</th><th>Setor</th><th>Status</th><th>{t.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr><td colSpan={7}><div className="empty-state"><i className="fas fa-building" /><p>{t.noRecords}</p></div></td></tr>
-              )}
-              {filtered.map(e => (
-                <tr key={e.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div className="avatar" style={{ background: e.pais === 'US' ? 'rgba(59,130,246,.15)' : 'var(--brand-dim)', color: e.pais === 'US' ? 'var(--blue)' : 'var(--brand)', fontSize: 11 }}>
-                        {e.nome.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{e.nome}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{e.cidade}{e.estado ? `, ${e.estado}` : ''}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td><span className={`badge ${e.pais === 'BR' ? 'badge-brand' : 'badge-blue'}`}>{e.pais === 'BR' ? '🇧🇷 BR' : '🇺🇸 US'}</span></td>
-                  <td style={{ fontSize: 12, fontFamily: 'monospace' }}>{e.pais === 'BR' ? e.cnpj || '—' : e.ein || '—'}</td>
-                  <td style={{ fontSize: 12 }}>{e.legalType || '—'}</td>
-                  <td style={{ fontSize: 12 }}>{e.setor || '—'}</td>
-                  <td><span className={`badge ${statusBadge(e.status)}`}>{e.status}</span></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn-icon" onClick={() => openDetail(e)} title="Ver detalhes"><i className="fas fa-eye" /></button>
-                      <button className="btn-icon" onClick={() => openEdit(e)} title={t.edit}><i className="fas fa-pen" /></button>
-                      <button className="btn-icon danger" onClick={() => setConfirmId(e.id!)} title={t.delete}><i className="fas fa-trash" /></button>
-                    </div>
-                  </td>
+      {/* Empresas Table */}
+      {view === 'empresas' && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Empresa</th><th>País</th><th>CNPJ / EIN</th>
+                  <th>Tipo Jurídico</th><th>Setor</th><th>Status</th><th>{t.actions}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.length === 0 && (
+                  <tr><td colSpan={7}><div className="empty-state"><i className="fas fa-building" /><p>{t.noRecords}</p></div></td></tr>
+                )}
+                {filtered.map(e => (
+                  <tr key={e.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div className="avatar" style={{ background: e.pais === 'US' ? 'rgba(59,130,246,.15)' : 'var(--brand-dim)', color: e.pais === 'US' ? 'var(--blue)' : 'var(--brand)', fontSize: 11 }}>
+                          {e.nome.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{e.nome}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{e.cidade}{e.estado ? `, ${e.estado}` : ''}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className={`badge ${e.pais === 'BR' ? 'badge-brand' : 'badge-blue'}`}>{e.pais === 'BR' ? '🇧🇷 BR' : '🇺🇸 US'}</span></td>
+                    <td style={{ fontSize: 12, fontFamily: 'monospace' }}>{e.pais === 'BR' ? e.cnpj || '—' : e.ein || '—'}</td>
+                    <td style={{ fontSize: 12 }}>{e.legalType || '—'}</td>
+                    <td style={{ fontSize: 12 }}>{e.setor || '—'}</td>
+                    <td><span className={`badge ${statusBadge(e.status)}`}>{e.status}</span></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn-icon" onClick={() => openDetail(e)} title="Ver detalhes"><i className="fas fa-eye" /></button>
+                        <button className="btn-icon" onClick={() => openEdit(e)} title={t.edit}><i className="fas fa-pen" /></button>
+                        <button className="btn-icon danger" onClick={() => setConfirmId(e.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Documentos Gerais Table */}
+      {view === 'docs' && (() => {
+        const today = new Date().toISOString().slice(0, 10)
+        const vencBadge = (v?: string) => {
+          if (!v) return null
+          if (v < today) return <span className="badge badge-red" style={{ fontSize: 10 }}>Vencido</span>
+          if (v <= new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)) return <span className="badge badge-yellow" style={{ fontSize: 10 }}>Vence em breve</span>
+          return <span className="badge badge-green" style={{ fontSize: 10 }}>Válido</span>
+        }
+        const filteredDocs = allDocs.filter(d => {
+          const matchEmp = filterDocEmp === 'all' || d.empresaId === filterDocEmp
+          const matchSearch = !search ||
+            d.nome.toLowerCase().includes(search.toLowerCase()) ||
+            (d.categoria || '').toLowerCase().includes(search.toLowerCase())
+          return matchEmp && matchSearch
+        })
+        return (
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Documento</th><th>Empresa</th><th>Categoria</th>
+                    <th>Versão</th><th>Upload</th><th>Vencimento</th><th>{t.actions}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDocs.length === 0 && (
+                    <tr><td colSpan={7}><div className="empty-state"><i className="fas fa-file" /><p>{t.noRecords}</p></div></td></tr>
+                  )}
+                  {filteredDocs.map(d => {
+                    const emp = empresas.find(e => e.id === d.empresaId)
+                    return (
+                      <tr key={d.id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => downloadDoc(d)}
+                              title={d.arquivoPath ? 'Baixar arquivo' : 'Sem arquivo anexado'}
+                              disabled={!d.arquivoPath}
+                              style={{ background: 'transparent', border: 0, padding: 0, cursor: d.arquivoPath ? 'pointer' : 'not-allowed', opacity: d.arquivoPath ? 1 : 0.4 }}
+                            >
+                              <i className={`fas ${d.tipo === 'PDF' ? 'fa-file-pdf' : d.tipo === 'XLSX' ? 'fa-file-excel' : 'fa-file'}`} style={{ color: d.tipo === 'PDF' ? 'var(--red)' : d.tipo === 'XLSX' ? 'var(--green)' : 'var(--brand)', fontSize: 18 }} />
+                            </button>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{d.nome}</div>
+                              {d.descricao && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.descricao}</div>}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ fontSize: 12 }}>{emp?.nome || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                        <td><span className="badge badge-brand" style={{ fontSize: 10 }}>{d.categoria}</span></td>
+                        <td style={{ fontSize: 12 }}>v{d.versao || '1'}</td>
+                        <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
+                        <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            {d.arquivoPath && (
+                              <button className="btn-icon" onClick={() => downloadDoc(d)} title="Baixar"><i className="fas fa-download" /></button>
+                            )}
+                            <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Edit / New Modal */}
       {modal && (
