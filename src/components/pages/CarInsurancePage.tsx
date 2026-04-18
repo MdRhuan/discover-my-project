@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/ui/Modal'
+import { ConfirmDialog, Modal } from '@/components/ui/Modal'
+import { InsuranceDocsManager } from '@/components/insurance/InsuranceDocsManager'
 
 const CI_KEY = 'carInsurance_data'
 
@@ -64,6 +65,7 @@ export function CarInsurancePage() {
   const [form, setForm] = useState<Partial<Seguro>>({})
   const [confirm, setConfirm] = useState<null | { msg: string; onConfirm: () => void }>(null)
   const [detail, setDetail] = useState<Seguro | null>(null)
+  const [centralOpen, setCentralOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
