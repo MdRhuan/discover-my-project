@@ -45,6 +45,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [theme, setTheme] = useState('light')
+  const [role, setRole] = useState<AppRole>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('hub-theme')
