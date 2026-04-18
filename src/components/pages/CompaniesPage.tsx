@@ -795,14 +795,18 @@ export function CompaniesPage() {
         )
       })()}
 
-      {/* Add Document to Empresa Modal */}
-      {docModal && detail && (
+      {/* Add / Edit Document Modal */}
+      {docModal && (
         <Modal
-          title={`Novo Documento — ${detail.nome}`}
-          onClose={() => { setDocModal(false); setDocForm({}); setDocFile(null) }}
+          title={
+            editingDocId
+              ? `Editar Documento${detail ? ` — ${detail.nome}` : ''}`
+              : `Novo Documento${detail ? ` — ${detail.nome}` : ''}`
+          }
+          onClose={closeDocModal}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}); setDocFile(null) }} disabled={uploading}>{t.cancel}</button>
+              <button className="btn btn-ghost" onClick={closeDocModal} disabled={uploading}>{t.cancel}</button>
               <button className="btn btn-primary" onClick={saveDetailDoc} disabled={uploading}>
                 {uploading ? <><i className="fas fa-spinner fa-spin" /> Enviando...</> : <><i className="fas fa-check" />{t.save}</>}
               </button>
@@ -810,6 +814,21 @@ export function CompaniesPage() {
           }
         >
           <div className="form-grid">
+            {/* Empresa selector quando não estamos no contexto de uma empresa específica */}
+            {!detail && (
+              <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                <label className="form-label">Empresa Vinculada</label>
+                <select
+                  className="form-select"
+                  value={docForm.empresaId ?? ''}
+                  onChange={e => setDocForm(p => ({ ...p, empresaId: e.target.value ? Number(e.target.value) : undefined }))}
+                >
+                  <option value="">— Sem empresa vinculada —</option>
+                  {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
+                </select>
+              </div>
+            )}
+
             {/* Upload */}
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label">Arquivo</label>
@@ -819,7 +838,17 @@ export function CompaniesPage() {
                 style={{ display: 'none' }}
                 onChange={e => handleFilePicked(e.target.files?.[0] || null)}
               />
-              {!docFile ? (
+              {/* Editando com arquivo já existente, sem novo arquivo selecionado */}
+              {editingDocId && docForm.arquivoPath && !docFile && !replaceFile ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--surface-border)' }}>
+                  <i className="fas fa-paperclip" style={{ fontSize: 20, color: 'var(--brand)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Arquivo já anexado</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docForm.arquivoPath.split('/').pop()}</div>
+                  </div>
+                  <button className="btn-icon" onClick={() => { setReplaceFile(true); fileInputRef.current?.click() }} title="Substituir arquivo"><i className="fas fa-rotate" /></button>
+                </div>
+              ) : !docFile ? (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -839,10 +868,10 @@ export function CompaniesPage() {
                   <i className="fas fa-file" style={{ fontSize: 22, color: 'var(--brand)' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docFile.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBytes(docFile.size)}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBytes(docFile.size)} {editingDocId && docForm.arquivoPath ? '— substituirá o arquivo atual' : ''}</div>
                   </div>
                   <button className="btn-icon" onClick={() => fileInputRef.current?.click()} title="Trocar"><i className="fas fa-rotate" /></button>
-                  <button className="btn-icon danger" onClick={() => setDocFile(null)} title="Remover"><i className="fas fa-times" /></button>
+                  <button className="btn-icon danger" onClick={() => { setDocFile(null); setReplaceFile(false) }} title="Remover"><i className="fas fa-times" /></button>
                 </div>
               )}
             </div>
