@@ -28,6 +28,7 @@ const TaxPlanningPage   = lazy(() => import('@/components/pages/TaxPlanningPage'
 const CheckBoxPage      = lazy(() => import('@/components/pages/CheckBoxPage').then(m => ({ default: m.CheckBoxPage })))
 const BackupPage        = lazy(() => import('@/components/pages/BackupPage').then(m => ({ default: m.BackupPage })))
 const AuditLogPage      = lazy(() => import('@/components/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
+const UsersPage         = lazy(() => import('@/components/pages/UsersPage').then(m => ({ default: m.UsersPage })))
 
 function Shell() {
   const { user, page, isAdmin } = useApp()
