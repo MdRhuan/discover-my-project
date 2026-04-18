@@ -7,6 +7,8 @@ import { db, supabaseSignOut } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
+type AppRole = 'admin' | 'user' | null
+
 interface AppContextValue {
   t: Translations
   lang: Lang
@@ -16,6 +18,8 @@ interface AppContextValue {
   toast: (msg: string, type?: Toast['type']) => void
   user: User | null
   setUser: (u: User | null) => void
+  role: AppRole
+  isAdmin: boolean
   page: PageKey
   setPage: (p: PageKey) => void
   sidebarOpen: boolean
@@ -41,6 +45,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [theme, setTheme] = useState('light')
+  const [role, setRole] = useState<AppRole>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('hub-theme')
@@ -61,7 +66,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setRole(null)
+      return
+    }
+    // Buscar papel do usuário
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .order('role', { ascending: true }) // 'admin' vem antes de 'user'
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setRole((data?.role as AppRole) ?? 'user')
+      })
+
     db.config.get('prefs').then(rec => {
       if (rec?.value && typeof rec.value === 'object') {
         const prefs = rec.value as { lang?: Lang; currency?: Currency }
@@ -94,7 +114,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider value={{
       t, lang, setLang, currency, setCurrency, toast,
-      user, setUser, page, setPage,
+      user, setUser, role, isAdmin: role === 'admin',
+      page, setPage,
       sidebarOpen, setSidebarOpen, theme, toggleTheme, toasts,
     }}>
       {children}

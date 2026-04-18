@@ -30,9 +30,12 @@ const BackupPage        = lazy(() => import('@/components/pages/BackupPage').the
 const AuditLogPage      = lazy(() => import('@/components/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 
 function Shell() {
-  const { user, page } = useApp()
+  const { user, page, isAdmin } = useApp()
 
   if (!user) return <AuthScreen />
+
+  // Bloqueio de rota: não-admin não acessa Despesas Fixas
+  const effectivePage = (!isAdmin && page === 'fixedExpenses') ? 'dashboard' : page
 
   const fallback = (
     <div style={{ padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>
@@ -42,7 +45,7 @@ function Shell() {
   )
 
   let content: React.ReactNode = null
-  switch (page) {
+  switch (effectivePage) {
     case 'dashboard':      content = <DashboardPage />; break
     case 'tasks':          content = <TasksPage />; break
     case 'companies':      content = <CompaniesPage />; break

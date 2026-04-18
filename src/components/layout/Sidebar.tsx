@@ -152,8 +152,17 @@ function NavItemComponent({
   )
 }
 
+function filterByRole(items: NavItemDef[], isAdmin: boolean): NavItemDef[] {
+  return items
+    .filter(it => isAdmin || it.key !== 'fixedExpenses')
+    .map(it => it.children
+      ? { ...it, children: filterByRole(it.children, isAdmin) }
+      : it,
+    )
+}
+
 export function Sidebar() {
-  const { page, setPage, lang, sidebarOpen, setSidebarOpen, setUser, toast } = useApp()
+  const { page, setPage, lang, sidebarOpen, setSidebarOpen, setUser, toast, isAdmin } = useApp()
 
   async function handleLogout() {
     try {
@@ -163,6 +172,8 @@ export function Sidebar() {
     setUser(null)
     toast('Logout realizado', 'success')
   }
+
+  const navItems = filterByRole(NAV_STRUCTURE, isAdmin)
 
   return (
     <>
@@ -175,7 +186,7 @@ export function Sidebar() {
           </span>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-          {NAV_STRUCTURE.map(item => (
+          {navItems.map(item => (
             <NavItemComponent
               key={item.key} item={item} page={page}
               setPage={setPage} onClose={() => setSidebarOpen(false)} lang={lang}
