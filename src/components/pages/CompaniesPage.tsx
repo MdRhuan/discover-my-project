@@ -199,6 +199,14 @@ export function CompaniesPage() {
     const [emps, docs] = await Promise.all([db.empresas.toArray(), db.documentos.toArray()])
     setEmpresas(emps)
     setAllDocs(docs)
+    try {
+      const pendingId = localStorage.getItem('open-empresa-id')
+      if (pendingId) {
+        localStorage.removeItem('open-empresa-id')
+        const target = emps.find(e => e.id === Number(pendingId))
+        if (target) openDetail(target)
+      }
+    } catch { /* ignore */ }
   }
 
   async function save() {
