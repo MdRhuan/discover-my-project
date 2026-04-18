@@ -73,7 +73,7 @@ export interface Transacao {
 
 export interface OrgNode {
   id?: number
-  empresaId: number
+  empresaId?: number | null
   parentId?: number | null
   nome: string
   cargo?: string
@@ -84,6 +84,8 @@ export interface OrgNode {
   corFundo?: string
   espessuraBorda?: number
   estiloBorda?: string
+  zIndex?: number
+  livre?: boolean
 }
 
 export interface OrgEdge {
@@ -95,6 +97,39 @@ export interface OrgEdge {
   espessura?: number
   estilo?: string
   label?: string
+}
+
+export interface OrgTextCanvas {
+  id?: number
+  empresaId?: number | null
+  conteudo: string
+  posX: number
+  posY: number
+  largura?: number
+  fonte?: string
+  tamanho?: number
+  cor?: string
+  alinhamento?: 'left' | 'center' | 'right'
+  negrito?: boolean
+  italico?: boolean
+  zIndex?: number
+}
+
+export interface OrgShape {
+  id?: number
+  empresaId?: number | null
+  rotulo?: string
+  posX: number
+  posY: number
+  largura: number
+  altura: number
+  corBorda?: string
+  corFundo?: string
+  espessuraBorda?: number
+  estiloBorda?: string
+  raio?: number
+  opacidade?: number
+  zIndex?: number
 }
 
 export interface Task {

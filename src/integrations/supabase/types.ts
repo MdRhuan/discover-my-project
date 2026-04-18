@@ -514,12 +514,14 @@ export type Database = {
           estilo_borda: string | null
           icon: string | null
           id: number
+          livre: boolean | null
           nome: string
           owner_id: string
           parent_id: number | null
           pos_x: number | null
           pos_y: number | null
           updated_at: string
+          z_index: number | null
         }
         Insert: {
           cargo?: string | null
@@ -531,12 +533,14 @@ export type Database = {
           estilo_borda?: string | null
           icon?: string | null
           id?: number
+          livre?: boolean | null
           nome: string
           owner_id?: string
           parent_id?: number | null
           pos_x?: number | null
           pos_y?: number | null
           updated_at?: string
+          z_index?: number | null
         }
         Update: {
           cargo?: string | null
@@ -548,12 +552,14 @@ export type Database = {
           estilo_borda?: string | null
           icon?: string | null
           id?: number
+          livre?: boolean | null
           nome?: string
           owner_id?: string
           parent_id?: number | null
           pos_x?: number | null
           pos_y?: number | null
           updated_at?: string
+          z_index?: number | null
         }
         Relationships: [
           {
@@ -564,6 +570,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      org_shapes: {
+        Row: {
+          altura: number
+          cor_borda: string | null
+          cor_fundo: string | null
+          created_at: string
+          empresa_id: number | null
+          espessura_borda: number | null
+          estilo_borda: string | null
+          id: number
+          largura: number
+          opacidade: number | null
+          owner_id: string
+          pos_x: number
+          pos_y: number
+          raio: number | null
+          rotulo: string | null
+          updated_at: string
+          z_index: number | null
+        }
+        Insert: {
+          altura?: number
+          cor_borda?: string | null
+          cor_fundo?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          espessura_borda?: number | null
+          estilo_borda?: string | null
+          id?: number
+          largura?: number
+          opacidade?: number | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          raio?: number | null
+          rotulo?: string | null
+          updated_at?: string
+          z_index?: number | null
+        }
+        Update: {
+          altura?: number
+          cor_borda?: string | null
+          cor_fundo?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          espessura_borda?: number | null
+          estilo_borda?: string | null
+          id?: number
+          largura?: number
+          opacidade?: number | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          raio?: number | null
+          rotulo?: string | null
+          updated_at?: string
+          z_index?: number | null
+        }
+        Relationships: []
       }
       org_texts: {
         Row: {
@@ -592,6 +658,63 @@ export type Database = {
           owner_id?: string
           updated_at?: string
           value?: Json | null
+        }
+        Relationships: []
+      }
+      org_texts_canvas: {
+        Row: {
+          alinhamento: string | null
+          conteudo: string
+          cor: string | null
+          created_at: string
+          empresa_id: number | null
+          fonte: string | null
+          id: number
+          italico: boolean | null
+          largura: number | null
+          negrito: boolean | null
+          owner_id: string
+          pos_x: number
+          pos_y: number
+          tamanho: number | null
+          updated_at: string
+          z_index: number | null
+        }
+        Insert: {
+          alinhamento?: string | null
+          conteudo?: string
+          cor?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          fonte?: string | null
+          id?: number
+          italico?: boolean | null
+          largura?: number | null
+          negrito?: boolean | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          tamanho?: number | null
+          updated_at?: string
+          z_index?: number | null
+        }
+        Update: {
+          alinhamento?: string | null
+          conteudo?: string
+          cor?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          fonte?: string | null
+          id?: number
+          italico?: boolean | null
+          largura?: number | null
+          negrito?: boolean | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          tamanho?: number | null
+          updated_at?: string
+          z_index?: number | null
         }
         Relationships: []
       }
