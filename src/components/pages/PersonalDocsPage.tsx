@@ -9,12 +9,19 @@ import type { DocPessoal } from '@/types'
 
 const OB_KEY = 'proximas_obrigacoes'
 
-interface Obrigacao { id: number; label: string; info?: string; data?: string }
+interface Obrigacao {
+  id: number
+  label: string
+  info?: string
+  data?: string
+  pessoas?: string[]
+  categorias?: string[]
+}
 
 const OB_DEFAULTS: Obrigacao[] = [
-  { id: 1, label: 'Naturalization Eligibility', info: 'Verificar elegibilidade após 5 anos de residência permanente', data: '' },
-  { id: 2, label: 'Green Card Renewal — Eduardo', info: 'Renovação obrigatória antes do vencimento', data: '' },
-  { id: 3, label: 'Green Card Renewal — Carla', info: 'Renovação obrigatória antes do vencimento', data: '' },
+  { id: 1, label: 'Naturalization Eligibility', info: 'Verificar elegibilidade após 5 anos de residência permanente', data: '', pessoas: [], categorias: [] },
+  { id: 2, label: 'Green Card Renewal — Eduardo', info: 'Renovação obrigatória antes do vencimento', data: '', pessoas: [], categorias: [] },
+  { id: 3, label: 'Green Card Renewal — Carla', info: 'Renovação obrigatória antes do vencimento', data: '', pessoas: [], categorias: [] },
 ]
 
 const SUBCATS = [
