@@ -52,6 +52,7 @@ export const TRANSLATIONS = {
     viewDetails: 'Ver Detalhes', addCompany: 'Nova Empresa',
     companyDetail: 'Ficha da Empresa', fiscalObligations: 'Obrigações Fiscais',
     complianceChecklist: 'Checklist de Compliance',
+    close: 'Fechar',
   },
   'en-US': {
     appName: 'Business Hub', login: 'Sign In', logout: 'Sign Out',
@@ -106,8 +107,9 @@ export const TRANSLATIONS = {
     viewDetails: 'View Details', addCompany: 'New Company',
     companyDetail: 'Company Detail', fiscalObligations: 'Fiscal Obligations',
     complianceChecklist: 'Compliance Checklist',
+    close: 'Close',
   },
-} as const
+}
 
 export type Translations = typeof TRANSLATIONS['pt-BR']
 export type TKey = keyof Translations
