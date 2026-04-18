@@ -17,7 +17,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   corBorda: 'cor_borda', corFundo: 'cor_fundo', svgIcon: 'svg_icon',
   posX: 'pos_x', posY: 'pos_y', espessuraBorda: 'espessura_borda',
   estiloBorda: 'estilo_borda', sourceId: 'source_id', targetId: 'target_id',
-  zIndex: 'z_index',
+  zIndex: 'z_index', svgContent: 'svg_content',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
