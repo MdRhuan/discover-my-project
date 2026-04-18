@@ -446,6 +446,57 @@ export type Database = {
           },
         ]
       }
+      insurance_docs: {
+        Row: {
+          apolice_id: number | null
+          apolice_label: string | null
+          arquivo_path: string
+          categoria: string | null
+          created_at: string
+          data_upload: string | null
+          id: number
+          insurance_type: string
+          nome: string
+          observacoes: string | null
+          owner_id: string
+          tamanho: string | null
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          apolice_id?: number | null
+          apolice_label?: string | null
+          arquivo_path: string
+          categoria?: string | null
+          created_at?: string
+          data_upload?: string | null
+          id?: number
+          insurance_type: string
+          nome: string
+          observacoes?: string | null
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apolice_id?: number | null
+          apolice_label?: string | null
+          arquivo_path?: string
+          categoria?: string | null
+          created_at?: string
+          data_upload?: string | null
+          id?: number
+          insurance_type?: string
+          nome?: string
+          observacoes?: string | null
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_edges: {
         Row: {
           cor: string | null
