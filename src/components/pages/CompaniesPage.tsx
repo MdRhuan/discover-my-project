@@ -624,7 +624,12 @@ export function CompaniesPage() {
                           <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
                           <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
                           <td>
-                            <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              {d.arquivoPath && (
+                                <button className="btn-icon" onClick={() => downloadDoc(d)} title="Baixar"><i className="fas fa-download" /></button>
+                              )}
+                              <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                            </div>
                           </td>
                         </tr>
                       ))}
