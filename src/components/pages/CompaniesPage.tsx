@@ -383,10 +383,11 @@ export function CompaniesPage() {
         }
         const filteredDocs = allDocs.filter(d => {
           const matchEmp = filterDocEmp === 'all' || d.empresaId === filterDocEmp
+          const matchAno = filterDocAno === 'all' || (d.ano || '') === filterDocAno
           const matchSearch = !search ||
             d.nome.toLowerCase().includes(search.toLowerCase()) ||
             (d.categoria || '').toLowerCase().includes(search.toLowerCase())
-          return matchEmp && matchSearch
+          return matchEmp && matchAno && matchSearch
         })
         return (
           <>
