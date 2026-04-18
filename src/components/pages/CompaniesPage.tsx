@@ -402,7 +402,7 @@ export function CompaniesPage() {
                 <thead>
                   <tr>
                     <th>Documento</th><th>Empresa</th><th>Categoria</th>
-                    <th>Versão</th><th>Upload</th><th>Vencimento</th><th>{t.actions}</th>
+                    <th>Versão</th><th>Ano</th><th>Vencimento</th><th>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
