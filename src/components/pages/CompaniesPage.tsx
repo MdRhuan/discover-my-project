@@ -62,6 +62,7 @@ export function CompaniesPage() {
   const [view, setView] = useState<'empresas' | 'docs'>('empresas')
   const [allDocs, setAllDocs] = useState<Documento[]>([])
   const [filterDocEmp, setFilterDocEmp] = useState<number | 'all'>('all')
+  const [filterDocAno, setFilterDocAno] = useState<string>('all')
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState<Partial<Empresa>>(EMPTY_EMPRESA)
   const [extra, setExtra] = useState<ExtraData>(EMPTY_EXTRA)
@@ -298,15 +299,28 @@ export function CompaniesPage() {
           </button>
         </div>
         {view === 'docs' && (
-          <select
-            className="form-select"
-            style={{ width: 'auto', minWidth: 200 }}
-            value={filterDocEmp}
-            onChange={e => setFilterDocEmp(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-          >
-            <option value="all">Todas as empresas</option>
-            {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
-          </select>
+          <>
+            <select
+              className="form-select"
+              style={{ width: 'auto', minWidth: 200 }}
+              value={filterDocEmp}
+              onChange={e => setFilterDocEmp(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            >
+              <option value="all">Todas as empresas</option>
+              {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
+            </select>
+            <select
+              className="form-select"
+              style={{ width: 'auto', minWidth: 140 }}
+              value={filterDocAno}
+              onChange={e => setFilterDocAno(e.target.value)}
+            >
+              <option value="all">Todos os anos</option>
+              {Array.from(new Set(allDocs.map(d => d.ano).filter(Boolean) as string[]))
+                .sort((a, b) => b.localeCompare(a))
+                .map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </>
         )}
       </div>
 
@@ -369,10 +383,11 @@ export function CompaniesPage() {
         }
         const filteredDocs = allDocs.filter(d => {
           const matchEmp = filterDocEmp === 'all' || d.empresaId === filterDocEmp
+          const matchAno = filterDocAno === 'all' || (d.ano || '') === filterDocAno
           const matchSearch = !search ||
             d.nome.toLowerCase().includes(search.toLowerCase()) ||
             (d.categoria || '').toLowerCase().includes(search.toLowerCase())
-          return matchEmp && matchSearch
+          return matchEmp && matchAno && matchSearch
         })
         return (
           <>
@@ -387,7 +402,7 @@ export function CompaniesPage() {
                 <thead>
                   <tr>
                     <th>Documento</th><th>Empresa</th><th>Categoria</th>
-                    <th>Versão</th><th>Upload</th><th>Vencimento</th><th>{t.actions}</th>
+                    <th>Versão</th><th>Ano</th><th>Vencimento</th><th>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -418,7 +433,7 @@ export function CompaniesPage() {
                         <td style={{ fontSize: 12 }}>{emp?.nome || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                         <td><span className="badge badge-brand" style={{ fontSize: 10 }}>{d.categoria}</span></td>
                         <td style={{ fontSize: 12 }}>v{d.versao || '1'}</td>
-                        <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
+                        <td style={{ fontSize: 12 }}>{d.ano || '—'}</td>
                         <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -750,7 +765,7 @@ export function CompaniesPage() {
               ) : (
                 <div className="table-wrap">
                   <table className="data-table">
-                    <thead><tr><th>Documento</th><th>Categoria</th><th>Versão</th><th>Upload</th><th>Vencimento</th><th>{t.actions}</th></tr></thead>
+                    <thead><tr><th>Documento</th><th>Categoria</th><th>Versão</th><th>Ano</th><th>Vencimento</th><th>{t.actions}</th></tr></thead>
                     <tbody>
                       {detailDocs.map(d => (
                         <tr key={d.id}>
@@ -773,7 +788,7 @@ export function CompaniesPage() {
                           </td>
                           <td><span className="badge badge-brand" style={{ fontSize: 10 }}>{d.categoria}</span></td>
                           <td style={{ fontSize: 12 }}>v{d.versao || '1'}</td>
-                          <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
+                          <td style={{ fontSize: 12 }}>{d.ano || '—'}</td>
                           <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
@@ -897,8 +912,16 @@ export function CompaniesPage() {
               <input className="form-input" value={docForm.versao || ''} onChange={e => setDocForm(p => ({ ...p, versao: e.target.value }))} placeholder="1" />
             </div>
             <div className="form-group">
-              <label className="form-label">Data de Upload</label>
-              <input className="form-input" type="date" value={docForm.dataUpload || ''} onChange={e => setDocForm(p => ({ ...p, dataUpload: e.target.value }))} />
+              <label className="form-label">Ano do Documento</label>
+              <input
+                className="form-input"
+                type="number"
+                min={1900}
+                max={2100}
+                value={docForm.ano || ''}
+                onChange={e => setDocForm(p => ({ ...p, ano: e.target.value }))}
+                placeholder={String(new Date().getFullYear())}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Vencimento</label>

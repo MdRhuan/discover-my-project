@@ -50,6 +50,7 @@ export interface Documento {
   subcategoria?: string
   versao?: string
   dataUpload?: string
+  ano?: string
   tamanho?: string
   tipo?: string
   descricao?: string
