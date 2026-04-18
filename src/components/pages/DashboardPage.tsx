@@ -267,7 +267,7 @@ export function DashboardPage() {
           >
             <i className={`fas ${tab.icon}`} style={{ fontSize: 13 }} />
             {tab.label}
-            {'badge' in tab && tab.badge > 0 && (
+            {'badge' in tab && (tab.badge ?? 0) > 0 && (
               <span style={{ background: tab.key === 'alerts' && unreadCount > 0 ? 'var(--red)' : 'var(--brand)', color: '#fff', borderRadius: 20, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
                 {tab.badge}
               </span>
