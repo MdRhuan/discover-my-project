@@ -335,16 +335,11 @@ export function LifeInsurancePage() {
                 </div>
                 <div className="form-group" style={{ gridColumn:'1/-1' }}>
                   <label className="form-label">Documentos</label>
-                  <input ref={fileRef} type="file" style={{ display:'none' }} onChange={handleFile} />
-                  <button type="button" className="btn btn-secondary" onClick={() => fileRef.current?.click()}><i className="fas fa-paperclip" />Anexar</button>
-                  {(form.docs||[]).length > 0 && (
-                    <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:8 }}>
-                      {form.docs!.map((d, i) => (
-                        <span key={i} style={{ display:'flex', alignItems:'center', gap:5, background:'var(--surface-hover)', borderRadius:6, padding:'3px 9px', fontSize:11 }}>
-                          <i className="fas fa-file" style={{ color:'var(--brand)', fontSize:10 }} />{d.nome.length>22?d.nome.slice(0,22)+'…':d.nome}
-                          <button style={{ background:'none', border:'none', cursor:'pointer', color:'var(--red)', padding:0, marginLeft:2, fontSize:11 }} onClick={() => setForm(f=>({...f,docs:f.docs!.filter((_,j)=>j!==i)}))}>×</button>
-                        </span>
-                      ))}
+                  {form.id ? (
+                    <InsuranceDocsManager insuranceType="life" apoliceId={form.id} apoliceLabel={`${form.seguradora || ''}${form.produto ? ' — ' + form.produto : ''}`} />
+                  ) : (
+                    <div style={{ fontSize:12, color:'var(--text-muted)', padding:'10px 12px', background:'var(--surface-hover)', borderRadius:8, border:'1px dashed var(--surface-border)' }}>
+                      <i className="fas fa-info-circle" style={{ marginRight:6 }} />Salve a apólice primeiro para anexar documentos.
                     </div>
                   )}
                 </div>
