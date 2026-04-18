@@ -773,6 +773,7 @@ export function CompaniesPage() {
                               {d.arquivoPath && (
                                 <button className="btn-icon" onClick={() => downloadDoc(d)} title="Baixar"><i className="fas fa-download" /></button>
                               )}
+                              <button className="btn-icon" onClick={() => openEditDoc(d)} title={t.edit}><i className="fas fa-pen" /></button>
                               <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
                             </div>
                           </td>
