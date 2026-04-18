@@ -123,9 +123,14 @@ export function LifeInsurancePage() {
             <div className="page-header-sub">{seguros.filter(s=>s.status==='ativo').length} apólices ativas · BRL {Number(totalBRL).toLocaleString('pt-BR')} + USD {Number(totalUSD).toLocaleString('en-US')}</div>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={() => openForm(null)}>
-          <i className="fas fa-plus" />Nova Apólice
-        </button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-ghost" onClick={() => setCentralOpen(true)}>
+            <i className="fas fa-folder-open" />Central de Documentos
+          </button>
+          <button className="btn btn-primary" onClick={() => openForm(null)}>
+            <i className="fas fa-plus" />Nova Apólice
+          </button>
+        </div>
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:12, marginBottom:20 }}>
