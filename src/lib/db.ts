@@ -215,7 +215,7 @@ const configTable = {
 }
 
 import type {
-  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge,
+  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape,
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, AuditLog
 } from '@/types'
 
