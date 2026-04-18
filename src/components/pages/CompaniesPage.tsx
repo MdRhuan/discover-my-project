@@ -612,7 +612,15 @@ export function CompaniesPage() {
                         <tr key={d.id}>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <i className={`fas ${d.tipo === 'PDF' ? 'fa-file-pdf' : d.tipo === 'XLSX' ? 'fa-file-excel' : 'fa-file'}`} style={{ color: d.tipo === 'PDF' ? 'var(--red)' : d.tipo === 'XLSX' ? 'var(--green)' : 'var(--brand)', fontSize: 16 }} />
+                              <button
+                                type="button"
+                                onClick={() => downloadDoc(d)}
+                                title={d.arquivoPath ? 'Baixar arquivo' : 'Sem arquivo anexado'}
+                                disabled={!d.arquivoPath}
+                                style={{ background: 'transparent', border: 0, padding: 0, cursor: d.arquivoPath ? 'pointer' : 'not-allowed', opacity: d.arquivoPath ? 1 : 0.4 }}
+                              >
+                                <i className={`fas ${d.tipo === 'PDF' ? 'fa-file-pdf' : d.tipo === 'XLSX' ? 'fa-file-excel' : 'fa-file'}`} style={{ color: d.tipo === 'PDF' ? 'var(--red)' : d.tipo === 'XLSX' ? 'var(--green)' : 'var(--brand)', fontSize: 18 }} />
+                              </button>
                               <div>
                                 <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{d.nome}</div>
                                 {d.descricao && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.descricao}</div>}
