@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/ui/Modal'
+import { ConfirmDialog, Modal } from '@/components/ui/Modal'
+import { InsuranceDocsManager } from '@/components/insurance/InsuranceDocsManager'
 
 const LI_KEY = 'lifeInsurance_data'
 
