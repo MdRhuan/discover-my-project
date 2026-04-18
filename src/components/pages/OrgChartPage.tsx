@@ -264,6 +264,7 @@ function OrgChartEditor() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; kind: string } | null>(null)
   const dirtyRef = useRef(false)
   const saveTimer = useRef<number | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
 
   // Identifies node kinds via prefix in id
