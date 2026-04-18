@@ -276,12 +276,13 @@ function OrgChartEditor() {
   // ============ Load ============
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [emps, n, e, txs, shs] = await Promise.all([
+    const [emps, n, e, txs, shs, ics] = await Promise.all([
       db.empresas.toArray(),
       db.orgNodes.toArray(),
       db.orgEdges.toArray(),
       db.orgTextsCanvas.toArray(),
       db.orgShapes.toArray(),
+      db.orgIcons.toArray(),
     ])
     setEmpresas(emps)
 
