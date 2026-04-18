@@ -75,7 +75,31 @@ export function CompaniesPage() {
   const [docForm, setDocForm] = useState<Partial<Documento>>({})
   const [docFile, setDocFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [editingDocId, setEditingDocId] = useState<number | null>(null)
+  const [replaceFile, setReplaceFile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  function openNewDoc(empresaId?: number) {
+    setEditingDocId(null)
+    setDocFile(null)
+    setReplaceFile(false)
+    setDocForm({ categoria: 'Outros', tipo: 'PDF', versao: '1', empresaId })
+    setDocModal(true)
+  }
+  function openEditDoc(doc: Documento) {
+    setEditingDocId(doc.id!)
+    setDocFile(null)
+    setReplaceFile(false)
+    setDocForm({ ...doc })
+    setDocModal(true)
+  }
+  function closeDocModal() {
+    setDocModal(false)
+    setDocForm({})
+    setDocFile(null)
+    setEditingDocId(null)
+    setReplaceFile(false)
+  }
 
   async function loadDetailDocs(empresaId: number) {
     const all = await db.documentos.where('empresaId').equals(empresaId).toArray()
