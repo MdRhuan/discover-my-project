@@ -191,30 +191,6 @@ export function CompaniesPage() {
     setAllDocs(await db.documentos.toArray())
   }
 
-  async function removeDetailDoc(id: number) {
-    const doc = (detail ? detailDocs : allDocs).find(d => d.id === id)
-    if (doc?.arquivoPath) {
-      await supabase.storage.from(DOC_BUCKET).remove([doc.arquivoPath])
-    }
-    await db.documentos.delete(id)
-    toast(t.deleted)
-    if (detail?.id) await loadDetailDocs(detail.id)
-    await loadAllDocs()
-  }
-
-  async function downloadDoc(doc: Documento) {
-    if (!doc.arquivoPath) { toast('Sem arquivo anexado.', 'info'); return }
-    const { data, error } = await supabase.storage
-      .from(DOC_BUCKET)
-      .createSignedUrl(doc.arquivoPath, 60)
-    if (error || !data?.signedUrl) { toast('Erro ao gerar link.', 'error'); return }
-    window.open(data.signedUrl, '_blank', 'noopener')
-  }
-
-  async function loadAllDocs() {
-    setAllDocs(await db.documentos.toArray())
-  }
-
   useEffect(() => { load() }, [])
 
   async function load() {
