@@ -45,7 +45,7 @@ function rowsToCamel<T>(rows: Record<string, unknown>[]): T[] {
   return (rows || []).map(r => toCamel(r) as T)
 }
 
-function makeTable<T extends Record<string, unknown>>(tableName: string) {
+function makeTable<T>(tableName: string) {
   return {
     async toArray(): Promise<T[]> {
       const sb = getSupabase()
@@ -57,8 +57,8 @@ function makeTable<T extends Record<string, unknown>>(tableName: string) {
     async add(obj: Partial<T>): Promise<number> {
       const sb = getSupabase()
       const { data: { user } } = await sb.auth.getUser()
-      const row = { ...toSnake(obj as Record<string, unknown>), owner_id: user?.id }
-      delete row['id']
+      const row: Record<string, unknown> = { ...toSnake(obj as Record<string, unknown>), owner_id: user?.id }
+      delete row.id
       Object.keys(row).forEach(k => row[k] === undefined && delete row[k])
       const { data, error } = await sb.from(tableName).insert(row).select('id').single()
       if (error) { console.error(tableName + '.add()', error); throw error }
@@ -94,8 +94,8 @@ function makeTable<T extends Record<string, unknown>>(tableName: string) {
       const sb = getSupabase()
       const { data: { user } } = await sb.auth.getUser()
       const rows = arr.map(obj => {
-        const row = { ...toSnake(obj as Record<string, unknown>), owner_id: user?.id }
-        delete row['id']
+        const row: Record<string, unknown> = { ...toSnake(obj as Record<string, unknown>), owner_id: user?.id }
+        delete row.id
         Object.keys(row).forEach(k => row[k] === undefined && delete row[k])
         return row
       })
@@ -157,8 +157,8 @@ function makeTable<T extends Record<string, unknown>>(tableName: string) {
     async put(obj: Partial<T> & { chave?: string }): Promise<void> {
       const sb = getSupabase()
       const { data: { user } } = await sb.auth.getUser()
-      const row = { ...toSnake(obj as Record<string, unknown>), owner_id: user?.id }
-      delete row['id']
+      const row: Record<string, unknown> = { ...toSnake(obj as Record<string, unknown>), owner_id: user?.id }
+      delete row.id
       Object.keys(row).forEach(k => row[k] === undefined && delete row[k])
       const { error } = await sb.from(tableName).upsert(row)
       if (error) { console.error(tableName + '.put()', error); throw error }
@@ -221,7 +221,7 @@ export const db = {
   documentos: makeTable<Documento>('documentos'),
   transacoes: makeTable<Transacao>('transacoes'),
   orgNodes: makeTable<OrgNode>('org_nodes'),
-  orgTexts: makeTable<Record<string, unknown>>('org_texts'),
+  orgTexts: makeTable<{ id?: number; chave?: string; value?: unknown }>('org_texts'),
   auditLog: makeTable<AuditLog>('audit_log'),
   tasks: makeTable<Task>('tasks'),
   alertas: makeTable<Alerta>('alertas'),
