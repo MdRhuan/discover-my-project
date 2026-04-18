@@ -56,6 +56,7 @@ export function LifeInsurancePage() {
   const [form, setForm] = useState<Partial<Seguro>>({})
   const [confirm, setConfirm] = useState<null | { msg: string; onConfirm: () => void }>(null)
   const [detail, setDetail] = useState<Seguro | null>(null)
+  const [centralOpen, setCentralOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
