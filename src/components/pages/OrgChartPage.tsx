@@ -1033,6 +1033,54 @@ function EditShapeModal({ node, onClose, onSave, onDelete }: {
   )
 }
 
+function EditIconModal({ node, onClose, onSave, onDelete }: {
+  node: Node<IconNodeData>
+  onClose: () => void
+  onSave: (patch: Partial<IconNodeData>) => void
+  onDelete: () => void
+}) {
+  const [cor, setCor] = useState(node.data.cor || '#0f172a')
+  const [rotacao, setRotacao] = useState(node.data.rotacao || 0)
+  const [nome, setNome] = useState(node.data.nome || '')
+  const previewSvg = (node.data.svgContent || '').replace(/<svg([^>]*)>/i, (_m, a) => `<svg${String(a).replace(/\swidth="[^"]*"/i,'').replace(/\sheight="[^"]*"/i,'')} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`)
+  return (
+    <Modal onClose={onClose} title="Editar ícone SVG">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 12, background: 'hsl(var(--muted))', borderRadius: 8 }}>
+          <div style={{ width: 80, height: 80, color: cor, transform: `rotate(${rotacao}deg)` }}>
+            <style>{`.org-icon-preview svg, .org-icon-preview svg path, .org-icon-preview svg g, .org-icon-preview svg circle, .org-icon-preview svg rect, .org-icon-preview svg polygon { fill: ${cor}; stroke: ${cor}; }`}</style>
+            <div className="org-icon-preview" style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: previewSvg }} />
+          </div>
+        </div>
+        <div>
+          <label className="form-label">Nome</label>
+          <input className="form-input" value={nome} onChange={e => setNome(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label className="form-label">Cor</label>
+            <input type="color" className="form-input" value={cor} onChange={e => setCor(e.target.value)} style={{ height: 40 }} />
+          </div>
+          <div>
+            <label className="form-label">Rotação: {rotacao}°</label>
+            <input type="range" min={0} max={360} value={rotacao} onChange={e => setRotacao(Number(e.target.value))} style={{ width: '100%' }} />
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+          Dica: arraste os cantos do ícone no canvas para redimensionar (mantém proporção).
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+          <button className="btn btn-danger" onClick={onDelete}><i className="fas fa-trash" /> Remover</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={() => onSave({ cor, rotacao, nome })}>Salvar</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 export function OrgChartPage() {
   return (
     <ReactFlowProvider>
