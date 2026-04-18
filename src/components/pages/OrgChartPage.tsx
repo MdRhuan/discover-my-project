@@ -527,7 +527,32 @@ function OrgChartEditor() {
     } catch (err) { console.error(err); toast('Erro ao adicionar caixa', 'error') }
   }
 
-  // ============ Connect ============
+  async function handleAddIconFromFile(file: File) {
+    const text = await file.text()
+    if (!text.trim().toLowerCase().includes('<svg')) {
+      toast('Arquivo inválido: selecione um SVG', 'error'); return
+    }
+    if (text.length > 200000) {
+      toast('SVG muito grande (>200KB)', 'error'); return
+    }
+    const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    try {
+      const id = await db.orgIcons.add({
+        nome: file.name.replace(/\.svg$/i, ''), svgContent: text,
+        posX: pos.x, posY: pos.y, largura: 80, altura: 80,
+        cor: '#0f172a', rotacao: 0, zIndex: 1,
+      } as OrgIcon)
+      setNodes(curr => [...curr, {
+        id: `icon:${id}`, type: 'icon', position: pos,
+        style: { width: 80, height: 80 }, zIndex: 1,
+        data: {
+          svgContent: text, cor: '#0f172a', rotacao: 0, nome: file.name,
+          onEdit: (nid: string) => setEditNodeId(nid), onResize: handleIconResize,
+        },
+      }])
+      toast('Ícone adicionado · duplo clique para editar', 'success')
+    } catch (err) { console.error(err); toast('Erro ao adicionar ícone', 'error') }
+  }
   const onConnect = useCallback(async (conn: Connection) => {
     if (!conn.source || !conn.target) return
     const src = parseId(conn.source); const tgt = parseId(conn.target)
@@ -552,6 +577,7 @@ function OrgChartEditor() {
     if (kind === 'company') await db.orgNodes.delete(dbId)
     else if (kind === 'text') await db.orgTextsCanvas.delete(dbId)
     else if (kind === 'shape') await db.orgShapes.delete(dbId)
+    else if (kind === 'icon') await db.orgIcons.delete(dbId)
   }
 
   const deleteSelection = useCallback(async () => {
@@ -600,6 +626,14 @@ function OrgChartEditor() {
             estiloBorda: d.estiloBorda, raio: d.raio, opacidade: d.opacidade, rotulo: d.rotulo,
           } as OrgShape)
           setNodes(c => [...c, { ...n, id: `shape:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
+        } else if (kind === 'icon') {
+          const d = n.data as IconNodeData
+          const w = (n.style?.width as number) || 80; const h = (n.style?.height as number) || 80
+          const id = await db.orgIcons.add({
+            posX: newPos.x, posY: newPos.y, largura: w, altura: h,
+            svgContent: d.svgContent, cor: d.cor, rotacao: d.rotacao, nome: d.nome,
+          } as OrgIcon)
+          setNodes(c => [...c, { ...n, id: `icon:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
         }
       }
       toast(`${selN.length} duplicado(s)`, 'success')
@@ -614,7 +648,10 @@ function OrgChartEditor() {
     setNodes(curr => curr.map(n => n.selected ? { ...n, zIndex: target } : n))
     sel.forEach(n => {
       const { kind, dbId } = parseId(n.id)
-      const tbl = kind === 'company' ? db.orgNodes : kind === 'text' ? db.orgTextsCanvas : db.orgShapes
+      const tbl = kind === 'company' ? db.orgNodes
+        : kind === 'text' ? db.orgTextsCanvas
+        : kind === 'icon' ? db.orgIcons
+        : db.orgShapes
       tbl.update(dbId, { zIndex: target } as never).catch(console.error)
     })
   }, [nodes, setNodes, toast])
@@ -669,6 +706,16 @@ function OrgChartEditor() {
       await db.orgShapes.update(dbId, patch as Partial<OrgShape>)
       setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
       setEditNodeId(null); toast('Caixa atualizada', 'success')
+    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+  }
+
+  async function saveIconEdit(patch: Partial<IconNodeData>) {
+    if (!editNodeId) return
+    const { dbId } = parseId(editNodeId)
+    try {
+      await db.orgIcons.update(dbId, patch as Partial<OrgIcon>)
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      setEditNodeId(null); toast('Ícone atualizado', 'success')
     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }
 
