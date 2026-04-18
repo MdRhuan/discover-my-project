@@ -765,7 +765,7 @@ export function CompaniesPage() {
               ) : (
                 <div className="table-wrap">
                   <table className="data-table">
-                    <thead><tr><th>Documento</th><th>Categoria</th><th>Versão</th><th>Upload</th><th>Vencimento</th><th>{t.actions}</th></tr></thead>
+                    <thead><tr><th>Documento</th><th>Categoria</th><th>Versão</th><th>Ano</th><th>Vencimento</th><th>{t.actions}</th></tr></thead>
                     <tbody>
                       {detailDocs.map(d => (
                         <tr key={d.id}>
