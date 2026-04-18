@@ -66,7 +66,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setRole(null)
+      return
+    }
+    // Buscar papel do usuário
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .order('role', { ascending: true }) // 'admin' vem antes de 'user'
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setRole((data?.role as AppRole) ?? 'user')
+      })
+
     db.config.get('prefs').then(rec => {
       if (rec?.value && typeof rec.value === 'object') {
         const prefs = rec.value as { lang?: Lang; currency?: Currency }
