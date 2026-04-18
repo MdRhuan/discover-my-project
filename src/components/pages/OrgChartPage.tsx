@@ -189,7 +189,67 @@ function ShapeNode({ id, data, selected }: NodeProps<ShapeNodeData>) {
   )
 }
 
-const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode }
+// ============ Icon Node (SVG inline) ============
+interface IconNodeData {
+  svgContent: string
+  cor?: string
+  rotacao?: number
+  nome?: string
+  onEdit?: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
+}
+function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
+  // Inject fill/stroke override via wrapper: tint by setting CSS color and using currentColor only when SVG uses it.
+  // Strategy: render raw SVG, then apply css filter? Better: inject a <style> override targeting fill on path/g.
+  const svg = useMemo(() => {
+    if (!data.svgContent) return ''
+    let s = data.svgContent
+    // Ensure svg fills container
+    s = s.replace(/<svg([^>]*)>/i, (_m, attrs) => {
+      const cleaned = String(attrs)
+        .replace(/\swidth="[^"]*"/i, '')
+        .replace(/\sheight="[^"]*"/i, '')
+      return `<svg${cleaned} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`
+    })
+    return s
+  }, [data.svgContent])
+  const tint = data.cor || '#0f172a'
+  return (
+    <>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={24}
+        minHeight={24}
+        keepAspectRatio
+        onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
+        lineStyle={{ borderColor: '#3b82f6' }}
+        handleStyle={{ background: '#3b82f6', width: 8, height: 8 }}
+      />
+      <div
+        onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
+        style={{
+          width: '100%',
+          height: '100%',
+          color: tint,
+          transform: `rotate(${data.rotacao || 0}deg)`,
+          outline: selected ? '1px dashed #3b82f6' : 'none',
+          borderRadius: 4,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxSizing: 'border-box',
+          cursor: 'move',
+        }}
+        title={data.nome ? `${data.nome} · duplo clique p/ editar` : 'Duplo clique p/ editar'}
+      >
+        <style>{`.org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg path, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg g, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg circle, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg rect, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg polygon { fill: ${tint}; stroke: ${tint}; }`}</style>
+        <div className={`org-icon-tint-${id.replace(/[^\w-]/g, '_')}`} style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: svg }} />
+      </div>
+    </>
+  )
+}
+
+const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode }
 
 // ============ Editor ============
 function OrgChartEditor() {
