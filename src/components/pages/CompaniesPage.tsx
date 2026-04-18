@@ -436,6 +436,7 @@ export function CompaniesPage() {
               </table>
             </div>
           </div>
+          </>
         )
       })()}
 
