@@ -187,3 +187,4 @@ export type PageKey =
   | 'checkBox'
   | 'backup'
   | 'auditLog'
+  | 'users'

@@ -28,6 +28,7 @@ const TaxPlanningPage   = lazy(() => import('@/components/pages/TaxPlanningPage'
 const CheckBoxPage      = lazy(() => import('@/components/pages/CheckBoxPage').then(m => ({ default: m.CheckBoxPage })))
 const BackupPage        = lazy(() => import('@/components/pages/BackupPage').then(m => ({ default: m.BackupPage })))
 const AuditLogPage      = lazy(() => import('@/components/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
+const UsersPage         = lazy(() => import('@/components/pages/UsersPage').then(m => ({ default: m.UsersPage })))
 
 function Shell() {
   const { user, page, isAdmin } = useApp()
@@ -35,7 +36,9 @@ function Shell() {
   if (!user) return <AuthScreen />
 
   // Bloqueio de rota: não-admin não acessa Despesas Fixas
-  const effectivePage = (!isAdmin && page === 'fixedExpenses') ? 'dashboard' : page
+  let effectivePage = page
+  if (!isAdmin && page === 'fixedExpenses') effectivePage = 'dashboard'
+  if (!isAdmin && page === 'users') effectivePage = 'dashboard'
 
   const fallback = (
     <div style={{ padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>
@@ -69,6 +72,7 @@ function Shell() {
     case 'checkBox':       content = <CheckBoxPage />; break
     case 'backup':         content = <BackupPage />; break
     case 'auditLog':       content = <AuditLogPage />; break
+    case 'users':          content = <UsersPage />; break
     default:               content = <DashboardPage />
   }
 
