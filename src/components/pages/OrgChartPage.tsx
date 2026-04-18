@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -10,6 +9,7 @@ import ReactFlow, {
   Position,
   ReactFlowProvider,
   useReactFlow,
+  NodeResizer,
   type Node,
   type Edge,
   type Connection,
@@ -21,24 +21,9 @@ import 'reactflow/dist/style.css'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
-import type { OrgNode, OrgEdge, Empresa } from '@/types'
+import type { OrgNode, OrgEdge, OrgTextCanvas, OrgShape, Empresa } from '@/types'
 
-// ============ Custom Node ============
-interface NodeData {
-  label: string
-  cargo?: string
-  cnpj?: string
-  ein?: string
-  pais?: string
-  empresaId: number
-  icon?: string
-  corBorda?: string
-  corFundo?: string
-  espessuraBorda?: number
-  estiloBorda?: string
-  onOpenEmpresa?: (id: number) => void
-  onEdit?: (id: string) => void
-}
+type PageKey = Parameters<ReturnType<typeof useApp>['setPage']>[0]
 
 const ICON_MAP: Record<string, string> = {
   empresa: 'fa-building',
@@ -49,9 +34,27 @@ const ICON_MAP: Record<string, string> = {
   offshore: 'fa-globe',
 }
 
-function CompanyNode({ id, data, selected }: NodeProps<NodeData>) {
-  const borda = data.corBorda || 'hsl(var(--primary))'
-  const fundo = data.corFundo || 'hsl(var(--card))'
+// ============ Company / Free Block Node ============
+interface CompanyNodeData {
+  label: string
+  cargo?: string
+  cnpj?: string
+  ein?: string
+  pais?: string
+  empresaId?: number | null
+  livre?: boolean
+  icon?: string
+  corBorda?: string
+  corFundo?: string
+  espessuraBorda?: number
+  estiloBorda?: string
+  onOpenEmpresa?: (id: number) => void
+  onEdit?: (id: string) => void
+}
+
+function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
+  const borda = data.corBorda || '#3b82f6'
+  const fundo = data.corFundo || '#ffffff'
   const espessura = data.espessuraBorda || 2
   const estilo = data.estiloBorda || 'solid'
   return (
@@ -63,46 +66,34 @@ function CompanyNode({ id, data, selected }: NodeProps<NodeData>) {
         padding: '12px 16px',
         minWidth: 200,
         boxShadow: selected ? '0 0 0 2px hsl(var(--ring))' : '0 2px 8px rgba(0,0,0,0.08)',
-        fontFamily: 'inherit',
       }}
     >
       <Handle type="target" position={Position.Top} style={{ background: borda }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        <i
-          className={`fas ${ICON_MAP[data.icon || 'empresa'] || 'fa-building'}`}
-          style={{ color: borda, fontSize: 18 }}
-        />
-        <button
-          onClick={(e) => { e.stopPropagation(); data.onOpenEmpresa?.(data.empresaId) }}
-          style={{
-            background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
-            fontWeight: 700, fontSize: 14, color: 'hsl(var(--foreground))',
-            textAlign: 'left', flex: 1, textDecoration: 'underline',
-            textDecorationColor: 'transparent', transition: 'text-decoration-color .15s',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.textDecorationColor = borda)}
-          onMouseLeave={(e) => (e.currentTarget.style.textDecorationColor = 'transparent')}
-          title="Abrir detalhes da empresa"
-        >
-          {data.label}
-        </button>
+        <i className={`fas ${ICON_MAP[data.icon || 'empresa'] || 'fa-building'}`} style={{ color: borda, fontSize: 18 }} />
+        {data.empresaId ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); data.onOpenEmpresa?.(data.empresaId!) }}
+            style={{
+              background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+              fontWeight: 700, fontSize: 14, color: '#0f172a', textAlign: 'left', flex: 1,
+              textDecoration: 'underline', textDecorationColor: 'transparent', transition: 'text-decoration-color .15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.textDecorationColor = borda)}
+            onMouseLeave={(e) => (e.currentTarget.style.textDecorationColor = 'transparent')}
+            title="Abrir detalhes da empresa"
+          >{data.label}</button>
+        ) : (
+          <span style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', flex: 1 }}>{data.label}</span>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
-          style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'hsl(var(--muted-foreground))', padding: 4,
-          }}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}
           title="Editar bloco"
-        >
-          <i className="fas fa-pen" style={{ fontSize: 11 }} />
-        </button>
+        ><i className="fas fa-pen" style={{ fontSize: 11 }} /></button>
       </div>
-      {data.cargo && (
-        <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}>
-          {data.cargo}
-        </div>
-      )}
-      <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>
+      {data.cargo && <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>{data.cargo}</div>}
+      <div style={{ display: 'flex', gap: 8, fontSize: 10, color: '#64748b' }}>
         {data.pais && <span><i className="fas fa-flag" style={{ marginRight: 4 }} />{data.pais}</span>}
         {data.cnpj && <span>CNPJ: {data.cnpj}</span>}
         {data.ein && <span>EIN: {data.ein}</span>}
@@ -112,47 +103,145 @@ function CompanyNode({ id, data, selected }: NodeProps<NodeData>) {
   )
 }
 
-const nodeTypes = { company: CompanyNode }
+// ============ Text Node (texto solto) ============
+interface TextNodeData {
+  conteudo: string
+  fonte?: string
+  tamanho?: number
+  cor?: string
+  alinhamento?: 'left' | 'center' | 'right'
+  negrito?: boolean
+  italico?: boolean
+  largura?: number
+  onEdit?: (id: string) => void
+}
+function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
+  return (
+    <div
+      onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
+      style={{
+        padding: '6px 8px',
+        minWidth: 60,
+        width: data.largura || undefined,
+        fontFamily: data.fonte || 'inherit',
+        fontSize: data.tamanho || 14,
+        color: data.cor || '#0f172a',
+        textAlign: data.alinhamento || 'left',
+        fontWeight: data.negrito ? 700 : 400,
+        fontStyle: data.italico ? 'italic' : 'normal',
+        background: selected ? 'rgba(59,130,246,0.06)' : 'transparent',
+        outline: selected ? '1px dashed #3b82f6' : 'none',
+        borderRadius: 4,
+        cursor: 'move',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+      title="Duplo clique para editar"
+    >
+      {data.conteudo || 'Texto'}
+    </div>
+  )
+}
 
-// ============ Inner Editor ============
+// ============ Shape Node (caixa/borda) ============
+interface ShapeNodeData {
+  rotulo?: string
+  corBorda?: string
+  corFundo?: string
+  espessuraBorda?: number
+  estiloBorda?: string
+  raio?: number
+  opacidade?: number
+  onEdit?: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
+}
+function ShapeNode({ id, data, selected, width, height }: NodeProps<ShapeNodeData>) {
+  return (
+    <>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={80}
+        minHeight={60}
+        onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
+        lineStyle={{ borderColor: '#3b82f6' }}
+        handleStyle={{ background: '#3b82f6', width: 8, height: 8 }}
+      />
+      <div
+        onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
+        style={{
+          width: width || '100%',
+          height: height || '100%',
+          background: data.corFundo === 'transparent' ? 'transparent' : (data.corFundo || 'transparent'),
+          border: `${data.espessuraBorda || 2}px ${data.estiloBorda || 'dashed'} ${data.corBorda || '#94a3b8'}`,
+          borderRadius: data.raio ?? 12,
+          opacity: data.opacidade ?? 1,
+          padding: 8,
+          color: '#475569',
+          fontSize: 12,
+          fontWeight: 500,
+          boxSizing: 'border-box',
+        }}
+        title="Duplo clique para editar"
+      >
+        {data.rotulo}
+      </div>
+    </>
+  )
+}
+
+const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode }
+
+// ============ Editor ============
 function OrgChartEditor() {
-  const { toast, setPage } = useApp() as ReturnType<typeof useApp> & { setPage: (p: string) => void }
+  const { toast, setPage } = useApp() as ReturnType<typeof useApp> & { setPage: (p: PageKey) => void }
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [loading, setLoading] = useState(true)
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
-  const [addModal, setAddModal] = useState(false)
+  const [addEmpresaModal, setAddEmpresaModal] = useState(false)
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null)
   const [editNodeId, setEditNodeId] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState<{ type: 'node' | 'edge'; id: string } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; kind: string } | null>(null)
   const dirtyRef = useRef(false)
   const saveTimer = useRef<number | null>(null)
-  const { fitView, zoomIn, zoomOut } = useReactFlow()
+  const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
+
+  // Identifies node kinds via prefix in id
+  // company:<dbId>  text:<dbId>  shape:<dbId>
+  const parseId = (id: string) => {
+    const [kind, dbId] = id.split(':')
+    return { kind, dbId: Number(dbId) }
+  }
 
   // ============ Load ============
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [emps, n, e] = await Promise.all([
+    const [emps, n, e, txs, shs] = await Promise.all([
       db.empresas.toArray(),
       db.orgNodes.toArray(),
       db.orgEdges.toArray(),
+      db.orgTextsCanvas.toArray(),
+      db.orgShapes.toArray(),
     ])
     setEmpresas(emps)
 
     const empMap = new Map(emps.map(x => [x.id!, x]))
-    const flowNodes: Node<NodeData>[] = n.map(node => {
-      const emp = empMap.get(node.empresaId)
+
+    const companyNodes: Node[] = n.map(node => {
+      const emp = node.empresaId ? empMap.get(node.empresaId) : undefined
       return {
-        id: String(node.id),
+        id: `company:${node.id}`,
         type: 'company',
         position: { x: Number(node.posX) || 0, y: Number(node.posY) || 0 },
+        zIndex: node.zIndex || 0,
         data: {
-          label: emp?.nome || node.nome || '(empresa removida)',
+          label: emp?.nome || node.nome || 'Bloco livre',
           cargo: node.cargo,
           cnpj: emp?.cnpj,
           ein: emp?.ein,
           pais: emp?.pais,
-          empresaId: node.empresaId,
+          empresaId: node.empresaId ?? null,
+          livre: !!node.livre,
           icon: node.icon || 'empresa',
           corBorda: node.corBorda,
           corFundo: node.corFundo,
@@ -162,213 +251,299 @@ function OrgChartEditor() {
       }
     })
 
+    const textNodes: Node[] = txs.map(t => ({
+      id: `text:${t.id}`,
+      type: 'freetext',
+      position: { x: Number(t.posX) || 0, y: Number(t.posY) || 0 },
+      zIndex: t.zIndex || 0,
+      data: {
+        conteudo: t.conteudo,
+        fonte: t.fonte,
+        tamanho: t.tamanho,
+        cor: t.cor,
+        alinhamento: (t.alinhamento || 'left') as 'left' | 'center' | 'right',
+        negrito: t.negrito,
+        italico: t.italico,
+        largura: t.largura,
+      },
+    }))
+
+    const shapeNodes: Node[] = shs.map(s => ({
+      id: `shape:${s.id}`,
+      type: 'shape',
+      position: { x: Number(s.posX) || 0, y: Number(s.posY) || 0 },
+      style: { width: Number(s.largura) || 300, height: Number(s.altura) || 200 },
+      zIndex: s.zIndex ?? -1,
+      data: {
+        rotulo: s.rotulo,
+        corBorda: s.corBorda,
+        corFundo: s.corFundo,
+        espessuraBorda: s.espessuraBorda,
+        estiloBorda: s.estiloBorda,
+        raio: s.raio,
+        opacidade: s.opacidade,
+      },
+    }))
+
     const flowEdges: Edge[] = e.map(ed => ({
-      id: String(ed.id),
-      source: String(ed.sourceId),
-      target: String(ed.targetId),
+      id: `edge:${ed.id}`,
+      source: `company:${ed.sourceId}`,
+      target: `company:${ed.targetId}`,
       label: ed.label,
       style: {
         stroke: ed.cor || '#94a3b8',
         strokeWidth: ed.espessura || 2,
         strokeDasharray: ed.estilo === 'dashed' ? '6 4' : ed.estilo === 'dotted' ? '2 3' : undefined,
       },
-      data: {
-        cor: ed.cor || '#94a3b8',
-        espessura: ed.espessura || 2,
-        estilo: ed.estilo || 'solid',
-      },
+      data: { cor: ed.cor || '#94a3b8', espessura: ed.espessura || 2, estilo: ed.estilo || 'solid' },
     }))
 
-    setNodes(flowNodes)
+    setNodes([...shapeNodes, ...companyNodes, ...textNodes])
     setEdges(flowEdges)
     setLoading(false)
   }, [setNodes, setEdges])
 
   useEffect(() => { loadAll() }, [loadAll])
 
-  // ============ Wire callbacks into nodes ============
+  // ============ Wire callbacks ============
   const handleOpenEmpresa = useCallback((empresaId: number) => {
-    try {
-      localStorage.setItem('open-empresa-id', String(empresaId))
-    } catch { /* ignore */ }
+    try { localStorage.setItem('open-empresa-id', String(empresaId)) } catch { /* noop */ }
     setPage('companies' as PageKey)
   }, [setPage])
 
-  useEffect(() => {
-    setNodes(curr => curr.map(n => ({
-      ...n,
-      data: {
-        ...n.data,
-        onOpenEmpresa: handleOpenEmpresa,
-        onEdit: (id: string) => setEditNodeId(id),
-      },
-    })))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleOpenEmpresa])
+  const handleShapeResize = useCallback((id: string, w: number, h: number) => {
+    const { dbId } = parseId(id)
+    db.orgShapes.update(dbId, { largura: w, altura: h }).catch(console.error)
+  }, [])
 
-  // ============ Auto save (debounced) ============
+  useEffect(() => {
+    setNodes(curr => curr.map(n => {
+      if (n.type === 'company') {
+        return { ...n, data: { ...n.data, onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid) } }
+      }
+      if (n.type === 'freetext') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid) } }
+      if (n.type === 'shape') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize } }
+      return n
+    }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleOpenEmpresa, handleShapeResize])
+
+  // ============ Auto-save positions ============
   const scheduleSave = useCallback(() => {
     dirtyRef.current = true
     if (saveTimer.current) window.clearTimeout(saveTimer.current)
     saveTimer.current = window.setTimeout(async () => {
       if (!dirtyRef.current) return
       dirtyRef.current = false
-      // Save node positions
       try {
-        await Promise.all(nodes.map(n =>
-          db.orgNodes.update(Number(n.id), {
-            posX: n.position.x,
-            posY: n.position.y,
-          })
-        ))
-      } catch (err) { console.error('autosave nodes', err) }
-    }, 800)
+        await Promise.all(nodes.map(n => {
+          const { kind, dbId } = parseId(n.id)
+          if (kind === 'company') return db.orgNodes.update(dbId, { posX: n.position.x, posY: n.position.y })
+          if (kind === 'text') return db.orgTextsCanvas.update(dbId, { posX: n.position.x, posY: n.position.y })
+          if (kind === 'shape') return db.orgShapes.update(dbId, { posX: n.position.x, posY: n.position.y })
+          return Promise.resolve()
+        }))
+      } catch (err) { console.error('autosave', err) }
+    }, 600)
   }, [nodes])
 
   const wrappedNodesChange = useCallback((changes: NodeChange[]) => {
     onNodesChange(changes)
-    if (changes.some(c => c.type === 'position' && !c.dragging)) {
+    if (changes.some(c => (c.type === 'position' && !c.dragging) || c.type === 'dimensions')) {
       scheduleSave()
     }
   }, [onNodesChange, scheduleSave])
 
-  const wrappedEdgesChange = useCallback((changes: EdgeChange[]) => {
-    onEdgesChange(changes)
-  }, [onEdgesChange])
+  const wrappedEdgesChange = useCallback((changes: EdgeChange[]) => { onEdgesChange(changes) }, [onEdgesChange])
 
-  // ============ Add node ============
-  async function handleAddNode() {
+  // ============ Add elements ============
+  async function handleAddEmpresa() {
     if (!selectedEmpresaId) { toast('Selecione uma empresa', 'error'); return }
     const emp = empresas.find(e => e.id === selectedEmpresaId)
     if (!emp) return
+    const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
     try {
       const id = await db.orgNodes.add({
-        empresaId: selectedEmpresaId,
-        nome: emp.nome,
-        cargo: '',
-        posX: 100 + Math.random() * 200,
-        posY: 100 + Math.random() * 100,
-        icon: 'empresa',
-        corBorda: '#3b82f6',
-        corFundo: '#ffffff',
-        espessuraBorda: 2,
-        estiloBorda: 'solid',
+        empresaId: selectedEmpresaId, nome: emp.nome, cargo: '',
+        posX: pos.x, posY: pos.y,
+        icon: 'empresa', corBorda: '#3b82f6', corFundo: '#ffffff',
+        espessuraBorda: 2, estiloBorda: 'solid', livre: false,
       } as OrgNode)
-      const newNode: Node<NodeData> = {
-        id: String(id),
-        type: 'company',
-        position: { x: 100 + Math.random() * 200, y: 100 + Math.random() * 100 },
+      setNodes(curr => [...curr, {
+        id: `company:${id}`, type: 'company', position: pos,
         data: {
-          label: emp.nome,
-          cnpj: emp.cnpj,
-          ein: emp.ein,
-          pais: emp.pais,
-          empresaId: emp.id!,
-          icon: 'empresa',
-          corBorda: '#3b82f6',
-          corFundo: '#ffffff',
-          espessuraBorda: 2,
-          estiloBorda: 'solid',
-          onOpenEmpresa: handleOpenEmpresa,
+          label: emp.nome, cnpj: emp.cnpj, ein: emp.ein, pais: emp.pais,
+          empresaId: emp.id!, icon: 'empresa', corBorda: '#3b82f6', corFundo: '#ffffff',
+          espessuraBorda: 2, estiloBorda: 'solid',
+          onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid),
+        },
+      }])
+      setAddEmpresaModal(false); setSelectedEmpresaId(null)
+      toast('Bloco adicionado', 'success')
+    } catch (err) { console.error(err); toast('Erro ao adicionar', 'error') }
+  }
+
+  async function handleAddFreeBlock() {
+    const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    try {
+      const id = await db.orgNodes.add({
+        empresaId: null, nome: 'Bloco livre', cargo: '',
+        posX: pos.x, posY: pos.y, icon: 'empresa',
+        corBorda: '#64748b', corFundo: '#ffffff',
+        espessuraBorda: 2, estiloBorda: 'solid', livre: true,
+      } as OrgNode)
+      setNodes(curr => [...curr, {
+        id: `company:${id}`, type: 'company', position: pos,
+        data: {
+          label: 'Bloco livre', empresaId: null, livre: true, icon: 'empresa',
+          corBorda: '#64748b', corFundo: '#ffffff', espessuraBorda: 2, estiloBorda: 'solid',
+          onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid),
+        },
+      }])
+      toast('Bloco livre adicionado', 'success')
+    } catch (err) { console.error(err); toast('Erro ao adicionar', 'error') }
+  }
+
+  async function handleAddText() {
+    const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    try {
+      const id = await db.orgTextsCanvas.add({
+        conteudo: 'Novo texto', posX: pos.x, posY: pos.y,
+        tamanho: 14, cor: '#0f172a', alinhamento: 'left', negrito: false, italico: false,
+      } as OrgTextCanvas)
+      setNodes(curr => [...curr, {
+        id: `text:${id}`, type: 'freetext', position: pos,
+        data: {
+          conteudo: 'Novo texto', tamanho: 14, cor: '#0f172a', alinhamento: 'left',
+          negrito: false, italico: false,
           onEdit: (nid: string) => setEditNodeId(nid),
         },
-      }
-      setNodes(curr => [...curr, newNode])
-      setAddModal(false)
-      setSelectedEmpresaId(null)
-      toast('Bloco adicionado', 'success')
-    } catch (e) {
-      console.error(e)
-      toast('Erro ao adicionar bloco', 'error')
-    }
+      }])
+      toast('Texto adicionado · duplo clique para editar', 'success')
+    } catch (err) { console.error(err); toast('Erro ao adicionar texto', 'error') }
+  }
+
+  async function handleAddShape() {
+    const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    try {
+      const id = await db.orgShapes.add({
+        posX: pos.x, posY: pos.y, largura: 320, altura: 200,
+        corBorda: '#94a3b8', corFundo: 'transparent',
+        espessuraBorda: 2, estiloBorda: 'dashed', raio: 12, opacidade: 1, zIndex: -1,
+        rotulo: 'Grupo',
+      } as OrgShape)
+      setNodes(curr => [{
+        id: `shape:${id}`, type: 'shape', position: pos,
+        style: { width: 320, height: 200 }, zIndex: -1,
+        data: {
+          rotulo: 'Grupo', corBorda: '#94a3b8', corFundo: 'transparent',
+          espessuraBorda: 2, estiloBorda: 'dashed', raio: 12, opacidade: 1,
+          onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize,
+        },
+      }, ...curr])
+      toast('Caixa adicionada · duplo clique para editar', 'success')
+    } catch (err) { console.error(err); toast('Erro ao adicionar caixa', 'error') }
   }
 
   // ============ Connect ============
   const onConnect = useCallback(async (conn: Connection) => {
     if (!conn.source || !conn.target) return
+    const src = parseId(conn.source); const tgt = parseId(conn.target)
+    if (src.kind !== 'company' || tgt.kind !== 'company') {
+      toast('Conexões só entre blocos de empresa/livre', 'info'); return
+    }
     try {
       const id = await db.orgEdges.add({
-        sourceId: Number(conn.source),
-        targetId: Number(conn.target),
-        cor: '#94a3b8',
-        espessura: 2,
-        estilo: 'solid',
+        sourceId: src.dbId, targetId: tgt.dbId, cor: '#94a3b8', espessura: 2, estilo: 'solid',
       } as OrgEdge)
       setEdges(curr => addEdge({
-        ...conn,
-        id: String(id),
+        ...conn, id: `edge:${id}`,
         style: { stroke: '#94a3b8', strokeWidth: 2 },
         data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
       }, curr))
-    } catch (e) {
-      console.error(e)
-      toast('Erro ao criar conexão', 'error')
-    }
+    } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
   }, [setEdges, toast])
 
-  // ============ Delete / Duplicate (reusable) ============
+  // ============ Delete / duplicate / layer ============
+  const deleteByNode = async (n: Node) => {
+    const { kind, dbId } = parseId(n.id)
+    if (kind === 'company') await db.orgNodes.delete(dbId)
+    else if (kind === 'text') await db.orgTextsCanvas.delete(dbId)
+    else if (kind === 'shape') await db.orgShapes.delete(dbId)
+  }
+
   const deleteSelection = useCallback(async () => {
     const selN = nodes.filter(n => n.selected)
     const selE = edges.filter(e => e.selected)
-    if (selN.length === 0 && selE.length === 0) {
-      toast('Selecione blocos ou conexões para excluir', 'info')
-      return
-    }
+    if (selN.length === 0 && selE.length === 0) { toast('Selecione algo para excluir', 'info'); return }
     try {
-      for (const n of selN) await db.orgNodes.delete(Number(n.id))
-      for (const ed of selE) await db.orgEdges.delete(Number(ed.id))
+      for (const n of selN) await deleteByNode(n)
+      for (const ed of selE) await db.orgEdges.delete(parseId(ed.id).dbId)
       setNodes(c => c.filter(n => !n.selected))
       setEdges(c => c.filter(e => !e.selected))
       toast(`${selN.length + selE.length} item(ns) removido(s)`, 'success')
-    } catch (err) {
-      console.error(err); toast('Erro ao excluir', 'error')
-    }
+    } catch (err) { console.error(err); toast('Erro ao excluir', 'error') }
   }, [nodes, edges, setNodes, setEdges, toast])
 
   const duplicateSelection = useCallback(async () => {
     const selN = nodes.filter(n => n.selected)
-    if (selN.length === 0) {
-      toast('Selecione um bloco para duplicar', 'info')
-      return
-    }
+    if (selN.length === 0) { toast('Selecione um bloco para duplicar', 'info'); return }
     try {
       for (const n of selN) {
-        const data = n.data
-        const id = await db.orgNodes.add({
-          empresaId: data.empresaId,
-          nome: data.label,
-          cargo: data.cargo || '',
-          posX: n.position.x + 40,
-          posY: n.position.y + 40,
-          icon: data.icon,
-          corBorda: data.corBorda,
-          corFundo: data.corFundo,
-          espessuraBorda: data.espessuraBorda,
-          estiloBorda: data.estiloBorda,
-        } as OrgNode)
-        setNodes(curr => [...curr, {
-          ...n,
-          id: String(id),
-          position: { x: n.position.x + 40, y: n.position.y + 40 },
-          selected: false,
-          data: { ...data },
-        }])
+        const { kind } = parseId(n.id)
+        const newPos = { x: n.position.x + 40, y: n.position.y + 40 }
+        if (kind === 'company') {
+          const d = n.data as CompanyNodeData
+          const id = await db.orgNodes.add({
+            empresaId: d.empresaId ?? null, nome: d.label, cargo: d.cargo || '',
+            posX: newPos.x, posY: newPos.y, icon: d.icon,
+            corBorda: d.corBorda, corFundo: d.corFundo,
+            espessuraBorda: d.espessuraBorda, estiloBorda: d.estiloBorda, livre: !d.empresaId,
+          } as OrgNode)
+          setNodes(c => [...c, { ...n, id: `company:${id}`, position: newPos, selected: false, data: { ...d } }])
+        } else if (kind === 'text') {
+          const d = n.data as TextNodeData
+          const id = await db.orgTextsCanvas.add({
+            conteudo: d.conteudo, posX: newPos.x, posY: newPos.y,
+            fonte: d.fonte, tamanho: d.tamanho, cor: d.cor, alinhamento: d.alinhamento,
+            negrito: d.negrito, italico: d.italico, largura: d.largura,
+          } as OrgTextCanvas)
+          setNodes(c => [...c, { ...n, id: `text:${id}`, position: newPos, selected: false, data: { ...d } }])
+        } else if (kind === 'shape') {
+          const d = n.data as ShapeNodeData
+          const w = (n.style?.width as number) || 320; const h = (n.style?.height as number) || 200
+          const id = await db.orgShapes.add({
+            posX: newPos.x, posY: newPos.y, largura: w, altura: h,
+            corBorda: d.corBorda, corFundo: d.corFundo, espessuraBorda: d.espessuraBorda,
+            estiloBorda: d.estiloBorda, raio: d.raio, opacidade: d.opacidade, rotulo: d.rotulo,
+          } as OrgShape)
+          setNodes(c => [...c, { ...n, id: `shape:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
+        }
       }
-      toast(`${selN.length} bloco(s) duplicado(s)`, 'success')
-    } catch (err) {
-      console.error(err); toast('Erro ao duplicar', 'error')
-    }
+      toast(`${selN.length} duplicado(s)`, 'success')
+    } catch (err) { console.error(err); toast('Erro ao duplicar', 'error') }
+  }, [nodes, setNodes, toast])
+
+  const changeLayer = useCallback((dir: 'front' | 'back') => {
+    const sel = nodes.filter(n => n.selected)
+    if (sel.length === 0) { toast('Selecione um elemento', 'info'); return }
+    const allZ = nodes.map(n => n.zIndex || 0)
+    const target = dir === 'front' ? Math.max(...allZ, 0) + 1 : Math.min(...allZ, 0) - 1
+    setNodes(curr => curr.map(n => n.selected ? { ...n, zIndex: target } : n))
+    sel.forEach(n => {
+      const { kind, dbId } = parseId(n.id)
+      const tbl = kind === 'company' ? db.orgNodes : kind === 'text' ? db.orgTextsCanvas : db.orgShapes
+      tbl.update(dbId, { zIndex: target } as never).catch(console.error)
+    })
   }, [nodes, setNodes, toast])
 
   // ============ Keyboard shortcuts ============
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) {
-          e.preventDefault(); deleteSelection()
-        }
+        if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) { e.preventDefault(); deleteSelection() }
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         if (nodes.some(n => n.selected)) { e.preventDefault(); duplicateSelection() }
@@ -378,27 +553,41 @@ function OrgChartEditor() {
     return () => window.removeEventListener('keydown', onKey)
   }, [nodes, edges, deleteSelection, duplicateSelection])
 
-  // ============ Edit node modal ============
+  // ============ Edit modal ============
   const editNode = useMemo(() => nodes.find(n => n.id === editNodeId), [nodes, editNodeId])
 
-  async function saveEdit(patch: Partial<NodeData>) {
+  async function saveCompanyEdit(patch: Partial<CompanyNodeData> & { label?: string }) {
     if (!editNodeId) return
-    const numId = Number(editNodeId)
+    const { dbId } = parseId(editNodeId)
     try {
-      await db.orgNodes.update(numId, {
-        cargo: patch.cargo,
-        icon: patch.icon,
-        corBorda: patch.corBorda,
-        corFundo: patch.corFundo,
-        espessuraBorda: patch.espessuraBorda,
-        estiloBorda: patch.estiloBorda,
+      await db.orgNodes.update(dbId, {
+        nome: patch.label, cargo: patch.cargo, icon: patch.icon,
+        corBorda: patch.corBorda, corFundo: patch.corFundo,
+        espessuraBorda: patch.espessuraBorda, estiloBorda: patch.estiloBorda,
       } as Partial<OrgNode>)
-      setNodes(curr => curr.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
-      setEditNodeId(null)
-      toast('Bloco atualizado', 'success')
-    } catch (e) {
-      console.error(e); toast('Erro ao salvar', 'error')
-    }
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      setEditNodeId(null); toast('Bloco atualizado', 'success')
+    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+  }
+
+  async function saveTextEdit(patch: Partial<TextNodeData>) {
+    if (!editNodeId) return
+    const { dbId } = parseId(editNodeId)
+    try {
+      await db.orgTextsCanvas.update(dbId, patch as Partial<OrgTextCanvas>)
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      setEditNodeId(null); toast('Texto atualizado', 'success')
+    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+  }
+
+  async function saveShapeEdit(patch: Partial<ShapeNodeData>) {
+    if (!editNodeId) return
+    const { dbId } = parseId(editNodeId)
+    try {
+      await db.orgShapes.update(dbId, patch as Partial<OrgShape>)
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      setEditNodeId(null); toast('Caixa atualizada', 'success')
+    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }
 
   return (
@@ -406,41 +595,42 @@ function OrgChartEditor() {
       <div className="page-header">
         <div className="page-header-info">
           <div className="page-header-title">Organograma Societário</div>
-          <div className="page-header-sub">
-            Arraste para mover · Conecte arrastando das bordas · Delete/Backspace remove · Ctrl+D duplica
-          </div>
+          <div className="page-header-sub">Arraste · Conecte das bordas · Delete remove · Ctrl+D duplica · Duplo clique edita textos/caixas</div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => setAddModal(true)} title="Adicionar bloco vinculado a uma empresa cadastrada">
-            <i className="fas fa-plus" /> Adicionar
+          <button className="btn btn-primary" onClick={() => setAddEmpresaModal(true)} title="Adicionar bloco de empresa cadastrada">
+            <i className="fas fa-plus" /> Empresa
           </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              const sel = nodes.find(n => n.selected)
-              if (!sel) { toast('Selecione um bloco para editar', 'info'); return }
-              setEditNodeId(sel.id)
-            }}
-            title="Editar o bloco selecionado (ícone, cores, borda)"
-          >
+          <button className="btn btn-secondary" onClick={handleAddFreeBlock} title="Adicionar bloco sem vínculo (livre)">
+            <i className="fas fa-square" /> Bloco livre
+          </button>
+          <button className="btn btn-secondary" onClick={handleAddText} title="Adicionar texto solto no canvas">
+            <i className="fas fa-font" /> Texto
+          </button>
+          <button className="btn btn-secondary" onClick={handleAddShape} title="Adicionar caixa/borda para agrupar">
+            <i className="fas fa-vector-square" /> Caixa
+          </button>
+          <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          <button className="btn btn-secondary" onClick={() => { const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento', 'info'); return } setEditNodeId(sel.id) }} title="Editar elemento selecionado">
             <i className="fas fa-pen" /> Editar
           </button>
-          <button className="btn btn-secondary" onClick={duplicateSelection} title="Duplicar bloco(s) selecionado(s) — Ctrl+D">
+          <button className="btn btn-secondary" onClick={duplicateSelection} title="Duplicar (Ctrl+D)">
             <i className="fas fa-clone" /> Duplicar
           </button>
-          <button className="btn btn-danger" onClick={deleteSelection} title="Excluir blocos/conexões selecionados — Delete">
+          <button className="btn btn-danger" onClick={deleteSelection} title="Excluir (Delete)">
             <i className="fas fa-trash" /> Excluir
           </button>
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
-          <button className="btn btn-secondary" onClick={() => zoomIn({ duration: 200 })} title="Zoom in">
-            <i className="fas fa-magnifying-glass-plus" />
+          <button className="btn btn-secondary" onClick={() => changeLayer('front')} title="Trazer para frente">
+            <i className="fas fa-arrow-up" />
           </button>
-          <button className="btn btn-secondary" onClick={() => zoomOut({ duration: 200 })} title="Zoom out">
-            <i className="fas fa-magnifying-glass-minus" />
+          <button className="btn btn-secondary" onClick={() => changeLayer('back')} title="Enviar para trás">
+            <i className="fas fa-arrow-down" />
           </button>
-          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })} title="Centralizar e ajustar">
-            <i className="fas fa-expand" /> Ajustar
-          </button>
+          <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          <button className="btn btn-secondary" onClick={() => zoomIn({ duration: 200 })} title="Zoom in"><i className="fas fa-magnifying-glass-plus" /></button>
+          <button className="btn btn-secondary" onClick={() => zoomOut({ duration: 200 })} title="Zoom out"><i className="fas fa-magnifying-glass-minus" /></button>
+          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })} title="Ajustar"><i className="fas fa-expand" /></button>
         </div>
       </div>
 
@@ -452,80 +642,67 @@ function OrgChartEditor() {
           </div>
         ) : (
           <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={wrappedNodesChange}
-            onEdgesChange={wrappedEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            fitView
-            snapToGrid
-            snapGrid={[10, 10]}
-            multiSelectionKeyCode={['Meta', 'Shift']}
-            deleteKeyCode={null}
+            nodes={nodes} edges={edges}
+            onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
+            onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
+            multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
           >
-            <Background gap={20} size={1} color="hsl(var(--border))" />
+            <Background gap={20} size={1} color="#e2e8f0" />
             <Controls />
           </ReactFlow>
         )}
       </div>
 
-      {/* Add modal */}
-      {addModal && (
-        <Modal onClose={() => setAddModal(false)} title="Adicionar bloco ao organograma">
+      {addEmpresaModal && (
+        <Modal onClose={() => setAddEmpresaModal(false)} title="Adicionar empresa ao organograma">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label className="form-label">Empresa cadastrada *</label>
-              <select
-                className="form-select"
-                value={selectedEmpresaId || ''}
-                onChange={e => setSelectedEmpresaId(Number(e.target.value) || null)}
-              >
+              <select className="form-select" value={selectedEmpresaId || ''} onChange={e => setSelectedEmpresaId(Number(e.target.value) || null)}>
                 <option value="">— Selecione —</option>
                 {empresas.map(e => (
-                  <option key={e.id} value={e.id}>
-                    {e.nome} {e.cnpj ? `· ${e.cnpj}` : e.ein ? `· ${e.ein}` : ''}
-                  </option>
+                  <option key={e.id} value={e.id}>{e.nome} {e.cnpj ? `· ${e.cnpj}` : e.ein ? `· ${e.ein}` : ''}</option>
                 ))}
               </select>
               {empresas.length === 0 && (
                 <div style={{ marginTop: 8, fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
-                  Nenhuma empresa cadastrada. Cadastre uma em <strong>Empresas</strong> primeiro.
+                  Nenhuma empresa cadastrada. Cadastre uma em <strong>Empresas</strong> primeiro, ou use <strong>Bloco livre</strong>.
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button className="btn btn-secondary" onClick={() => setAddModal(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handleAddNode} disabled={!selectedEmpresaId}>
-                Adicionar
-              </button>
+              <button className="btn btn-secondary" onClick={() => setAddEmpresaModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleAddEmpresa} disabled={!selectedEmpresaId}>Adicionar</button>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* Edit modal */}
-      {editNode && (
-        <EditNodeModal
-          node={editNode}
-          onClose={() => setEditNodeId(null)}
-          onSave={saveEdit}
-          onDelete={() => setConfirmDelete({ type: 'node', id: editNode.id })}
-        />
+      {editNode && editNode.type === 'company' && (
+        <EditCompanyModal node={editNode as Node<CompanyNodeData>} onClose={() => setEditNodeId(null)} onSave={saveCompanyEdit}
+          onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'company' })} />
+      )}
+      {editNode && editNode.type === 'freetext' && (
+        <EditTextModal node={editNode as Node<TextNodeData>} onClose={() => setEditNodeId(null)} onSave={saveTextEdit}
+          onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'text' })} />
+      )}
+      {editNode && editNode.type === 'shape' && (
+        <EditShapeModal node={editNode as Node<ShapeNodeData>} onClose={() => setEditNodeId(null)} onSave={saveShapeEdit}
+          onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'shape' })} />
       )}
 
       {confirmDelete && (
         <ConfirmDialog
-          msg="Esta ação removerá o bloco e suas conexões."
+          msg="Esta ação removerá o elemento e suas conexões."
           onConfirm={async () => {
             if (!confirmDelete) return
             try {
-              await db.orgNodes.delete(Number(confirmDelete.id))
+              const n = nodes.find(x => x.id === confirmDelete.id)
+              if (n) await deleteByNode(n)
               setNodes(c => c.filter(n => n.id !== confirmDelete.id))
               setEdges(c => c.filter(e => e.source !== confirmDelete.id && e.target !== confirmDelete.id))
-              setEditNodeId(null)
-              toast('Bloco removido', 'success')
-            } catch (e) { console.error(e); toast('Erro ao remover', 'error') }
+              setEditNodeId(null); toast('Elemento removido', 'success')
+            } catch (err) { console.error(err); toast('Erro ao remover', 'error') }
             setConfirmDelete(null)
           }}
           onCancel={() => setConfirmDelete(null)}
@@ -535,77 +712,60 @@ function OrgChartEditor() {
   )
 }
 
-type PageKey = Parameters<ReturnType<typeof useApp>['setPage']>[0]
-
-// ============ Edit Node Modal ============
-function EditNodeModal({
-  node, onClose, onSave, onDelete,
-}: {
-  node: Node<NodeData>
+// ============ Edit Modals ============
+function EditCompanyModal({ node, onClose, onSave, onDelete }: {
+  node: Node<CompanyNodeData>
   onClose: () => void
-  onSave: (patch: Partial<NodeData>) => void
+  onSave: (patch: Partial<CompanyNodeData> & { label?: string }) => void
   onDelete: () => void
 }) {
+  const [label, setLabel] = useState(node.data.label || '')
   const [cargo, setCargo] = useState(node.data.cargo || '')
   const [icon, setIcon] = useState(node.data.icon || 'empresa')
   const [corBorda, setCorBorda] = useState(node.data.corBorda || '#3b82f6')
   const [corFundo, setCorFundo] = useState(node.data.corFundo || '#ffffff')
   const [espessura, setEspessura] = useState(node.data.espessuraBorda || 2)
   const [estilo, setEstilo] = useState(node.data.estiloBorda || 'solid')
+  const isLivre = !node.data.empresaId
 
   return (
-    <Modal onClose={onClose} title={`Editar bloco · ${node.data.label}`}>
+    <Modal onClose={onClose} title={`Editar ${isLivre ? 'bloco livre' : 'empresa'} · ${node.data.label}`}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {isLivre && (
+          <div>
+            <label className="form-label">Nome do bloco</label>
+            <input className="form-input" value={label} onChange={e => setLabel(e.target.value)} />
+          </div>
+        )}
         <div>
           <label className="form-label">Descrição / Cargo</label>
-          <input className="form-input" value={cargo} onChange={e => setCargo(e.target.value)}
-                 placeholder="Ex: Holding controladora, 60% participação..." />
+          <input className="form-input" value={cargo} onChange={e => setCargo(e.target.value)} placeholder="Ex: Holding, 60% de participação..." />
         </div>
         <div>
           <label className="form-label">Ícone</label>
           <select className="form-select" value={icon} onChange={e => setIcon(e.target.value)}>
-            <option value="empresa">Empresa</option>
-            <option value="holding">Holding</option>
-            <option value="pessoa">Pessoa física</option>
-            <option value="fundo">Fundo</option>
-            <option value="trust">Trust</option>
-            <option value="offshore">Offshore</option>
+            <option value="empresa">Empresa</option><option value="holding">Holding</option>
+            <option value="pessoa">Pessoa física</option><option value="fundo">Fundo</option>
+            <option value="trust">Trust</option><option value="offshore">Offshore</option>
           </select>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <label className="form-label">Cor da borda</label>
-            <input type="color" className="form-input" value={corBorda} onChange={e => setCorBorda(e.target.value)} style={{ height: 40 }} />
-          </div>
-          <div>
-            <label className="form-label">Cor de fundo</label>
-            <input type="color" className="form-input" value={corFundo} onChange={e => setCorFundo(e.target.value)} style={{ height: 40 }} />
-          </div>
+          <div><label className="form-label">Cor da borda</label><input type="color" className="form-input" value={corBorda} onChange={e => setCorBorda(e.target.value)} style={{ height: 40 }} /></div>
+          <div><label className="form-label">Cor de fundo</label><input type="color" className="form-input" value={corFundo} onChange={e => setCorFundo(e.target.value)} style={{ height: 40 }} /></div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <label className="form-label">Espessura da borda: {espessura}px</label>
-            <input type="range" min={1} max={6} value={espessura} onChange={e => setEspessura(Number(e.target.value))} style={{ width: '100%' }} />
-          </div>
-          <div>
-            <label className="form-label">Estilo da borda</label>
+          <div><label className="form-label">Espessura: {espessura}px</label><input type="range" min={1} max={6} value={espessura} onChange={e => setEspessura(Number(e.target.value))} style={{ width: '100%' }} /></div>
+          <div><label className="form-label">Estilo</label>
             <select className="form-select" value={estilo} onChange={e => setEstilo(e.target.value)}>
-              <option value="solid">Sólida</option>
-              <option value="dashed">Tracejada</option>
-              <option value="dotted">Pontilhada</option>
+              <option value="solid">Sólida</option><option value="dashed">Tracejada</option><option value="dotted">Pontilhada</option>
             </select>
           </div>
         </div>
-
         <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
-          <button className="btn btn-danger" onClick={onDelete}>
-            <i className="fas fa-trash" /> Remover
-          </button>
+          <button className="btn btn-danger" onClick={onDelete}><i className="fas fa-trash" /> Remover</button>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-            <button className="btn btn-primary" onClick={() => onSave({ cargo, icon, corBorda, corFundo, espessuraBorda: espessura, estiloBorda: estilo })}>
-              Salvar
-            </button>
+            <button className="btn btn-primary" onClick={() => onSave({ label: isLivre ? label : undefined, cargo, icon, corBorda, corFundo, espessuraBorda: espessura, estiloBorda: estilo })}>Salvar</button>
           </div>
         </div>
       </div>
@@ -613,7 +773,122 @@ function EditNodeModal({
   )
 }
 
-// ============ Wrapper with Provider ============
+function EditTextModal({ node, onClose, onSave, onDelete }: {
+  node: Node<TextNodeData>
+  onClose: () => void
+  onSave: (patch: Partial<TextNodeData>) => void
+  onDelete: () => void
+}) {
+  const [conteudo, setConteudo] = useState(node.data.conteudo || '')
+  const [tamanho, setTamanho] = useState(node.data.tamanho || 14)
+  const [cor, setCor] = useState(node.data.cor || '#0f172a')
+  const [alinhamento, setAlinhamento] = useState<'left' | 'center' | 'right'>(node.data.alinhamento || 'left')
+  const [negrito, setNegrito] = useState(!!node.data.negrito)
+  const [italico, setItalico] = useState(!!node.data.italico)
+  const [fonte, setFonte] = useState(node.data.fonte || 'inherit')
+  const [largura, setLargura] = useState(node.data.largura || 200)
+
+  return (
+    <Modal onClose={onClose} title="Editar texto">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <label className="form-label">Conteúdo</label>
+          <textarea className="form-input" value={conteudo} onChange={e => setConteudo(e.target.value)} rows={4} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label className="form-label">Fonte</label>
+            <select className="form-select" value={fonte} onChange={e => setFonte(e.target.value)}>
+              <option value="inherit">Padrão</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Courier New', monospace">Courier</option>
+              <option value="'Times New Roman', serif">Times</option>
+            </select>
+          </div>
+          <div><label className="form-label">Tamanho: {tamanho}px</label><input type="range" min={10} max={48} value={tamanho} onChange={e => setTamanho(Number(e.target.value))} style={{ width: '100%' }} /></div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><label className="form-label">Cor</label><input type="color" className="form-input" value={cor} onChange={e => setCor(e.target.value)} style={{ height: 40 }} /></div>
+          <div><label className="form-label">Largura: {largura}px</label><input type="range" min={80} max={600} value={largura} onChange={e => setLargura(Number(e.target.value))} style={{ width: '100%' }} /></div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className={`btn ${alinhamento === 'left' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAlinhamento('left')}><i className="fas fa-align-left" /></button>
+          <button className={`btn ${alinhamento === 'center' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAlinhamento('center')}><i className="fas fa-align-center" /></button>
+          <button className={`btn ${alinhamento === 'right' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAlinhamento('right')}><i className="fas fa-align-right" /></button>
+          <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          <button className={`btn ${negrito ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setNegrito(!negrito)}><i className="fas fa-bold" /></button>
+          <button className={`btn ${italico ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setItalico(!italico)}><i className="fas fa-italic" /></button>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+          <button className="btn btn-danger" onClick={onDelete}><i className="fas fa-trash" /> Remover</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={() => onSave({ conteudo, tamanho, cor, alinhamento, negrito, italico, fonte, largura })}>Salvar</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function EditShapeModal({ node, onClose, onSave, onDelete }: {
+  node: Node<ShapeNodeData>
+  onClose: () => void
+  onSave: (patch: Partial<ShapeNodeData>) => void
+  onDelete: () => void
+}) {
+  const [rotulo, setRotulo] = useState(node.data.rotulo || '')
+  const [corBorda, setCorBorda] = useState(node.data.corBorda || '#94a3b8')
+  const [fundoTransparente, setFundoTransparente] = useState((node.data.corFundo || 'transparent') === 'transparent')
+  const [corFundo, setCorFundo] = useState(node.data.corFundo === 'transparent' ? '#f1f5f9' : (node.data.corFundo || '#f1f5f9'))
+  const [espessura, setEspessura] = useState(node.data.espessuraBorda || 2)
+  const [estilo, setEstilo] = useState(node.data.estiloBorda || 'dashed')
+  const [raio, setRaio] = useState(node.data.raio ?? 12)
+  const [opacidade, setOpacidade] = useState(node.data.opacidade ?? 1)
+
+  return (
+    <Modal onClose={onClose} title="Editar caixa">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <label className="form-label">Rótulo (opcional)</label>
+          <input className="form-input" value={rotulo} onChange={e => setRotulo(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><label className="form-label">Cor da borda</label><input type="color" className="form-input" value={corBorda} onChange={e => setCorBorda(e.target.value)} style={{ height: 40 }} /></div>
+          <div>
+            <label className="form-label">Cor de fundo</label>
+            <input type="color" className="form-input" value={corFundo} onChange={e => setCorFundo(e.target.value)} disabled={fundoTransparente} style={{ height: 40 }} />
+            <label style={{ fontSize: 11, display: 'flex', gap: 4, alignItems: 'center', marginTop: 4 }}>
+              <input type="checkbox" checked={fundoTransparente} onChange={e => setFundoTransparente(e.target.checked)} />
+              Transparente
+            </label>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><label className="form-label">Espessura: {espessura}px</label><input type="range" min={1} max={8} value={espessura} onChange={e => setEspessura(Number(e.target.value))} style={{ width: '100%' }} /></div>
+          <div><label className="form-label">Estilo</label>
+            <select className="form-select" value={estilo} onChange={e => setEstilo(e.target.value)}>
+              <option value="solid">Sólida</option><option value="dashed">Tracejada</option><option value="dotted">Pontilhada</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><label className="form-label">Raio: {raio}px</label><input type="range" min={0} max={40} value={raio} onChange={e => setRaio(Number(e.target.value))} style={{ width: '100%' }} /></div>
+          <div><label className="form-label">Opacidade: {Math.round(opacidade * 100)}%</label><input type="range" min={10} max={100} value={Math.round(opacidade * 100)} onChange={e => setOpacidade(Number(e.target.value) / 100)} style={{ width: '100%' }} /></div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+          <button className="btn btn-danger" onClick={onDelete}><i className="fas fa-trash" /> Remover</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={() => onSave({ rotulo, corBorda, corFundo: fundoTransparente ? 'transparent' : corFundo, espessuraBorda: espessura, estiloBorda: estilo, raio, opacidade })}>Salvar</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 export function OrgChartPage() {
   return (
     <ReactFlowProvider>
