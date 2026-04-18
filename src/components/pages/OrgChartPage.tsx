@@ -346,6 +346,20 @@ function OrgChartEditor() {
       },
     }))
 
+    const iconNodes: Node[] = ics.map(ic => ({
+      id: `icon:${ic.id}`,
+      type: 'icon',
+      position: { x: Number(ic.posX) || 0, y: Number(ic.posY) || 0 },
+      style: { width: Number(ic.largura) || 64, height: Number(ic.altura) || 64 },
+      zIndex: ic.zIndex || 1,
+      data: {
+        svgContent: ic.svgContent,
+        cor: ic.cor || '#0f172a',
+        rotacao: Number(ic.rotacao) || 0,
+        nome: ic.nome,
+      },
+    }))
+
     const flowEdges: Edge[] = e.map(ed => ({
       id: `edge:${ed.id}`,
       source: `company:${ed.sourceId}`,
