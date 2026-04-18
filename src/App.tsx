@@ -3,7 +3,7 @@ import { AppProvider, useApp } from '@/context/AppContext'
 import { AuthScreen } from '@/components/layout/AuthScreen'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
-import { Toast } from '@/components/ui/Toast'
+import { ToastContainer } from '@/components/ui/Toast'
 
 const DashboardPage     = lazy(() => import('@/components/pages/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const TasksPage         = lazy(() => import('@/components/pages/TasksPage').then(m => ({ default: m.TasksPage })))
@@ -78,7 +78,7 @@ function Shell() {
           <Suspense fallback={fallback}>{content}</Suspense>
         </main>
       </div>
-      <Toast />
+      <ToastContainer />
     </div>
   )
 }
