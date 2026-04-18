@@ -53,6 +53,8 @@ export function PersonalDocsPage() {
   const [obForm, setObForm] = useState<Partial<Obrigacao>>({})
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [confirmObId, setConfirmObId] = useState<number | null>(null)
+  const [obFilterPessoas, setObFilterPessoas] = useState<string[]>([])
+  const [obFilterCats, setObFilterCats] = useState<string[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
