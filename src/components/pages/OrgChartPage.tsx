@@ -739,6 +739,16 @@ function OrgChartEditor() {
           <button className="btn btn-secondary" onClick={handleAddShape} title="Adicionar caixa/borda para agrupar">
             <i className="fas fa-vector-square" /> Caixa
           </button>
+          <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()} title="Adicionar ícone SVG (upload)">
+            <i className="fas fa-icons" /> Ícone SVG
+          </button>
+          <input
+            ref={fileInputRef} type="file" accept=".svg,image/svg+xml" style={{ display: 'none' }}
+            onChange={async (ev) => {
+              const f = ev.target.files?.[0]; if (f) await handleAddIconFromFile(f)
+              if (fileInputRef.current) fileInputRef.current.value = ''
+            }}
+          />
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
           <button className="btn btn-secondary" onClick={() => { const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento', 'info'); return } setEditNodeId(sel.id) }} title="Editar elemento selecionado">
             <i className="fas fa-pen" /> Editar
