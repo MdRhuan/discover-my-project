@@ -75,7 +75,31 @@ export function CompaniesPage() {
   const [docForm, setDocForm] = useState<Partial<Documento>>({})
   const [docFile, setDocFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [editingDocId, setEditingDocId] = useState<number | null>(null)
+  const [replaceFile, setReplaceFile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  function openNewDoc(empresaId?: number) {
+    setEditingDocId(null)
+    setDocFile(null)
+    setReplaceFile(false)
+    setDocForm({ categoria: 'Outros', tipo: 'PDF', versao: '1', empresaId })
+    setDocModal(true)
+  }
+  function openEditDoc(doc: Documento) {
+    setEditingDocId(doc.id!)
+    setDocFile(null)
+    setReplaceFile(false)
+    setDocForm({ ...doc })
+    setDocModal(true)
+  }
+  function closeDocModal() {
+    setDocModal(false)
+    setDocForm({})
+    setDocFile(null)
+    setEditingDocId(null)
+    setReplaceFile(false)
+  }
 
   async function loadDetailDocs(empresaId: number) {
     const all = await db.documentos.where('empresaId').equals(empresaId).toArray()
@@ -100,31 +124,43 @@ export function CompaniesPage() {
   }
 
   async function saveDetailDoc() {
-    if (!detail?.id) return
     if (!docForm.nome?.trim()) { toast('Nome é obrigatório.', 'error'); return }
+    const empresaId = docForm.empresaId ?? detail?.id
     try {
       setUploading(true)
-      let arquivoPath: string | undefined
+      let arquivoPath: string | undefined = docForm.arquivoPath
       if (docFile) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { toast('Usuário não autenticado.', 'error'); setUploading(false); return }
         const safeName = docFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-        arquivoPath = `${user.id}/${detail.id}/${Date.now()}-${safeName}`
+        const folder = empresaId ? `${user.id}/${empresaId}` : `${user.id}/_geral`
+        const newPath = `${folder}/${Date.now()}-${safeName}`
         const { error: upErr } = await supabase.storage
           .from(DOC_BUCKET)
-          .upload(arquivoPath, docFile, { contentType: docFile.type || undefined, upsert: false })
+          .upload(newPath, docFile, { contentType: docFile.type || undefined, upsert: false })
         if (upErr) { console.error(upErr); toast('Falha ao enviar arquivo.', 'error'); setUploading(false); return }
+        // remove arquivo antigo se substituindo
+        if (editingDocId && docForm.arquivoPath && docForm.arquivoPath !== newPath) {
+          await supabase.storage.from(DOC_BUCKET).remove([docForm.arquivoPath])
+        }
+        arquivoPath = newPath
       }
-      await db.documentos.add({
+      const payload: Partial<Documento> = {
         ...docForm,
-        empresaId: detail.id,
+        empresaId,
         arquivoPath,
         dataUpload: docForm.dataUpload || new Date().toISOString().slice(0, 10),
-      } as Documento)
-      await db.auditLog.add({ acao: `Documento adicionado a ${detail.nome}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      }
+      if (editingDocId) {
+        await db.documentos.update(editingDocId, payload)
+        await db.auditLog.add({ acao: `Documento editado: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      } else {
+        await db.documentos.add(payload as Documento)
+        await db.auditLog.add({ acao: `Documento adicionado${detail ? ` a ${detail.nome}` : ''}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      }
       toast(t.saved)
-      setDocModal(false); setDocForm({}); setDocFile(null)
-      await loadDetailDocs(detail.id)
+      closeDocModal()
+      if (detail?.id) await loadDetailDocs(detail.id)
       await loadAllDocs()
     } catch (e) {
       console.error(e); toast(t.errorSave, 'error')
@@ -132,7 +168,7 @@ export function CompaniesPage() {
   }
 
   async function removeDetailDoc(id: number) {
-    const doc = (detail ? detailDocs : allDocs).find(d => d.id === id)
+    const doc = [...detailDocs, ...allDocs].find(d => d.id === id)
     if (doc?.arquivoPath) {
       await supabase.storage.from(DOC_BUCKET).remove([doc.arquivoPath])
     }
@@ -339,7 +375,13 @@ export function CompaniesPage() {
           return matchEmp && matchSearch
         })
         return (
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button className="btn btn-primary btn-sm" onClick={() => openNewDoc(filterDocEmp === 'all' ? undefined : filterDocEmp)}>
+                <i className="fas fa-plus" /> Adicionar Documento
+              </button>
+            </div>
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="table-wrap">
               <table className="data-table">
                 <thead>
@@ -383,6 +425,7 @@ export function CompaniesPage() {
                             {d.arquivoPath && (
                               <button className="btn-icon" onClick={() => downloadDoc(d)} title="Baixar"><i className="fas fa-download" /></button>
                             )}
+                            <button className="btn-icon" onClick={() => openEditDoc(d)} title={t.edit}><i className="fas fa-pen" /></button>
                             <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
                           </div>
                         </td>
@@ -393,6 +436,7 @@ export function CompaniesPage() {
               </table>
             </div>
           </div>
+          </>
         )
       })()}
 
@@ -694,7 +738,7 @@ export function CompaniesPage() {
                     {detailDocs.length} documento{detailDocs.length === 1 ? '' : 's'} vinculado{detailDocs.length === 1 ? '' : 's'}
                   </div>
                 </div>
-                <button className="btn btn-primary btn-sm" onClick={() => { setDocForm({ categoria: 'Outros', tipo: 'PDF', versao: '1' }); setDocModal(true) }}>
+                <button className="btn btn-primary btn-sm" onClick={() => openNewDoc(detail.id)}>
                   <i className="fas fa-plus" /> Adicionar Documento
                 </button>
               </div>
@@ -736,6 +780,7 @@ export function CompaniesPage() {
                               {d.arquivoPath && (
                                 <button className="btn-icon" onClick={() => downloadDoc(d)} title="Baixar"><i className="fas fa-download" /></button>
                               )}
+                              <button className="btn-icon" onClick={() => openEditDoc(d)} title={t.edit}><i className="fas fa-pen" /></button>
                               <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
                             </div>
                           </td>
@@ -750,14 +795,18 @@ export function CompaniesPage() {
         )
       })()}
 
-      {/* Add Document to Empresa Modal */}
-      {docModal && detail && (
+      {/* Add / Edit Document Modal */}
+      {docModal && (
         <Modal
-          title={`Novo Documento — ${detail.nome}`}
-          onClose={() => { setDocModal(false); setDocForm({}); setDocFile(null) }}
+          title={
+            editingDocId
+              ? `Editar Documento${detail ? ` — ${detail.nome}` : ''}`
+              : `Novo Documento${detail ? ` — ${detail.nome}` : ''}`
+          }
+          onClose={closeDocModal}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}); setDocFile(null) }} disabled={uploading}>{t.cancel}</button>
+              <button className="btn btn-ghost" onClick={closeDocModal} disabled={uploading}>{t.cancel}</button>
               <button className="btn btn-primary" onClick={saveDetailDoc} disabled={uploading}>
                 {uploading ? <><i className="fas fa-spinner fa-spin" /> Enviando...</> : <><i className="fas fa-check" />{t.save}</>}
               </button>
@@ -765,6 +814,21 @@ export function CompaniesPage() {
           }
         >
           <div className="form-grid">
+            {/* Empresa selector quando não estamos no contexto de uma empresa específica */}
+            {!detail && (
+              <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                <label className="form-label">Empresa Vinculada</label>
+                <select
+                  className="form-select"
+                  value={docForm.empresaId ?? ''}
+                  onChange={e => setDocForm(p => ({ ...p, empresaId: e.target.value ? Number(e.target.value) : undefined }))}
+                >
+                  <option value="">— Sem empresa vinculada —</option>
+                  {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
+                </select>
+              </div>
+            )}
+
             {/* Upload */}
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label">Arquivo</label>
@@ -774,7 +838,17 @@ export function CompaniesPage() {
                 style={{ display: 'none' }}
                 onChange={e => handleFilePicked(e.target.files?.[0] || null)}
               />
-              {!docFile ? (
+              {/* Editando com arquivo já existente, sem novo arquivo selecionado */}
+              {editingDocId && docForm.arquivoPath && !docFile && !replaceFile ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--surface-border)' }}>
+                  <i className="fas fa-paperclip" style={{ fontSize: 20, color: 'var(--brand)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Arquivo já anexado</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docForm.arquivoPath.split('/').pop()}</div>
+                  </div>
+                  <button className="btn-icon" onClick={() => { setReplaceFile(true); fileInputRef.current?.click() }} title="Substituir arquivo"><i className="fas fa-rotate" /></button>
+                </div>
+              ) : !docFile ? (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -794,10 +868,10 @@ export function CompaniesPage() {
                   <i className="fas fa-file" style={{ fontSize: 22, color: 'var(--brand)' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docFile.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBytes(docFile.size)}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBytes(docFile.size)} {editingDocId && docForm.arquivoPath ? '— substituirá o arquivo atual' : ''}</div>
                   </div>
                   <button className="btn-icon" onClick={() => fileInputRef.current?.click()} title="Trocar"><i className="fas fa-rotate" /></button>
-                  <button className="btn-icon danger" onClick={() => setDocFile(null)} title="Remover"><i className="fas fa-times" /></button>
+                  <button className="btn-icon danger" onClick={() => { setDocFile(null); setReplaceFile(false) }} title="Remover"><i className="fas fa-times" /></button>
                 </div>
               )}
             </div>
