@@ -227,6 +227,8 @@ export const db = {
   orgNodes: makeTable<OrgNode>('org_nodes'),
   orgEdges: makeTable<OrgEdge>('org_edges'),
   orgTexts: makeTable<{ id?: number; chave?: string; value?: unknown }>('org_texts'),
+  orgTextsCanvas: makeTable<OrgTextCanvas>('org_texts_canvas'),
+  orgShapes: makeTable<OrgShape>('org_shapes'),
   auditLog: makeTable<AuditLog>('audit_log'),
   tasks: makeTable<Task>('tasks'),
   alertas: makeTable<Alerta>('alertas'),
