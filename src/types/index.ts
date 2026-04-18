@@ -76,7 +76,25 @@ export interface OrgNode {
   empresaId: number
   parentId?: number | null
   nome: string
-  cargo: string
+  cargo?: string
+  posX?: number
+  posY?: number
+  icon?: string
+  corBorda?: string
+  corFundo?: string
+  espessuraBorda?: number
+  estiloBorda?: string
+}
+
+export interface OrgEdge {
+  id?: number
+  empresaId?: number | null
+  sourceId: number
+  targetId: number
+  cor?: string
+  espessura?: number
+  estilo?: string
+  label?: string
 }
 
 export interface Task {

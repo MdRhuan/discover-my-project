@@ -14,7 +14,9 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   passaporteBR: 'passaporte_br', passaporteUS: 'passaporte_us',
   residenteFiscal: 'residente_fiscal', enderecoBR: 'endereco_br',
   enderecoUS: 'endereco_us', dataVencimento: 'data_vencimento',
-  corBorda: 'cor_borda', svgIcon: 'svg_icon',
+  corBorda: 'cor_borda', corFundo: 'cor_fundo', svgIcon: 'svg_icon',
+  posX: 'pos_x', posY: 'pos_y', espessuraBorda: 'espessura_borda',
+  estiloBorda: 'estilo_borda', sourceId: 'source_id', targetId: 'target_id',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
@@ -212,7 +214,7 @@ const configTable = {
 }
 
 import type {
-  Empresa, Funcionario, Documento, Transacao, OrgNode,
+  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge,
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, AuditLog
 } from '@/types'
 
@@ -222,6 +224,7 @@ export const db = {
   documentos: makeTable<Documento>('documentos'),
   transacoes: makeTable<Transacao>('transacoes'),
   orgNodes: makeTable<OrgNode>('org_nodes'),
+  orgEdges: makeTable<OrgEdge>('org_edges'),
   orgTexts: makeTable<{ id?: number; chave?: string; value?: unknown }>('org_texts'),
   auditLog: makeTable<AuditLog>('audit_log'),
   tasks: makeTable<Task>('tasks'),
