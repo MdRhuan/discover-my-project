@@ -395,6 +395,12 @@ export function AptInsurancePage() {
       )}
 
       {confirm && <ConfirmDialog msg={confirm.msg} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
+
+      {centralOpen && (
+        <Modal title="Central de Documentos — Seguro do Apartamento" large onClose={() => setCentralOpen(false)}>
+          <InsuranceDocsManager insuranceType="apt" global />
+        </Modal>
+      )}
     </div>
   )
 }
