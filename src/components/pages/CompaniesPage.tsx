@@ -146,8 +146,9 @@ export function CompaniesPage() {
         }
         arquivoPath = newPath
       }
+      const { id: _id, createdAt: _c, updatedAt: _u, ownerId: _o, ...cleanForm } = docForm as Documento & { createdAt?: string; updatedAt?: string; ownerId?: string }
       const payload: Partial<Documento> = {
-        ...docForm,
+        ...cleanForm,
         empresaId,
         arquivoPath,
         dataUpload: docForm.dataUpload || new Date().toISOString().slice(0, 10),
