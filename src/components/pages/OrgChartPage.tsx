@@ -155,7 +155,7 @@ interface ShapeNodeData {
   onEdit?: (id: string) => void
   onResize?: (id: string, w: number, h: number) => void
 }
-function ShapeNode({ id, data, selected, width, height }: NodeProps<ShapeNodeData>) {
+function ShapeNode({ id, data, selected }: NodeProps<ShapeNodeData>) {
   return (
     <>
       <NodeResizer
