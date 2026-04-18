@@ -49,6 +49,41 @@ export function CompaniesPage() {
   const [editing, setEditing] = useState<number | null>(null)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [detail, setDetail] = useState<Empresa | null>(null)
+  const [detailDocs, setDetailDocs] = useState<Documento[]>([])
+  const [docModal, setDocModal] = useState(false)
+  const [docForm, setDocForm] = useState<Partial<Documento>>({})
+
+  async function loadDetailDocs(empresaId: number) {
+    const all = await db.documentos.where('empresaId').equals(empresaId).toArray()
+    setDetailDocs(all)
+  }
+
+  async function openDetail(e: Empresa) {
+    setDetail(e)
+    if (e.id) await loadDetailDocs(e.id)
+  }
+
+  async function saveDetailDoc() {
+    if (!detail?.id) return
+    if (!docForm.nome?.trim()) { toast('Nome é obrigatório.', 'error'); return }
+    try {
+      await db.documentos.add({
+        ...docForm,
+        empresaId: detail.id,
+        dataUpload: docForm.dataUpload || new Date().toISOString().slice(0, 10),
+      } as Documento)
+      await db.auditLog.add({ acao: `Documento adicionado a ${detail.nome}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
+      toast(t.saved); setDocModal(false); setDocForm({})
+      await loadDetailDocs(detail.id)
+    } catch { toast(t.errorSave, 'error') }
+  }
+
+  async function removeDetailDoc(id: number) {
+    if (!detail?.id) return
+    await db.documentos.delete(id)
+    toast(t.deleted)
+    await loadDetailDocs(detail.id)
+  }
 
   useEffect(() => { load() }, [])
 
