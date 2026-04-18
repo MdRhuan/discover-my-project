@@ -7,10 +7,31 @@ import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
 import type { Empresa } from '@/types'
 
+interface Socio { nome: string; documento: string; participacao: string; papel: string; email: string }
+
 const EMPTY_EMPRESA: Partial<Empresa> = {
   nome: '', pais: 'BR', cnpj: '', ein: '', status: 'ativo',
   cidade: '', estado: '', website: '', legalType: '', taxRegime: '',
-  fundacao: '', setor: '', notas: '',
+  fundacao: '', setor: '', notas: '', inscricaoEstadual: '',
+  obrigacoesAcessorias: '', anoCalendario: '2024', dataEncerramento: '',
+  ctbElection: '', cfcClass: 'nao-aplicavel',
+}
+
+interface ExtraData { socios: Socio[]; tags: string[]; email: string; telefone: string; observacoes: string }
+const EMPTY_EXTRA: ExtraData = { socios: [], tags: [], email: '', telefone: '', observacoes: '' }
+
+function parseNotas(notas?: string): { extra: ExtraData; legacy: string } {
+  if (!notas) return { extra: EMPTY_EXTRA, legacy: '' }
+  try {
+    const obj = JSON.parse(notas)
+    if (obj && typeof obj === 'object' && '__extra' in obj) {
+      return { extra: { ...EMPTY_EXTRA, ...obj.__extra }, legacy: obj.legacy || '' }
+    }
+  } catch { /* not json */ }
+  return { extra: EMPTY_EXTRA, legacy: notas }
+}
+function serializeNotas(extra: ExtraData): string {
+  return JSON.stringify({ __extra: extra, legacy: extra.observacoes })
 }
 
 export function CompaniesPage() {
@@ -20,6 +41,9 @@ export function CompaniesPage() {
   const [filterPais, setFilterPais] = useState('all')
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState<Partial<Empresa>>(EMPTY_EMPRESA)
+  const [extra, setExtra] = useState<ExtraData>(EMPTY_EXTRA)
+  const [tab, setTab] = useState<'gerais' | 'socios' | 'fiscal' | 'tags'>('gerais')
+  const [tagInput, setTagInput] = useState('')
   const [editing, setEditing] = useState<number | null>(null)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [detail, setDetail] = useState<Empresa | null>(null)
