@@ -432,36 +432,38 @@ function OrgChartEditor() {
       </div>
 
       {/* Add modal */}
-      <Modal open={addModal} onClose={() => setAddModal(false)} title="Adicionar bloco ao organograma">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <label className="form-label">Empresa cadastrada *</label>
-            <select
-              className="form-select"
-              value={selectedEmpresaId || ''}
-              onChange={e => setSelectedEmpresaId(Number(e.target.value) || null)}
-            >
-              <option value="">— Selecione —</option>
-              {empresas.map(e => (
-                <option key={e.id} value={e.id}>
-                  {e.nome} {e.cnpj ? `· ${e.cnpj}` : e.ein ? `· ${e.ein}` : ''}
-                </option>
-              ))}
-            </select>
-            {empresas.length === 0 && (
-              <div style={{ marginTop: 8, fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
-                Nenhuma empresa cadastrada. Cadastre uma em <strong>Empresas</strong> primeiro.
-              </div>
-            )}
+      {addModal && (
+        <Modal onClose={() => setAddModal(false)} title="Adicionar bloco ao organograma">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label className="form-label">Empresa cadastrada *</label>
+              <select
+                className="form-select"
+                value={selectedEmpresaId || ''}
+                onChange={e => setSelectedEmpresaId(Number(e.target.value) || null)}
+              >
+                <option value="">— Selecione —</option>
+                {empresas.map(e => (
+                  <option key={e.id} value={e.id}>
+                    {e.nome} {e.cnpj ? `· ${e.cnpj}` : e.ein ? `· ${e.ein}` : ''}
+                  </option>
+                ))}
+              </select>
+              {empresas.length === 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
+                  Nenhuma empresa cadastrada. Cadastre uma em <strong>Empresas</strong> primeiro.
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setAddModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleAddNode} disabled={!selectedEmpresaId}>
+                Adicionar
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button className="btn btn-secondary" onClick={() => setAddModal(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={handleAddNode} disabled={!selectedEmpresaId}>
-              Adicionar
-            </button>
-          </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
 
       {/* Edit modal */}
       {editNode && (
@@ -473,23 +475,23 @@ function OrgChartEditor() {
         />
       )}
 
-      <ConfirmDialog
-        open={!!confirmDelete}
-        title="Remover bloco?"
-        message="Esta ação removerá o bloco e suas conexões."
-        onConfirm={async () => {
-          if (!confirmDelete) return
-          try {
-            await db.orgNodes.delete(Number(confirmDelete.id))
-            setNodes(c => c.filter(n => n.id !== confirmDelete.id))
-            setEdges(c => c.filter(e => e.source !== confirmDelete.id && e.target !== confirmDelete.id))
-            setEditNodeId(null)
-            toast('Bloco removido', 'success')
-          } catch (e) { console.error(e); toast('Erro ao remover', 'error') }
-          setConfirmDelete(null)
-        }}
-        onCancel={() => setConfirmDelete(null)}
-      />
+      {confirmDelete && (
+        <ConfirmDialog
+          msg="Esta ação removerá o bloco e suas conexões."
+          onConfirm={async () => {
+            if (!confirmDelete) return
+            try {
+              await db.orgNodes.delete(Number(confirmDelete.id))
+              setNodes(c => c.filter(n => n.id !== confirmDelete.id))
+              setEdges(c => c.filter(e => e.source !== confirmDelete.id && e.target !== confirmDelete.id))
+              setEditNodeId(null)
+              toast('Bloco removido', 'success')
+            } catch (e) { console.error(e); toast('Erro ao remover', 'error') }
+            setConfirmDelete(null)
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
     </div>
   )
 }
@@ -513,7 +515,7 @@ function EditNodeModal({
   const [estilo, setEstilo] = useState(node.data.estiloBorda || 'solid')
 
   return (
-    <Modal open onClose={onClose} title={`Editar bloco · ${node.data.label}`}>
+    <Modal onClose={onClose} title={`Editar bloco · ${node.data.label}`}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
           <label className="form-label">Descrição / Cargo</label>
