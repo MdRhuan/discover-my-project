@@ -227,16 +227,12 @@ export function LifeInsurancePage() {
                   <i className="fas fa-note-sticky" style={{ marginRight:6, color:'var(--brand)' }} />{detail.obs}
                 </div>
               )}
-              {(detail.docs||[]).length > 0 && (
-                <div style={{ marginTop:14 }}>
-                  <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.05em' }}>Documentos</div>
-                  <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                    {detail.docs!.map((d, i) => (
-                      <button key={i} onClick={() => downloadDoc(d)} style={{ display:'flex', alignItems:'center', gap:6, background:'var(--surface-hover)', border:'1px solid var(--surface-border)', borderRadius:8, padding:'5px 12px', cursor:'pointer', fontSize:12, color:'var(--text-secondary)' }}>
-                        <i className="fas fa-file-pdf" style={{ color:'var(--brand)', fontSize:11 }} />{d.nome.length>24?d.nome.slice(0,24)+'…':d.nome}
-                      </button>
-                    ))}
+              {detail && (
+                <div style={{ marginTop:18 }}>
+                  <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.05em' }}>
+                    <i className="fas fa-folder" style={{ marginRight:6 }} />Documentos vinculados
                   </div>
+                  <InsuranceDocsManager insuranceType="life" apoliceId={detail.id} apoliceLabel={`${detail.seguradora}${detail.produto ? ' — ' + detail.produto : ''}`} />
                 </div>
               )}
             </div>
