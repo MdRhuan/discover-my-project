@@ -319,33 +319,6 @@ export function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="card" style={{ padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <div style={{ width: 46, height: 46, borderRadius: 12, background: '#6470f11a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className="fas fa-dollar-sign" style={{ fontSize: 20, color: 'var(--brand)' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: totalRev - totalExp >= 0 ? 'var(--green)' : 'var(--red)', lineHeight: 1 }}>
-                  {fmt.currency(totalRev - totalExp, currency, lang)}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{t.netBalance}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
-                  <span style={{ color: 'var(--green)', marginRight: 8 }}>↑ {fmt.currency(totalRev, currency, lang)}</span>
-                  <span style={{ color: 'var(--red)' }}>↓ {fmt.currency(totalExp, currency, lang)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Charts Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16, marginBottom: 16 }}>
-            <div className="card">
-              <div className="card-title"><i className="fas fa-chart-bar" style={{ marginRight: 8 }} />{t.financialOverview}</div>
-              <div style={{ height: 240 }}><canvas ref={revenueRef} /></div>
-            </div>
-            <div className="card">
-              <div className="card-title"><i className="fas fa-chart-pie" style={{ marginRight: 8 }} />{t.byCompany}</div>
-              <div style={{ height: 240 }}><canvas ref={pieRef} /></div>
-            </div>
           </div>
 
           {/* Timeline + Audit */}
