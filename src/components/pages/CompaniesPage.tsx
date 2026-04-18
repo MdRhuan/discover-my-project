@@ -912,8 +912,16 @@ export function CompaniesPage() {
               <input className="form-input" value={docForm.versao || ''} onChange={e => setDocForm(p => ({ ...p, versao: e.target.value }))} placeholder="1" />
             </div>
             <div className="form-group">
-              <label className="form-label">Data de Upload</label>
-              <input className="form-input" type="date" value={docForm.dataUpload || ''} onChange={e => setDocForm(p => ({ ...p, dataUpload: e.target.value }))} />
+              <label className="form-label">Ano do Documento</label>
+              <input
+                className="form-input"
+                type="number"
+                min={1900}
+                max={2100}
+                value={docForm.ano || ''}
+                onChange={e => setDocForm(p => ({ ...p, ano: e.target.value }))}
+                placeholder={String(new Date().getFullYear())}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Vencimento</label>
