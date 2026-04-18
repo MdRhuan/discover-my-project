@@ -299,15 +299,28 @@ export function CompaniesPage() {
           </button>
         </div>
         {view === 'docs' && (
-          <select
-            className="form-select"
-            style={{ width: 'auto', minWidth: 200 }}
-            value={filterDocEmp}
-            onChange={e => setFilterDocEmp(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-          >
-            <option value="all">Todas as empresas</option>
-            {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
-          </select>
+          <>
+            <select
+              className="form-select"
+              style={{ width: 'auto', minWidth: 200 }}
+              value={filterDocEmp}
+              onChange={e => setFilterDocEmp(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            >
+              <option value="all">Todas as empresas</option>
+              {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
+            </select>
+            <select
+              className="form-select"
+              style={{ width: 'auto', minWidth: 140 }}
+              value={filterDocAno}
+              onChange={e => setFilterDocAno(e.target.value)}
+            >
+              <option value="all">Todos os anos</option>
+              {Array.from(new Set(allDocs.map(d => d.ano).filter(Boolean) as string[]))
+                .sort((a, b) => b.localeCompare(a))
+                .map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </>
         )}
       </div>
 
