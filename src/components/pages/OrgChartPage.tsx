@@ -422,9 +422,8 @@ function OrgChartEditor() {
             multiSelectionKeyCode={['Meta', 'Shift']}
             deleteKeyCode={null}
           >
-            <Background gap={20} size={1} />
+            <Background gap={20} size={1} color="hsl(var(--border))" />
             <Controls />
-            <MiniMap pannable zoomable />
           </ReactFlow>
         )}
       </div>
