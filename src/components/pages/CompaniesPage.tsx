@@ -731,7 +731,7 @@ export function CompaniesPage() {
                     {detailDocs.length} documento{detailDocs.length === 1 ? '' : 's'} vinculado{detailDocs.length === 1 ? '' : 's'}
                   </div>
                 </div>
-                <button className="btn btn-primary btn-sm" onClick={() => { setDocForm({ categoria: 'Outros', tipo: 'PDF', versao: '1' }); setDocModal(true) }}>
+                <button className="btn btn-primary btn-sm" onClick={() => openNewDoc(detail.id)}>
                   <i className="fas fa-plus" /> Adicionar Documento
                 </button>
               </div>
