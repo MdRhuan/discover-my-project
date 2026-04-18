@@ -9,12 +9,19 @@ import type { DocPessoal } from '@/types'
 
 const OB_KEY = 'proximas_obrigacoes'
 
-interface Obrigacao { id: number; label: string; info?: string; data?: string }
+interface Obrigacao {
+  id: number
+  label: string
+  info?: string
+  data?: string
+  pessoas?: string[]
+  categorias?: string[]
+}
 
 const OB_DEFAULTS: Obrigacao[] = [
-  { id: 1, label: 'Naturalization Eligibility', info: 'Verificar elegibilidade após 5 anos de residência permanente', data: '' },
-  { id: 2, label: 'Green Card Renewal — Eduardo', info: 'Renovação obrigatória antes do vencimento', data: '' },
-  { id: 3, label: 'Green Card Renewal — Carla', info: 'Renovação obrigatória antes do vencimento', data: '' },
+  { id: 1, label: 'Naturalization Eligibility', info: 'Verificar elegibilidade após 5 anos de residência permanente', data: '', pessoas: [], categorias: [] },
+  { id: 2, label: 'Green Card Renewal — Eduardo', info: 'Renovação obrigatória antes do vencimento', data: '', pessoas: [], categorias: [] },
+  { id: 3, label: 'Green Card Renewal — Carla', info: 'Renovação obrigatória antes do vencimento', data: '', pessoas: [], categorias: [] },
 ]
 
 const SUBCATS = [
@@ -46,6 +53,8 @@ export function PersonalDocsPage() {
   const [obForm, setObForm] = useState<Partial<Obrigacao>>({})
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [confirmObId, setConfirmObId] = useState<number | null>(null)
+  const [obFilterPessoas, setObFilterPessoas] = useState<string[]>([])
+  const [obFilterCats, setObFilterCats] = useState<string[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -59,12 +68,19 @@ export function PersonalDocsPage() {
 
   useEffect(() => { load() }, [load])
 
-  const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))]
+  const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
+  const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
   const filtered = docs.filter(d =>
     (!filterPessoa || d.pessoa === filterPessoa) &&
     (!filterCat || d.categoria === filterCat) &&
     (!search || d.nome?.toLowerCase().includes(search.toLowerCase()) || d.pessoa?.toLowerCase().includes(search.toLowerCase()))
   )
+
+  const obFiltered = obList.filter(ob => {
+    const okP = obFilterPessoas.length === 0 || (ob.pessoas || []).some(p => obFilterPessoas.includes(p))
+    const okC = obFilterCats.length === 0 || (ob.categorias || []).some(c => obFilterCats.includes(c))
+    return okP && okC
+  })
 
   function alertColor(v?: string) {
     if (!v) return null
@@ -143,15 +159,80 @@ export function PersonalDocsPage() {
 
       {/* Próximas Obrigações */}
       <div className="card" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}><i className="fas fa-clock-rotate-left" style={{ marginRight: 8, color: 'var(--brand)' }} />Próximas Obrigações</div>
-          <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setObForm({}); setObModal(true) }}><i className="fas fa-plus" />Adicionar</button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>
+            <i className="fas fa-clock-rotate-left" style={{ marginRight: 8, color: 'var(--brand)' }} />
+            Próximas Obrigações
+            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>
+              ({obFiltered.length}{obFiltered.length !== obList.length ? ` de ${obList.length}` : ''})
+            </span>
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ fontSize: 12 }}
+            onClick={() => {
+              if (pessoas.length === 0 && categorias.length === 0) {
+                toast('Cadastre ao menos um documento (com pessoa e categoria) antes de criar obrigações.', 'error')
+                return
+              }
+              setObForm({ pessoas: [], categorias: [] })
+              setObModal(true)
+            }}
+          >
+            <i className="fas fa-plus" />Adicionar
+          </button>
         </div>
+
+        {/* Filtros de obrigações */}
+        {obList.length > 0 && (pessoas.length > 0 || categorias.length > 0) && (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 12, padding: 10, background: 'var(--surface-hover)', borderRadius: 8 }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Filtrar por pessoa</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {pessoas.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Nenhuma cadastrada</span>}
+                {pessoas.map(p => {
+                  const active = obFilterPessoas.includes(p)
+                  return (
+                    <button key={p} onClick={() => setObFilterPessoas(prev => active ? prev.filter(x => x !== p) : [...prev, p])}
+                      style={{ fontSize: 11, padding: '3px 8px', borderRadius: 12, border: `1px solid ${active ? 'var(--brand)' : 'var(--surface-border)'}`, background: active ? 'var(--brand-dim)' : 'var(--surface-card)', color: active ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: active ? 600 : 400 }}>
+                      {active && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 9 }} />}{p}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Filtrar por categoria</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {categorias.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Nenhuma cadastrada</span>}
+                {categorias.map(c => {
+                  const active = obFilterCats.includes(c)
+                  return (
+                    <button key={c} onClick={() => setObFilterCats(prev => active ? prev.filter(x => x !== c) : [...prev, c])}
+                      style={{ fontSize: 11, padding: '3px 8px', borderRadius: 12, border: `1px solid ${active ? 'var(--brand)' : 'var(--surface-border)'}`, background: active ? 'var(--brand-dim)' : 'var(--surface-card)', color: active ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: active ? 600 : 400 }}>
+                      {active && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 9 }} />}{c}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {(obFilterPessoas.length > 0 || obFilterCats.length > 0) && (
+              <button className="btn btn-ghost" style={{ fontSize: 11, alignSelf: 'flex-end' }} onClick={() => { setObFilterPessoas([]); setObFilterCats([]) }}>
+                <i className="fas fa-xmark" />Limpar
+              </button>
+            )}
+          </div>
+        )}
+
         {obList.length === 0 ? (
           <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '8px 0' }}>Nenhuma obrigação cadastrada.</div>
+        ) : obFiltered.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px', textAlign: 'center' }}>
+            <i className="fas fa-filter" style={{ marginRight: 6 }} />Nenhuma obrigação corresponde aos filtros.
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {obList.map(ob => {
+            {obFiltered.map(ob => {
               const c = alertColor(ob.data)
               return (
                 <div key={ob.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 8, border: `1px solid ${c ? c + '44' : 'var(--surface-border)'}` }}>
@@ -159,10 +240,24 @@ export function PersonalDocsPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{ob.label}</div>
                     {ob.info && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ob.info}</div>}
+                    {((ob.pessoas && ob.pessoas.length > 0) || (ob.categorias && ob.categorias.length > 0)) && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+                        {(ob.pessoas || []).map(p => (
+                          <span key={'p' + p} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600 }}>
+                            <i className="fas fa-user" style={{ marginRight: 3, fontSize: 8 }} />{p}
+                          </span>
+                        ))}
+                        {(ob.categorias || []).map(cat => (
+                          <span key={'c' + cat} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: 'rgba(245,158,11,.15)', color: 'var(--yellow)', fontWeight: 600 }}>
+                            <i className="fas fa-folder" style={{ marginRight: 3, fontSize: 8 }} />{cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {ob.data && <span style={{ fontSize: 11, color: c || 'var(--text-secondary)', fontWeight: c ? 700 : 400, flexShrink: 0 }}>{fmt.date(ob.data, lang)}</span>}
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                    <button className="btn-icon" onClick={() => { setObForm({ ...ob }); setObModal(true) }}><i className="fas fa-pen" /></button>
+                    <button className="btn-icon" onClick={() => { setObForm({ ...ob, pessoas: ob.pessoas || [], categorias: ob.categorias || [] }); setObModal(true) }}><i className="fas fa-pen" /></button>
                     <button className="btn-icon danger" onClick={() => setConfirmObId(ob.id)}><i className="fas fa-trash" /></button>
                   </div>
                 </div>
@@ -330,6 +425,52 @@ export function PersonalDocsPage() {
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label">Data / Prazo</label>
               <input className="form-input" type="date" value={obForm.data || ''} onChange={e => setObForm(f => ({ ...f, data: e.target.value }))} />
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Pessoas vinculadas</label>
+              {pessoas.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--yellow)', padding: 8, background: 'rgba(245,158,11,.1)', borderRadius: 6 }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: 6 }} />
+                  Nenhuma pessoa cadastrada. Crie um documento com pessoa primeiro.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: 8, background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)', maxHeight: 120, overflowY: 'auto' }}>
+                  {pessoas.map(p => {
+                    const sel = (obForm.pessoas || []).includes(p)
+                    return (
+                      <button key={p} type="button"
+                        onClick={() => setObForm(f => ({ ...f, pessoas: sel ? (f.pessoas || []).filter(x => x !== p) : [...(f.pessoas || []), p] }))}
+                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 12, border: `1px solid ${sel ? 'var(--brand)' : 'var(--surface-border)'}`, background: sel ? 'var(--brand-dim)' : 'var(--surface-card)', color: sel ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                        {sel && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 10 }} />}{p}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Categorias vinculadas</label>
+              {categorias.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--yellow)', padding: 8, background: 'rgba(245,158,11,.1)', borderRadius: 6 }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: 6 }} />
+                  Nenhuma categoria cadastrada. Crie um documento primeiro.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: 8, background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)', maxHeight: 120, overflowY: 'auto' }}>
+                  {categorias.map(c => {
+                    const sel = (obForm.categorias || []).includes(c)
+                    return (
+                      <button key={c} type="button"
+                        onClick={() => setObForm(f => ({ ...f, categorias: sel ? (f.categorias || []).filter(x => x !== c) : [...(f.categorias || []), c] }))}
+                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 12, border: `1px solid ${sel ? 'var(--brand)' : 'var(--surface-border)'}`, background: sel ? 'var(--brand-dim)' : 'var(--surface-card)', color: sel ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                        {sel && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 10 }} />}{c}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </Modal>
