@@ -254,10 +254,24 @@ export function CompaniesPage() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t.search} />
         </div>
         <div className="tabs">
-          {[['all','Todas'],['BR','Brasil'],['US','EUA']].map(([v,l]) => (
+          {view === 'empresas' && [['all','Todas'],['BR','Brasil'],['US','EUA']].map(([v,l]) => (
             <button key={v} className={`tab ${filterPais === v ? 'active' : ''}`} onClick={() => setFilterPais(v)}>{l}</button>
           ))}
+          <button className={`tab ${view === 'docs' ? 'active' : ''}`} onClick={() => setView(view === 'docs' ? 'empresas' : 'docs')}>
+            <i className="fas fa-folder-open" style={{ marginRight: 6 }} />Documentos Gerais
+          </button>
         </div>
+        {view === 'docs' && (
+          <select
+            className="form-select"
+            style={{ width: 'auto', minWidth: 200 }}
+            value={filterDocEmp}
+            onChange={e => setFilterDocEmp(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+          >
+            <option value="all">Todas as empresas</option>
+            {empresas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Table */}
