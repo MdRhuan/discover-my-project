@@ -114,7 +114,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider value={{
       t, lang, setLang, currency, setCurrency, toast,
-      user, setUser, page, setPage,
+      user, setUser, role, isAdmin: role === 'admin',
+      page, setPage,
       sidebarOpen, setSidebarOpen, theme, toggleTheme, toasts,
     }}>
       {children}
