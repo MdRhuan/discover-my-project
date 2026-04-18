@@ -127,7 +127,7 @@ function OrgChartEditor() {
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'node' | 'edge'; id: string } | null>(null)
   const dirtyRef = useRef(false)
   const saveTimer = useRef<number | null>(null)
-  const { fitView } = useReactFlow()
+  const { fitView, zoomIn, zoomOut } = useReactFlow()
 
   // ============ Load ============
   const loadAll = useCallback(async () => {
@@ -306,59 +306,77 @@ function OrgChartEditor() {
     }
   }, [setEdges, toast])
 
-  // ============ Delete selection ============
+  // ============ Delete / Duplicate (reusable) ============
+  const deleteSelection = useCallback(async () => {
+    const selN = nodes.filter(n => n.selected)
+    const selE = edges.filter(e => e.selected)
+    if (selN.length === 0 && selE.length === 0) {
+      toast('Selecione blocos ou conexões para excluir', 'info')
+      return
+    }
+    try {
+      for (const n of selN) await db.orgNodes.delete(Number(n.id))
+      for (const ed of selE) await db.orgEdges.delete(Number(ed.id))
+      setNodes(c => c.filter(n => !n.selected))
+      setEdges(c => c.filter(e => !e.selected))
+      toast(`${selN.length + selE.length} item(ns) removido(s)`, 'success')
+    } catch (err) {
+      console.error(err); toast('Erro ao excluir', 'error')
+    }
+  }, [nodes, edges, setNodes, setEdges, toast])
+
+  const duplicateSelection = useCallback(async () => {
+    const selN = nodes.filter(n => n.selected)
+    if (selN.length === 0) {
+      toast('Selecione um bloco para duplicar', 'info')
+      return
+    }
+    try {
+      for (const n of selN) {
+        const data = n.data
+        const id = await db.orgNodes.add({
+          empresaId: data.empresaId,
+          nome: data.label,
+          cargo: data.cargo || '',
+          posX: n.position.x + 40,
+          posY: n.position.y + 40,
+          icon: data.icon,
+          corBorda: data.corBorda,
+          corFundo: data.corFundo,
+          espessuraBorda: data.espessuraBorda,
+          estiloBorda: data.estiloBorda,
+        } as OrgNode)
+        setNodes(curr => [...curr, {
+          ...n,
+          id: String(id),
+          position: { x: n.position.x + 40, y: n.position.y + 40 },
+          selected: false,
+          data: { ...data },
+        }])
+      }
+      toast(`${selN.length} bloco(s) duplicado(s)`, 'success')
+    } catch (err) {
+      console.error(err); toast('Erro ao duplicar', 'error')
+    }
+  }, [nodes, setNodes, toast])
+
+  // ============ Keyboard shortcuts ============
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && (e.target as HTMLElement)?.tagName !== 'INPUT' && (e.target as HTMLElement)?.tagName !== 'TEXTAREA') {
-        const selN = nodes.filter(n => n.selected)
-        const selE = edges.filter(e => e.selected)
-        if (selN.length === 0 && selE.length === 0) return
-        e.preventDefault()
-        ;(async () => {
-          try {
-            for (const n of selN) await db.orgNodes.delete(Number(n.id))
-            for (const ed of selE) await db.orgEdges.delete(Number(ed.id))
-            setNodes(c => c.filter(n => !n.selected))
-            setEdges(c => c.filter(e => !e.selected))
-          } catch (err) {
-            console.error(err); toast('Erro ao excluir', 'error')
-          }
-        })()
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) {
+          e.preventDefault(); deleteSelection()
+        }
       }
-      // Duplicate Ctrl+D
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-        const selN = nodes.filter(n => n.selected)
-        if (selN.length === 0) return
-        e.preventDefault()
-        ;(async () => {
-          for (const n of selN) {
-            const data = n.data
-            const id = await db.orgNodes.add({
-              empresaId: data.empresaId,
-              nome: data.label,
-              cargo: data.cargo || '',
-              posX: n.position.x + 40,
-              posY: n.position.y + 40,
-              icon: data.icon,
-              corBorda: data.corBorda,
-              corFundo: data.corFundo,
-              espessuraBorda: data.espessuraBorda,
-              estiloBorda: data.estiloBorda,
-            } as OrgNode)
-            setNodes(curr => [...curr, {
-              ...n,
-              id: String(id),
-              position: { x: n.position.x + 40, y: n.position.y + 40 },
-              selected: false,
-              data: { ...data },
-            }])
-          }
-        })()
+        if (nodes.some(n => n.selected)) { e.preventDefault(); duplicateSelection() }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nodes, edges, setNodes, setEdges, toast])
+  }, [nodes, edges, deleteSelection, duplicateSelection])
 
   // ============ Edit node modal ============
   const editNode = useMemo(() => nodes.find(n => n.id === editNodeId), [nodes, editNodeId])
@@ -392,12 +410,36 @@ function OrgChartEditor() {
             Arraste para mover · Conecte arrastando das bordas · Delete/Backspace remove · Ctrl+D duplica
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })}>
-            <i className="fas fa-expand" /> Centralizar
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={() => setAddModal(true)} title="Adicionar bloco vinculado a uma empresa cadastrada">
+            <i className="fas fa-plus" /> Adicionar
           </button>
-          <button className="btn btn-primary" onClick={() => setAddModal(true)}>
-            <i className="fas fa-plus" /> Adicionar empresa
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              const sel = nodes.find(n => n.selected)
+              if (!sel) { toast('Selecione um bloco para editar', 'info'); return }
+              setEditNodeId(sel.id)
+            }}
+            title="Editar o bloco selecionado (ícone, cores, borda)"
+          >
+            <i className="fas fa-pen" /> Editar
+          </button>
+          <button className="btn btn-secondary" onClick={duplicateSelection} title="Duplicar bloco(s) selecionado(s) — Ctrl+D">
+            <i className="fas fa-clone" /> Duplicar
+          </button>
+          <button className="btn btn-danger" onClick={deleteSelection} title="Excluir blocos/conexões selecionados — Delete">
+            <i className="fas fa-trash" /> Excluir
+          </button>
+          <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          <button className="btn btn-secondary" onClick={() => zoomIn({ duration: 200 })} title="Zoom in">
+            <i className="fas fa-magnifying-glass-plus" />
+          </button>
+          <button className="btn btn-secondary" onClick={() => zoomOut({ duration: 200 })} title="Zoom out">
+            <i className="fas fa-magnifying-glass-minus" />
+          </button>
+          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })} title="Centralizar e ajustar">
+            <i className="fas fa-expand" /> Ajustar
           </button>
         </div>
       </div>
