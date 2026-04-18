@@ -115,6 +115,20 @@ export interface OrgTextCanvas {
   zIndex?: number
 }
 
+export interface OrgIcon {
+  id?: number
+  empresaId?: number | null
+  nome?: string
+  svgContent: string
+  posX: number
+  posY: number
+  largura: number
+  altura: number
+  cor?: string
+  rotacao?: number
+  zIndex?: number
+}
+
 export interface OrgShape {
   id?: number
   empresaId?: number | null

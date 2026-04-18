@@ -17,7 +17,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   corBorda: 'cor_borda', corFundo: 'cor_fundo', svgIcon: 'svg_icon',
   posX: 'pos_x', posY: 'pos_y', espessuraBorda: 'espessura_borda',
   estiloBorda: 'estilo_borda', sourceId: 'source_id', targetId: 'target_id',
-  zIndex: 'z_index',
+  zIndex: 'z_index', svgContent: 'svg_content',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
@@ -215,7 +215,7 @@ const configTable = {
 }
 
 import type {
-  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape,
+  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon,
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, AuditLog
 } from '@/types'
 
@@ -229,6 +229,7 @@ export const db = {
   orgTexts: makeTable<{ id?: number; chave?: string; value?: unknown }>('org_texts'),
   orgTextsCanvas: makeTable<OrgTextCanvas>('org_texts_canvas'),
   orgShapes: makeTable<OrgShape>('org_shapes'),
+  orgIcons: makeTable<OrgIcon>('org_icons'),
   auditLog: makeTable<AuditLog>('audit_log'),
   tasks: makeTable<Task>('tasks'),
   alertas: makeTable<Alerta>('alertas'),

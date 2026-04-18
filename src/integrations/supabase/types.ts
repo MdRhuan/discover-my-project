@@ -503,6 +503,57 @@ export type Database = {
           },
         ]
       }
+      org_icons: {
+        Row: {
+          altura: number
+          cor: string | null
+          created_at: string
+          empresa_id: number | null
+          id: number
+          largura: number
+          nome: string | null
+          owner_id: string
+          pos_x: number
+          pos_y: number
+          rotacao: number | null
+          svg_content: string
+          updated_at: string
+          z_index: number | null
+        }
+        Insert: {
+          altura?: number
+          cor?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          id?: number
+          largura?: number
+          nome?: string | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          rotacao?: number | null
+          svg_content: string
+          updated_at?: string
+          z_index?: number | null
+        }
+        Update: {
+          altura?: number
+          cor?: string | null
+          created_at?: string
+          empresa_id?: number | null
+          id?: number
+          largura?: number
+          nome?: string | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          rotacao?: number | null
+          svg_content?: string
+          updated_at?: string
+          z_index?: number | null
+        }
+        Relationships: []
+      }
       org_nodes: {
         Row: {
           cargo: string | null
