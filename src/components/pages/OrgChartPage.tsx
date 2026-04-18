@@ -306,59 +306,77 @@ function OrgChartEditor() {
     }
   }, [setEdges, toast])
 
-  // ============ Delete selection ============
+  // ============ Delete / Duplicate (reusable) ============
+  const deleteSelection = useCallback(async () => {
+    const selN = nodes.filter(n => n.selected)
+    const selE = edges.filter(e => e.selected)
+    if (selN.length === 0 && selE.length === 0) {
+      toast('Selecione blocos ou conexões para excluir', 'info')
+      return
+    }
+    try {
+      for (const n of selN) await db.orgNodes.delete(Number(n.id))
+      for (const ed of selE) await db.orgEdges.delete(Number(ed.id))
+      setNodes(c => c.filter(n => !n.selected))
+      setEdges(c => c.filter(e => !e.selected))
+      toast(`${selN.length + selE.length} item(ns) removido(s)`, 'success')
+    } catch (err) {
+      console.error(err); toast('Erro ao excluir', 'error')
+    }
+  }, [nodes, edges, setNodes, setEdges, toast])
+
+  const duplicateSelection = useCallback(async () => {
+    const selN = nodes.filter(n => n.selected)
+    if (selN.length === 0) {
+      toast('Selecione um bloco para duplicar', 'info')
+      return
+    }
+    try {
+      for (const n of selN) {
+        const data = n.data
+        const id = await db.orgNodes.add({
+          empresaId: data.empresaId,
+          nome: data.label,
+          cargo: data.cargo || '',
+          posX: n.position.x + 40,
+          posY: n.position.y + 40,
+          icon: data.icon,
+          corBorda: data.corBorda,
+          corFundo: data.corFundo,
+          espessuraBorda: data.espessuraBorda,
+          estiloBorda: data.estiloBorda,
+        } as OrgNode)
+        setNodes(curr => [...curr, {
+          ...n,
+          id: String(id),
+          position: { x: n.position.x + 40, y: n.position.y + 40 },
+          selected: false,
+          data: { ...data },
+        }])
+      }
+      toast(`${selN.length} bloco(s) duplicado(s)`, 'success')
+    } catch (err) {
+      console.error(err); toast('Erro ao duplicar', 'error')
+    }
+  }, [nodes, setNodes, toast])
+
+  // ============ Keyboard shortcuts ============
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && (e.target as HTMLElement)?.tagName !== 'INPUT' && (e.target as HTMLElement)?.tagName !== 'TEXTAREA') {
-        const selN = nodes.filter(n => n.selected)
-        const selE = edges.filter(e => e.selected)
-        if (selN.length === 0 && selE.length === 0) return
-        e.preventDefault()
-        ;(async () => {
-          try {
-            for (const n of selN) await db.orgNodes.delete(Number(n.id))
-            for (const ed of selE) await db.orgEdges.delete(Number(ed.id))
-            setNodes(c => c.filter(n => !n.selected))
-            setEdges(c => c.filter(e => !e.selected))
-          } catch (err) {
-            console.error(err); toast('Erro ao excluir', 'error')
-          }
-        })()
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) {
+          e.preventDefault(); deleteSelection()
+        }
       }
-      // Duplicate Ctrl+D
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-        const selN = nodes.filter(n => n.selected)
-        if (selN.length === 0) return
-        e.preventDefault()
-        ;(async () => {
-          for (const n of selN) {
-            const data = n.data
-            const id = await db.orgNodes.add({
-              empresaId: data.empresaId,
-              nome: data.label,
-              cargo: data.cargo || '',
-              posX: n.position.x + 40,
-              posY: n.position.y + 40,
-              icon: data.icon,
-              corBorda: data.corBorda,
-              corFundo: data.corFundo,
-              espessuraBorda: data.espessuraBorda,
-              estiloBorda: data.estiloBorda,
-            } as OrgNode)
-            setNodes(curr => [...curr, {
-              ...n,
-              id: String(id),
-              position: { x: n.position.x + 40, y: n.position.y + 40 },
-              selected: false,
-              data: { ...data },
-            }])
-          }
-        })()
+        if (nodes.some(n => n.selected)) { e.preventDefault(); duplicateSelection() }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nodes, edges, setNodes, setEdges, toast])
+  }, [nodes, edges, deleteSelection, duplicateSelection])
 
   // ============ Edit node modal ============
   const editNode = useMemo(() => nodes.find(n => n.id === editNodeId), [nodes, editNodeId])
