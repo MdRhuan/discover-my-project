@@ -222,7 +222,7 @@ export function CompaniesPage() {
                   <td><span className={`badge ${statusBadge(e.status)}`}>{e.status}</span></td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn-icon" onClick={() => setDetail(e)} title="Ver detalhes"><i className="fas fa-eye" /></button>
+                      <button className="btn-icon" onClick={() => openDetail(e)} title="Ver detalhes"><i className="fas fa-eye" /></button>
                       <button className="btn-icon" onClick={() => openEdit(e)} title={t.edit}><i className="fas fa-pen" /></button>
                       <button className="btn-icon danger" onClick={() => setConfirmId(e.id!)} title={t.delete}><i className="fas fa-trash" /></button>
                     </div>
