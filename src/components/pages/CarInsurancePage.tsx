@@ -386,6 +386,12 @@ export function CarInsurancePage() {
       )}
 
       {confirm && <ConfirmDialog msg={confirm.msg} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
+
+      {centralOpen && (
+        <Modal title="Central de Documentos — Seguro do Carro" large onClose={() => setCentralOpen(false)}>
+          <InsuranceDocsManager insuranceType="car" global />
+        </Modal>
+      )}
     </div>
   )
 }
