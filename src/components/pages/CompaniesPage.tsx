@@ -125,6 +125,7 @@ export function CompaniesPage() {
       toast(t.saved)
       setDocModal(false); setDocForm({}); setDocFile(null)
       await loadDetailDocs(detail.id)
+      await loadAllDocs()
     } catch (e) {
       console.error(e); toast(t.errorSave, 'error')
     } finally { setUploading(false) }
