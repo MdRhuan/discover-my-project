@@ -201,89 +201,238 @@ export function CompaniesPage() {
       {modal && (
         <Modal
           title={editing ? 'Editar Empresa' : t.newCompany}
-          onClose={() => { setModal(false); setForm(EMPTY_EMPRESA); setEditing(null) }}
+          onClose={closeModal}
           large
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setModal(false); setForm(EMPTY_EMPRESA); setEditing(null) }}>{t.cancel}</button>
-              <button className="btn btn-primary" onClick={save}><i className="fas fa-save" />{t.save}</button>
+              <button className="btn btn-ghost" onClick={closeModal}>{t.cancel}</button>
+              <button className="btn btn-primary" onClick={save}><i className="fas fa-check" />{t.save}</button>
             </>
           }
         >
-          <div className="form-grid">
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label className="form-label">Razão Social *</label>
-              <input className="form-input" value={form.nome || ''} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))} placeholder="Nome da empresa" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">País</label>
-              <select className="form-select" value={form.pais || 'BR'} onChange={e => setForm(p => ({ ...p, pais: e.target.value as 'BR' | 'US' }))}>
-                <option value="BR">🇧🇷 Brasil</option>
-                <option value="US">🇺🇸 EUA</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Status</label>
-              <select className="form-select" value={form.status || 'ativo'} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
-                {['ativo','inativo','em liquidação','holding'].map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            {form.pais === 'BR' ? (
-              <div className="form-group">
-                <label className="form-label">CNPJ</label>
-                <input className="form-input" value={form.cnpj || ''} onChange={e => setForm(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0001-00" />
-              </div>
-            ) : (
-              <div className="form-group">
-                <label className="form-label">EIN</label>
-                <input className="form-input" value={form.ein || ''} onChange={e => setForm(p => ({ ...p, ein: e.target.value }))} placeholder="00-0000000" />
-              </div>
-            )}
-            <div className="form-group">
-              <label className="form-label">Tipo Jurídico</label>
-              <select className="form-select" value={form.legalType || ''} onChange={e => setForm(p => ({ ...p, legalType: e.target.value }))}>
-                <option value="">Selecione...</option>
-                {form.pais === 'BR'
-                  ? ['Ltda','S.A.','MEI','EIRELI','SCP','Fundação'].map(s => <option key={s} value={s}>{s}</option>)
-                  : ['LLC','Corporation','S-Corp','C-Corp','Partnership','Trust'].map(s => <option key={s} value={s}>{s}</option>)
-                }
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Regime Tributário</label>
-              <select className="form-select" value={form.taxRegime || ''} onChange={e => setForm(p => ({ ...p, taxRegime: e.target.value }))}>
-                <option value="">Selecione...</option>
-                {form.pais === 'BR'
-                  ? ['Simples Nacional','Lucro Presumido','Lucro Real','MEI'].map(s => <option key={s} value={s}>{s}</option>)
-                  : ['C-Corp','S-Corp','Pass-Through','Disregarded Entity'].map(s => <option key={s} value={s}>{s}</option>)
-                }
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Cidade</label>
-              <input className="form-input" value={form.cidade || ''} onChange={e => setForm(p => ({ ...p, cidade: e.target.value }))} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Estado</label>
-              <input className="form-input" value={form.estado || ''} onChange={e => setForm(p => ({ ...p, estado: e.target.value }))} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Setor</label>
-              <input className="form-input" value={form.setor || ''} onChange={e => setForm(p => ({ ...p, setor: e.target.value }))} placeholder="Tecnologia, Imóveis..." />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Fundação</label>
-              <input className="form-input" type="date" value={form.fundacao || ''} onChange={e => setForm(p => ({ ...p, fundacao: e.target.value }))} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Website</label>
-              <input className="form-input" value={form.website || ''} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} placeholder="https://" />
-            </div>
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label className="form-label">Observações</label>
-              <textarea className="form-textarea" value={form.notas || ''} onChange={e => setForm(p => ({ ...p, notas: e.target.value }))} />
-            </div>
+          {/* Tabs */}
+          <div className="tabs" style={{ marginBottom: 20, borderBottom: '1px solid var(--surface-border)' }}>
+            {([
+              ['gerais', 'fa-building', 'Dados Gerais'],
+              ['socios', 'fa-users', 'Sócios'],
+              ['fiscal', 'fa-file-invoice', 'Regime Fiscal'],
+              ['tags', 'fa-tag', 'Tags & Notas'],
+            ] as const).map(([k, icon, label]) => (
+              <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
+                <i className={`fas ${icon}`} style={{ marginRight: 6 }} />{label}
+              </button>
+            ))}
           </div>
+
+          {tab === 'gerais' && (
+            <div className="form-grid">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Nome Legal da Entidade *</label>
+                <input className="form-input" value={form.nome || ''} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))} placeholder="Ex: Grupo Meridian Ltda" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">País / Jurisdição</label>
+                <select className="form-select" value={form.pais || 'BR'} onChange={e => setForm(p => ({ ...p, pais: e.target.value as 'BR' | 'US' }))}>
+                  <option value="BR">Brasil</option>
+                  <option value="US">Estados Unidos</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tipo de Entidade</label>
+                <select className="form-select" value={form.legalType || ''} onChange={e => setForm(p => ({ ...p, legalType: e.target.value }))}>
+                  <option value="">Selecione...</option>
+                  {form.pais === 'BR'
+                    ? ['Ltda','S.A.','MEI','EIRELI','SCP','Fundação'].map(s => <option key={s} value={s}>{s}</option>)
+                    : ['LLC','Corporation','S-Corp','C-Corp','Partnership','Trust'].map(s => <option key={s} value={s}>{s}</option>)
+                  }
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Estado / Unidade Federativa</label>
+                <input className="form-input" value={form.estado || ''} onChange={e => setForm(p => ({ ...p, estado: e.target.value }))} placeholder="SP, RJ, MG..." />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Cidade</label>
+                <input className="form-input" value={form.cidade || ''} onChange={e => setForm(p => ({ ...p, cidade: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Status</label>
+                <select className="form-select" value={form.status || 'ativo'} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
+                  {['ativa','inativa','em liquidação','holding'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Data de Abertura</label>
+                <input className="form-input" type="date" value={form.fundacao || ''} onChange={e => setForm(p => ({ ...p, fundacao: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Data de Encerramento</label>
+                <input className="form-input" type="date" value={form.dataEncerramento || ''} onChange={e => setForm(p => ({ ...p, dataEncerramento: e.target.value }))} />
+              </div>
+              {form.pais === 'BR' ? (
+                <div className="form-group">
+                  <label className="form-label">CNPJ</label>
+                  <input className="form-input" value={form.cnpj || ''} onChange={e => setForm(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0001-00" />
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label className="form-label">EIN</label>
+                  <input className="form-input" value={form.ein || ''} onChange={e => setForm(p => ({ ...p, ein: e.target.value }))} placeholder="00-0000000" />
+                </div>
+              )}
+              <div className="form-group">
+                <label className="form-label">Inscrição Estadual</label>
+                <input className="form-input" value={form.inscricaoEstadual || ''} onChange={e => setForm(p => ({ ...p, inscricaoEstadual: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Setor de Atuação</label>
+                <input className="form-input" value={form.setor || ''} onChange={e => setForm(p => ({ ...p, setor: e.target.value }))} placeholder="Ex: Tecnologia, Construção, Imóveis..." />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Website</label>
+                <input className="form-input" value={form.website || ''} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} placeholder="https://..." />
+              </div>
+              <div className="form-group">
+                <label className="form-label">E-mail</label>
+                <input className="form-input" type="email" value={extra.email} onChange={e => setExtra(p => ({ ...p, email: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Telefone</label>
+                <input className="form-input" value={extra.telefone} onChange={e => setExtra(p => ({ ...p, telefone: e.target.value }))} />
+              </div>
+            </div>
+          )}
+
+          {tab === 'socios' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Sócios e participação societária</div>
+                <button className="btn btn-ghost btn-sm" onClick={() => setExtra(p => ({ ...p, socios: [...p.socios, { nome: '', documento: '', participacao: '', papel: '', email: '' }] }))}>
+                  <i className="fas fa-plus" /> Adicionar Sócio
+                </button>
+              </div>
+              {extra.socios.length === 0 ? (
+                <div className="empty-state"><i className="fas fa-users" /><p>Nenhum sócio cadastrado</p></div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {extra.socios.map((s, i) => (
+                    <div key={i} className="card" style={{ padding: 12 }}>
+                      <div className="form-grid">
+                        <div className="form-group">
+                          <label className="form-label">Nome</label>
+                          <input className="form-input" value={s.nome} onChange={e => setExtra(p => ({ ...p, socios: p.socios.map((x, j) => j === i ? { ...x, nome: e.target.value } : x) }))} />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">CPF / Documento</label>
+                          <input className="form-input" value={s.documento} onChange={e => setExtra(p => ({ ...p, socios: p.socios.map((x, j) => j === i ? { ...x, documento: e.target.value } : x) }))} />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Participação (%)</label>
+                          <input className="form-input" value={s.participacao} onChange={e => setExtra(p => ({ ...p, socios: p.socios.map((x, j) => j === i ? { ...x, participacao: e.target.value } : x) }))} />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Papel</label>
+                          <input className="form-input" value={s.papel} onChange={e => setExtra(p => ({ ...p, socios: p.socios.map((x, j) => j === i ? { ...x, papel: e.target.value } : x) }))} placeholder="Sócio-administrador" />
+                        </div>
+                        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                          <label className="form-label">E-mail</label>
+                          <input className="form-input" value={s.email} onChange={e => setExtra(p => ({ ...p, socios: p.socios.map((x, j) => j === i ? { ...x, email: e.target.value } : x) }))} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setExtra(p => ({ ...p, socios: p.socios.filter((_, j) => j !== i) }))}>
+                          <i className="fas fa-trash" /> Remover
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'fiscal' && (
+            <div className="form-grid">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Regime Tributário</label>
+                <select className="form-select" value={form.taxRegime || ''} onChange={e => setForm(p => ({ ...p, taxRegime: e.target.value }))}>
+                  <option value="">Selecione...</option>
+                  {form.pais === 'BR'
+                    ? ['Simples Nacional','Lucro Presumido','Lucro Real','MEI'].map(s => <option key={s} value={s}>{s}</option>)
+                    : ['C-Corp','S-Corp','Pass-Through','Disregarded Entity'].map(s => <option key={s} value={s}>{s}</option>)
+                  }
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Ano-Calendário Vigente</label>
+                <input className="form-input" value={form.anoCalendario || ''} onChange={e => setForm(p => ({ ...p, anoCalendario: e.target.value }))} placeholder="2024" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tipo de Apuração</label>
+                <select className="form-select" value={form.ctbElection || ''} onChange={e => setForm(p => ({ ...p, ctbElection: e.target.value }))}>
+                  <option value="">Selecione...</option>
+                  {['Mensal','Trimestral','Anual'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Classificação CFC</label>
+                <select className="form-select" value={form.cfcClass || 'nao-aplicavel'} onChange={e => setForm(p => ({ ...p, cfcClass: e.target.value }))}>
+                  <option value="nao-aplicavel">Não aplicável</option>
+                  <option value="cfc">CFC</option>
+                  <option value="pfic">PFIC</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Obrigações Acessórias Relevantes</label>
+                <textarea className="form-textarea" value={form.obrigacoesAcessorias || ''} onChange={e => setForm(p => ({ ...p, obrigacoesAcessorias: e.target.value }))} placeholder="Ex: ECF, SPED, FBAR, Form 5471, DIRPF..." />
+              </div>
+            </div>
+          )}
+
+          {tab === 'tags' && (
+            <div>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label">Tags</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    className="form-input"
+                    value={tagInput}
+                    onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && tagInput.trim()) {
+                        e.preventDefault()
+                        setExtra(p => ({ ...p, tags: [...p.tags, tagInput.trim()] }))
+                        setTagInput('')
+                      }
+                    }}
+                    placeholder="Digite uma tag e pressione Enter"
+                  />
+                  <button className="btn btn-ghost" onClick={() => {
+                    if (tagInput.trim()) {
+                      setExtra(p => ({ ...p, tags: [...p.tags, tagInput.trim()] }))
+                      setTagInput('')
+                    }
+                  }}><i className="fas fa-plus" /></button>
+                </div>
+                {extra.tags.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                    {extra.tags.map((tg, i) => (
+                      <span key={i} className="badge badge-brand" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {tg}
+                        <button onClick={() => setExtra(p => ({ ...p, tags: p.tags.filter((_, j) => j !== i) }))} style={{ background: 'transparent', border: 0, color: 'inherit', cursor: 'pointer' }}>
+                          <i className="fas fa-times" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Observações</label>
+                <textarea className="form-textarea" rows={6} value={extra.observacoes} onChange={e => setExtra(p => ({ ...p, observacoes: e.target.value }))} />
+              </div>
+            </div>
+          )}
         </Modal>
       )}
 
