@@ -354,6 +354,12 @@ export function LifeInsurancePage() {
       )}
 
       {confirm && <ConfirmDialog msg={confirm.msg} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
+
+      {centralOpen && (
+        <Modal title="Central de Documentos — Seguro de Vida" large onClose={() => setCentralOpen(false)}>
+          <InsuranceDocsManager insuranceType="life" global />
+        </Modal>
+      )}
     </div>
   )
 }
