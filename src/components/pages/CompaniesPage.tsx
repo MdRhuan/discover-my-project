@@ -433,7 +433,7 @@ export function CompaniesPage() {
                         <td style={{ fontSize: 12 }}>{emp?.nome || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                         <td><span className="badge badge-brand" style={{ fontSize: 10 }}>{d.categoria}</span></td>
                         <td style={{ fontSize: 12 }}>v{d.versao || '1'}</td>
-                        <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
+                        <td style={{ fontSize: 12 }}>{d.ano || '—'}</td>
                         <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
