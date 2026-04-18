@@ -375,7 +375,13 @@ export function CompaniesPage() {
           return matchEmp && matchSearch
         })
         return (
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button className="btn btn-primary btn-sm" onClick={() => openNewDoc(filterDocEmp === 'all' ? undefined : filterDocEmp)}>
+                <i className="fas fa-plus" /> Adicionar Documento
+              </button>
+            </div>
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="table-wrap">
               <table className="data-table">
                 <thead>
