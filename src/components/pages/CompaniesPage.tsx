@@ -1,11 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
+import { supabase } from '@/integrations/supabase/client'
 import type { Empresa, Documento } from '@/types'
+
+const DOC_BUCKET = 'company-documents'
+
+function inferDocType(file: File): string {
+  const ext = file.name.split('.').pop()?.toUpperCase() || ''
+  if (['PDF'].includes(ext)) return 'PDF'
+  if (['DOC','DOCX'].includes(ext)) return 'DOCX'
+  if (['XLS','XLSX'].includes(ext)) return 'XLSX'
+  if (['TXT','MD'].includes(ext)) return 'TXT'
+  if (['PNG','JPG','JPEG','GIF','WEBP'].includes(ext)) return 'IMG'
+  return 'Outro'
+}
+function fmtBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / 1024 / 1024).toFixed(2)} MB`
+}
 
 const DOC_CATS = ['Constituição','Financeiro','Legal','Tax','Licenças','Contratos','RH','Compliance','Outros']
 
