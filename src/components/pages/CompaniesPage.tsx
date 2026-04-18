@@ -5,7 +5,9 @@ import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
-import type { Empresa } from '@/types'
+import type { Empresa, Documento } from '@/types'
+
+const DOC_CATS = ['Constituição','Financeiro','Legal','Tax','Licenças','Contratos','RH','Compliance','Outros']
 
 interface Socio { nome: string; documento: string; participacao: string; papel: string; email: string }
 
