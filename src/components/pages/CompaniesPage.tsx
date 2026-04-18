@@ -1,11 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
+import { supabase } from '@/integrations/supabase/client'
 import type { Empresa, Documento } from '@/types'
+
+const DOC_BUCKET = 'company-documents'
+
+function inferDocType(file: File): string {
+  const ext = file.name.split('.').pop()?.toUpperCase() || ''
+  if (['PDF'].includes(ext)) return 'PDF'
+  if (['DOC','DOCX'].includes(ext)) return 'DOCX'
+  if (['XLS','XLSX'].includes(ext)) return 'XLSX'
+  if (['TXT','MD'].includes(ext)) return 'TXT'
+  if (['PNG','JPG','JPEG','GIF','WEBP'].includes(ext)) return 'IMG'
+  return 'Outro'
+}
+function fmtBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / 1024 / 1024).toFixed(2)} MB`
+}
 
 const DOC_CATS = ['Constituição','Financeiro','Legal','Tax','Licenças','Contratos','RH','Compliance','Outros']
 
@@ -52,6 +70,9 @@ export function CompaniesPage() {
   const [detailDocs, setDetailDocs] = useState<Documento[]>([])
   const [docModal, setDocModal] = useState(false)
   const [docForm, setDocForm] = useState<Partial<Documento>>({})
+  const [docFile, setDocFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   async function loadDetailDocs(empresaId: number) {
     const all = await db.documentos.where('empresaId').equals(empresaId).toArray()
@@ -63,26 +84,67 @@ export function CompaniesPage() {
     if (e.id) await loadDetailDocs(e.id)
   }
 
+  function handleFilePicked(file: File | null) {
+    setDocFile(file)
+    if (file) {
+      setDocForm(p => ({
+        ...p,
+        nome: p.nome || file.name.replace(/\.[^.]+$/, ''),
+        tipo: p.tipo || inferDocType(file),
+        tamanho: fmtBytes(file.size),
+      }))
+    }
+  }
+
   async function saveDetailDoc() {
     if (!detail?.id) return
     if (!docForm.nome?.trim()) { toast('Nome é obrigatório.', 'error'); return }
     try {
+      setUploading(true)
+      let arquivoPath: string | undefined
+      if (docFile) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { toast('Usuário não autenticado.', 'error'); setUploading(false); return }
+        const safeName = docFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        arquivoPath = `${user.id}/${detail.id}/${Date.now()}-${safeName}`
+        const { error: upErr } = await supabase.storage
+          .from(DOC_BUCKET)
+          .upload(arquivoPath, docFile, { contentType: docFile.type || undefined, upsert: false })
+        if (upErr) { console.error(upErr); toast('Falha ao enviar arquivo.', 'error'); setUploading(false); return }
+      }
       await db.documentos.add({
         ...docForm,
         empresaId: detail.id,
+        arquivoPath,
         dataUpload: docForm.dataUpload || new Date().toISOString().slice(0, 10),
       } as Documento)
       await db.auditLog.add({ acao: `Documento adicionado a ${detail.nome}: ${docForm.nome}`, modulo: 'Empresas', timestamp: new Date().toISOString() })
-      toast(t.saved); setDocModal(false); setDocForm({})
+      toast(t.saved)
+      setDocModal(false); setDocForm({}); setDocFile(null)
       await loadDetailDocs(detail.id)
-    } catch { toast(t.errorSave, 'error') }
+    } catch (e) {
+      console.error(e); toast(t.errorSave, 'error')
+    } finally { setUploading(false) }
   }
 
   async function removeDetailDoc(id: number) {
     if (!detail?.id) return
+    const doc = detailDocs.find(d => d.id === id)
+    if (doc?.arquivoPath) {
+      await supabase.storage.from(DOC_BUCKET).remove([doc.arquivoPath])
+    }
     await db.documentos.delete(id)
     toast(t.deleted)
     await loadDetailDocs(detail.id)
+  }
+
+  async function downloadDoc(doc: Documento) {
+    if (!doc.arquivoPath) { toast('Sem arquivo anexado.', 'info'); return }
+    const { data, error } = await supabase.storage
+      .from(DOC_BUCKET)
+      .createSignedUrl(doc.arquivoPath, 60)
+    if (error || !data?.signedUrl) { toast('Erro ao gerar link.', 'error'); return }
+    window.open(data.signedUrl, '_blank', 'noopener')
   }
 
   useEffect(() => { load() }, [])
@@ -562,7 +624,12 @@ export function CompaniesPage() {
                           <td style={{ fontSize: 12 }}>{fmt.date(d.dataUpload, lang)}</td>
                           <td>{vencBadge(d.vencimento)} <span style={{ fontSize: 11, marginLeft: 4 }}>{d.vencimento ? fmt.date(d.vencimento, lang) : '—'}</span></td>
                           <td>
-                            <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              {d.arquivoPath && (
+                                <button className="btn-icon" onClick={() => downloadDoc(d)} title="Baixar"><i className="fas fa-download" /></button>
+                              )}
+                              <button className="btn-icon danger" onClick={() => removeDetailDoc(d.id!)} title={t.delete}><i className="fas fa-trash" /></button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -579,15 +646,54 @@ export function CompaniesPage() {
       {docModal && detail && (
         <Modal
           title={`Novo Documento — ${detail.nome}`}
-          onClose={() => { setDocModal(false); setDocForm({}) }}
+          onClose={() => { setDocModal(false); setDocForm({}); setDocFile(null) }}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}) }}>{t.cancel}</button>
-              <button className="btn btn-primary" onClick={saveDetailDoc}><i className="fas fa-check" />{t.save}</button>
+              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}); setDocFile(null) }} disabled={uploading}>{t.cancel}</button>
+              <button className="btn btn-primary" onClick={saveDetailDoc} disabled={uploading}>
+                {uploading ? <><i className="fas fa-spinner fa-spin" /> Enviando...</> : <><i className="fas fa-check" />{t.save}</>}
+              </button>
             </>
           }
         >
           <div className="form-grid">
+            {/* Upload */}
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label className="form-label">Arquivo</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={e => handleFilePicked(e.target.files?.[0] || null)}
+              />
+              {!docFile ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    width: '100%', padding: '24px', border: '2px dashed var(--surface-border)',
+                    borderRadius: 8, background: 'transparent', color: 'var(--text-secondary)',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 8,
+                  }}
+                >
+                  <i className="fas fa-cloud-arrow-up" style={{ fontSize: 28, color: 'var(--brand)' }} />
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>Clique para anexar um arquivo</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>PDF, DOCX, XLSX, imagens...</div>
+                </button>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--surface-border)' }}>
+                  <i className="fas fa-file" style={{ fontSize: 22, color: 'var(--brand)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docFile.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtBytes(docFile.size)}</div>
+                  </div>
+                  <button className="btn-icon" onClick={() => fileInputRef.current?.click()} title="Trocar"><i className="fas fa-rotate" /></button>
+                  <button className="btn-icon danger" onClick={() => setDocFile(null)} title="Remover"><i className="fas fa-times" /></button>
+                </div>
+              )}
+            </div>
+
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label">Nome do Documento *</label>
               <input className="form-input" value={docForm.nome || ''} onChange={e => setDocForm(p => ({ ...p, nome: e.target.value }))} placeholder="Contrato Social, Ata..." />

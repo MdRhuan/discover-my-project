@@ -174,6 +174,7 @@ export type Database = {
       }
       documentos: {
         Row: {
+          arquivo_path: string | null
           categoria: string
           created_at: string
           data_upload: string | null
@@ -192,6 +193,7 @@ export type Database = {
           versao: string | null
         }
         Insert: {
+          arquivo_path?: string | null
           categoria: string
           created_at?: string
           data_upload?: string | null
@@ -210,6 +212,7 @@ export type Database = {
           versao?: string | null
         }
         Update: {
+          arquivo_path?: string | null
           categoria?: string
           created_at?: string
           data_upload?: string | null
