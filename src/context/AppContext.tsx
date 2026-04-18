@@ -7,6 +7,8 @@ import { db, supabaseSignOut } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
+type AppRole = 'admin' | 'user' | null
+
 interface AppContextValue {
   t: Translations
   lang: Lang
@@ -16,6 +18,8 @@ interface AppContextValue {
   toast: (msg: string, type?: Toast['type']) => void
   user: User | null
   setUser: (u: User | null) => void
+  role: AppRole
+  isAdmin: boolean
   page: PageKey
   setPage: (p: PageKey) => void
   sidebarOpen: boolean
