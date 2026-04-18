@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/ui/Modal'
+import { ConfirmDialog, Modal } from '@/components/ui/Modal'
+import { InsuranceDocsManager } from '@/components/insurance/InsuranceDocsManager'
 
 const AI_KEY = 'aptInsurance_data'
 
@@ -65,6 +66,7 @@ export function AptInsurancePage() {
   const [form, setForm] = useState<Partial<Seguro>>({})
   const [confirm, setConfirm] = useState<null | { msg: string; onConfirm: () => void }>(null)
   const [detail, setDetail] = useState<Seguro | null>(null)
+  const [centralOpen, setCentralOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
@@ -126,9 +128,14 @@ export function AptInsurancePage() {
             <div className="page-header-sub">{seguros.filter(s=>s.status==='ativo').length} apólices ativas · cobertura BRL {Number(totalBRL).toLocaleString('pt-BR')} + USD {Number(totalUSD).toLocaleString('en-US')}</div>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={() => openForm(null)}>
-          <i className="fas fa-plus" />Nova Apólice
-        </button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-ghost" onClick={() => setCentralOpen(true)}>
+            <i className="fas fa-folder-open" />Central de Documentos
+          </button>
+          <button className="btn btn-primary" onClick={() => openForm(null)}>
+            <i className="fas fa-plus" />Nova Apólice
+          </button>
+        </div>
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:12, marginBottom:20 }}>
@@ -231,16 +238,12 @@ export function AptInsurancePage() {
                   <i className="fas fa-note-sticky" style={{ marginRight:6, color:'var(--brand)' }} />{detail.obs}
                 </div>
               )}
-              {(detail.docs||[]).length > 0 && (
-                <div style={{ marginTop:14 }}>
-                  <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.05em' }}>Documentos</div>
-                  <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                    {detail.docs!.map((d, i) => (
-                      <button key={i} onClick={() => { const a=document.createElement('a');a.href=d.conteudo;a.download=d.nome;a.click() }} style={{ display:'flex', alignItems:'center', gap:6, background:'var(--surface-hover)', border:'1px solid var(--surface-border)', borderRadius:8, padding:'5px 12px', cursor:'pointer', fontSize:12, color:'var(--text-secondary)' }}>
-                        <i className="fas fa-file-pdf" style={{ color:'var(--brand)', fontSize:11 }} />{d.nome.length>24?d.nome.slice(0,24)+'…':d.nome}
-                      </button>
-                    ))}
+              {detail && (
+                <div style={{ marginTop:18 }}>
+                  <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.05em' }}>
+                    <i className="fas fa-folder" style={{ marginRight:6 }} />Documentos vinculados
                   </div>
+                  <InsuranceDocsManager insuranceType="apt" apoliceId={detail.id} apoliceLabel={`${detail.seguradora}${detail.imovel ? ' — ' + detail.imovel : ''}`} />
                 </div>
               )}
             </div>
@@ -373,16 +376,11 @@ export function AptInsurancePage() {
                 </div>
                 <div className="form-group" style={{ gridColumn:'1/-1' }}>
                   <label className="form-label">Documentos</label>
-                  <input ref={fileRef} type="file" style={{ display:'none' }} onChange={handleFile} />
-                  <button type="button" className="btn btn-secondary" onClick={() => fileRef.current?.click()}><i className="fas fa-paperclip" />Anexar</button>
-                  {(form.docs||[]).length > 0 && (
-                    <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:8 }}>
-                      {form.docs!.map((d, i) => (
-                        <span key={i} style={{ display:'flex', alignItems:'center', gap:5, background:'var(--surface-hover)', borderRadius:6, padding:'3px 9px', fontSize:11 }}>
-                          <i className="fas fa-file" style={{ color:'var(--brand)', fontSize:10 }} />{d.nome.length>22?d.nome.slice(0,22)+'…':d.nome}
-                          <button style={{ background:'none', border:'none', cursor:'pointer', color:'var(--red)', padding:0, marginLeft:2, fontSize:11 }} onClick={() => setForm(f=>({...f,docs:f.docs!.filter((_,j)=>j!==i)}))}>×</button>
-                        </span>
-                      ))}
+                  {form.id ? (
+                    <InsuranceDocsManager insuranceType="apt" apoliceId={form.id} apoliceLabel={`${form.seguradora || ''}${form.imovel ? ' — ' + form.imovel : ''}`} />
+                  ) : (
+                    <div style={{ fontSize:12, color:'var(--text-muted)', padding:'10px 12px', background:'var(--surface-hover)', borderRadius:8, border:'1px dashed var(--surface-border)' }}>
+                      <i className="fas fa-info-circle" style={{ marginRight:6 }} />Salve a apólice primeiro para anexar documentos.
                     </div>
                   )}
                 </div>
@@ -397,6 +395,12 @@ export function AptInsurancePage() {
       )}
 
       {confirm && <ConfirmDialog msg={confirm.msg} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
+
+      {centralOpen && (
+        <Modal title="Central de Documentos — Seguro do Apartamento" large onClose={() => setCentralOpen(false)}>
+          <InsuranceDocsManager insuranceType="apt" global />
+        </Modal>
+      )}
     </div>
   )
 }
