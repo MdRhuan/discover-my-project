@@ -62,6 +62,7 @@ export function CompaniesPage() {
   const [view, setView] = useState<'empresas' | 'docs'>('empresas')
   const [allDocs, setAllDocs] = useState<Documento[]>([])
   const [filterDocEmp, setFilterDocEmp] = useState<number | 'all'>('all')
+  const [filterDocAno, setFilterDocAno] = useState<string>('all')
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState<Partial<Empresa>>(EMPTY_EMPRESA)
   const [extra, setExtra] = useState<ExtraData>(EMPTY_EXTRA)
