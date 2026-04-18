@@ -127,7 +127,7 @@ function OrgChartEditor() {
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'node' | 'edge'; id: string } | null>(null)
   const dirtyRef = useRef(false)
   const saveTimer = useRef<number | null>(null)
-  const { fitView } = useReactFlow()
+  const { fitView, zoomIn, zoomOut } = useReactFlow()
 
   // ============ Load ============
   const loadAll = useCallback(async () => {
