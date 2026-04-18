@@ -44,10 +44,11 @@ export function TasksPage() {
     await db.tasks.delete(id); toast(t.deleted); setConfirmId(null); load()
   }
 
-  async function toggleStatus(tk: Task) {
-    const next = tk.status === 'concluida' ? 'pendente' : tk.status === 'pendente' ? 'em-andamento' : 'concluida'
+  async function changeStatus(tk: Task, next: Task['status']) {
+    if (tk.status === next) return
     await db.tasks.update(tk.id!, { status: next })
     setTasks(prev => prev.map(t => t.id === tk.id ? { ...t, status: next } : t))
+    toast(t.saved)
   }
 
   const today = new Date().toISOString().slice(0, 10)
@@ -133,9 +134,28 @@ export function TasksPage() {
                     </td>
                     <td><span className={`badge badge-${prio.badge}`}>{prio.label}</span></td>
                     <td>
-                      <button onClick={() => toggleStatus(tk)} className={`badge badge-${st.badge}`} style={{ cursor: 'pointer', border: 'none', background: 'transparent' }}>
-                        {st.label}
-                      </button>
+                      <select
+                        value={tk.status}
+                        onChange={(e) => changeStatus(tk, e.target.value as Task['status'])}
+                        className={`badge badge-${st.badge}`}
+                        style={{
+                          cursor: 'pointer',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: 6,
+                          fontWeight: 600,
+                          fontSize: 11,
+                          appearance: 'none',
+                          paddingRight: 22,
+                          backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'3\'><polyline points=\'6 9 12 15 18 9\'/></svg>")',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 6px center',
+                        }}
+                      >
+                        <option value="pendente">Pendente</option>
+                        <option value="em-andamento">Em andamento</option>
+                        <option value="concluida">Concluída</option>
+                      </select>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
