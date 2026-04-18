@@ -72,6 +72,7 @@ const NAV_STRUCTURE: NavItemDef[] = [
     children: [
       { key: 'backup',   icon: 'fa-database',     label: { pt: 'Backup',    en: 'Backup'    } },
       { key: 'auditLog', icon: 'fa-shield-halved', label: { pt: 'Auditoria', en: 'Audit Log' } },
+      { key: 'users',    icon: 'fa-users-gear',    label: { pt: 'Usuários',  en: 'Users'     } },
     ],
   },
 ]
@@ -154,7 +155,7 @@ function NavItemComponent({
 
 function filterByRole(items: NavItemDef[], isAdmin: boolean): NavItemDef[] {
   return items
-    .filter(it => isAdmin || it.key !== 'fixedExpenses')
+    .filter(it => isAdmin || (it.key !== 'fixedExpenses' && it.key !== 'users'))
     .map(it => it.children
       ? { ...it, children: filterByRole(it.children, isAdmin) }
       : it,

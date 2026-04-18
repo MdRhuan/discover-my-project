@@ -36,7 +36,9 @@ function Shell() {
   if (!user) return <AuthScreen />
 
   // Bloqueio de rota: não-admin não acessa Despesas Fixas
-  const effectivePage = (!isAdmin && page === 'fixedExpenses') ? 'dashboard' : page
+  let effectivePage = page
+  if (!isAdmin && page === 'fixedExpenses') effectivePage = 'dashboard'
+  if (!isAdmin && page === 'users') effectivePage = 'dashboard'
 
   const fallback = (
     <div style={{ padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>
@@ -70,6 +72,7 @@ function Shell() {
     case 'checkBox':       content = <CheckBoxPage />; break
     case 'backup':         content = <BackupPage />; break
     case 'auditLog':       content = <AuditLogPage />; break
+    case 'users':          content = <UsersPage />; break
     default:               content = <DashboardPage />
   }
 
