@@ -174,9 +174,9 @@ export function PersonalDocsPage() {
 
   async function saveDoc() {
     if (!form.nome?.trim()) { toast('Nome obrigatório.', 'error'); return }
-    if (!form.pessoa?.trim()) { toast('Pessoa obrigatória.', 'error'); return }
-    if (!form.categoria?.trim()) { toast('Categoria obrigatória.', 'error'); return }
-    if (!form.subcategoria?.trim()) { toast('Subcategoria obrigatória.', 'error'); return }
+    if (!form.pessoa?.trim()) { toast('Selecione uma pessoa cadastrada.', 'error'); return }
+    if (!registeredPeople.includes(form.pessoa)) { toast('Pessoa inválida. Selecione uma pessoa já cadastrada.', 'error'); return }
+    if (!form.categoria?.trim() || !SUBCATS.some(s => s.key === form.categoria)) { toast('Categoria inválida.', 'error'); return }
     try {
       const payload = { ...form }
       const editingId = payload.id
