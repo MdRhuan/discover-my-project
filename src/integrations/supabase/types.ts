@@ -679,6 +679,60 @@ export type Database = {
         }
         Relationships: []
       }
+      org_images: {
+        Row: {
+          altura: number
+          arquivo_path: string
+          created_at: string
+          empresa_id: number | null
+          id: number
+          largura: number
+          nome: string | null
+          opacidade: number | null
+          owner_id: string
+          pos_x: number
+          pos_y: number
+          raio: number | null
+          rotacao: number | null
+          updated_at: string
+          z_index: number | null
+        }
+        Insert: {
+          altura?: number
+          arquivo_path: string
+          created_at?: string
+          empresa_id?: number | null
+          id?: number
+          largura?: number
+          nome?: string | null
+          opacidade?: number | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          raio?: number | null
+          rotacao?: number | null
+          updated_at?: string
+          z_index?: number | null
+        }
+        Update: {
+          altura?: number
+          arquivo_path?: string
+          created_at?: string
+          empresa_id?: number | null
+          id?: number
+          largura?: number
+          nome?: string | null
+          opacidade?: number | null
+          owner_id?: string
+          pos_x?: number
+          pos_y?: number
+          raio?: number | null
+          rotacao?: number | null
+          updated_at?: string
+          z_index?: number | null
+        }
+        Relationships: []
+      }
       org_nodes: {
         Row: {
           cargo: string | null
