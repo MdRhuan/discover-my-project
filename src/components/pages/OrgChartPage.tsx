@@ -650,6 +650,56 @@ function OrgChartEditor() {
       toast('Ícone adicionado · duplo clique para editar', 'success')
     } catch (err) { console.error(err); toast('Erro ao adicionar ícone', 'error') }
   }
+
+  async function handleAddImageFromFile(file: File) {
+    const ALLOWED = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+    if (!ALLOWED.includes(file.type)) {
+      toast('Formato inválido (PNG, JPG, WEBP ou GIF)', 'error'); return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Imagem muito grande (máx 5MB)', 'error'); return
+    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { toast('Sessão expirada', 'error'); return }
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase()
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+      const up = await supabase.storage.from('org-images').upload(path, file, {
+        contentType: file.type, upsert: false,
+      })
+      if (up.error) throw up.error
+
+      const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+        const img = new Image()
+        const objUrl = URL.createObjectURL(file)
+        img.onload = () => { resolve({ w: img.naturalWidth, h: img.naturalHeight }); URL.revokeObjectURL(objUrl) }
+        img.onerror = () => { resolve({ w: 200, h: 200 }); URL.revokeObjectURL(objUrl) }
+        img.src = objUrl
+      })
+      const maxSide = 220
+      const ratio = dims.w / dims.h
+      const w = ratio >= 1 ? maxSide : Math.round(maxSide * ratio)
+      const h = ratio >= 1 ? Math.round(maxSide / ratio) : maxSide
+
+      const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      const id = await db.orgImages.add({
+        nome: file.name, arquivoPath: path,
+        posX: pos.x, posY: pos.y, largura: w, altura: h,
+        rotacao: 0, opacidade: 1, raio: 0, zIndex: 1,
+      } as OrgImage)
+      const signedUrl = await getSignedUrl(path)
+      setNodes(curr => [...curr, {
+        id: `image:${id}`, type: 'image', position: pos,
+        style: { width: w, height: h }, zIndex: 1,
+        data: {
+          url: signedUrl, nome: file.name, rotacao: 0, opacidade: 1, raio: 0,
+          onEdit: (nid: string) => setEditNodeId(nid), onResize: handleImageResize,
+        },
+      }])
+      toast('Imagem adicionada · duplo clique para editar', 'success')
+    } catch (err) { console.error(err); toast('Erro ao enviar imagem', 'error') }
+  }
+
   const onConnect = useCallback(async (conn: Connection) => {
     if (!conn.source || !conn.target) return
     const src = parseId(conn.source); const tgt = parseId(conn.target)
