@@ -50,10 +50,11 @@ const SUBCATS = [
   { key: 'Residência',  icon: 'fa-house',            color: 'blue'   },
   { key: 'Passaporte',  icon: 'fa-passport',         color: 'green'  },
   { key: 'Visto',       icon: 'fa-stamp',            color: 'yellow' },
+  { key: 'Seguros',     icon: 'fa-shield-halved',    color: 'purple' },
   { key: 'Outros',      icon: 'fa-folder',           color: 'orange' },
 ]
-const COLOR_VAR: Record<string, string> = { brand: 'var(--brand)', blue: 'var(--blue)', green: 'var(--green)', yellow: 'var(--yellow)', orange: 'var(--orange)' }
-const COLOR_BG: Record<string, string>  = { brand: 'var(--brand-dim)', blue: 'rgba(59,130,246,.12)', green: 'rgba(34,197,94,.12)', yellow: 'rgba(245,158,11,.12)', orange: 'rgba(249,115,22,.12)' }
+const COLOR_VAR: Record<string, string> = { brand: 'var(--brand)', blue: 'var(--blue)', green: 'var(--green)', yellow: 'var(--yellow)', orange: 'var(--orange)', purple: '#a855f7' }
+const COLOR_BG: Record<string, string>  = { brand: 'var(--brand-dim)', blue: 'rgba(59,130,246,.12)', green: 'rgba(34,197,94,.12)', yellow: 'rgba(245,158,11,.12)', orange: 'rgba(249,115,22,.12)', purple: 'rgba(168,85,247,.12)' }
 const STATUS_MAP: Record<string, { badge: string; label: string }> = {
   ativo: { badge: 'brand', label: 'Ativo' }, pendente: { badge: 'yellow', label: 'Pendente' },
   vencido: { badge: 'red', label: 'Vencido' }, renovado: { badge: 'green', label: 'Renovado' },
