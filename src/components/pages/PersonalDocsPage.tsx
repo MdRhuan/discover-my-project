@@ -220,115 +220,7 @@ export function PersonalDocsPage() {
       {/* Pessoas (abas) */}
       <PeopleTabs activePersonName={activePerson} onActivePersonChange={setActivePerson} />
 
-      {/* Próximas Obrigações */}
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>
-            <i className="fas fa-clock-rotate-left" style={{ marginRight: 8, color: 'var(--brand)' }} />
-            Próximas Obrigações
-            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>
-              ({obFiltered.length}{obFiltered.length !== obList.length ? ` de ${obList.length}` : ''})
-            </span>
-          </div>
-          <button
-            className="btn btn-primary"
-            style={{ fontSize: 12 }}
-            onClick={() => {
-              if (pessoas.length === 0 && categorias.length === 0) {
-                toast('Cadastre ao menos um documento (com pessoa e categoria) antes de criar obrigações.', 'error')
-                return
-              }
-              setObForm({ pessoas: [], categorias: [] })
-              setObModal(true)
-            }}
-          >
-            <i className="fas fa-plus" />Adicionar
-          </button>
-        </div>
-
-        {/* Filtros de obrigações */}
-        {obList.length > 0 && (pessoas.length > 0 || categorias.length > 0) && (
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 12, padding: 10, background: 'var(--surface-hover)', borderRadius: 8 }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Filtrar por pessoa</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {pessoas.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Nenhuma cadastrada</span>}
-                {pessoas.map(p => {
-                  const active = obFilterPessoas.includes(p)
-                  return (
-                    <button key={p} onClick={() => setObFilterPessoas(prev => active ? prev.filter(x => x !== p) : [...prev, p])}
-                      style={{ fontSize: 11, padding: '3px 8px', borderRadius: 12, border: `1px solid ${active ? 'var(--brand)' : 'var(--surface-border)'}`, background: active ? 'var(--brand-dim)' : 'var(--surface-card)', color: active ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: active ? 600 : 400 }}>
-                      {active && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 9 }} />}{p}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Filtrar por categoria</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {categorias.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Nenhuma cadastrada</span>}
-                {categorias.map(c => {
-                  const active = obFilterCats.includes(c)
-                  return (
-                    <button key={c} onClick={() => setObFilterCats(prev => active ? prev.filter(x => x !== c) : [...prev, c])}
-                      style={{ fontSize: 11, padding: '3px 8px', borderRadius: 12, border: `1px solid ${active ? 'var(--brand)' : 'var(--surface-border)'}`, background: active ? 'var(--brand-dim)' : 'var(--surface-card)', color: active ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: active ? 600 : 400 }}>
-                      {active && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 9 }} />}{c}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            {(obFilterPessoas.length > 0 || obFilterCats.length > 0) && (
-              <button className="btn btn-ghost" style={{ fontSize: 11, alignSelf: 'flex-end' }} onClick={() => { setObFilterPessoas([]); setObFilterCats([]) }}>
-                <i className="fas fa-xmark" />Limpar
-              </button>
-            )}
-          </div>
-        )}
-
-        {obList.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '8px 0' }}>Nenhuma obrigação cadastrada.</div>
-        ) : obFiltered.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px', textAlign: 'center' }}>
-            <i className="fas fa-filter" style={{ marginRight: 6 }} />Nenhuma obrigação corresponde aos filtros.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {obFiltered.map(ob => {
-              const c = alertColor(ob.data)
-              return (
-                <div key={ob.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 8, border: `1px solid ${c ? c + '44' : 'var(--surface-border)'}` }}>
-                  <i className="fas fa-calendar-check" style={{ color: c || 'var(--brand)', fontSize: 14, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{ob.label}</div>
-                    {ob.info && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ob.info}</div>}
-                    {((ob.pessoas && ob.pessoas.length > 0) || (ob.categorias && ob.categorias.length > 0)) && (
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
-                        {(ob.pessoas || []).map(p => (
-                          <span key={'p' + p} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600 }}>
-                            <i className="fas fa-user" style={{ marginRight: 3, fontSize: 8 }} />{p}
-                          </span>
-                        ))}
-                        {(ob.categorias || []).map(cat => (
-                          <span key={'c' + cat} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: 'rgba(245,158,11,.15)', color: 'var(--yellow)', fontWeight: 600 }}>
-                            <i className="fas fa-folder" style={{ marginRight: 3, fontSize: 8 }} />{cat}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {ob.data && <span style={{ fontSize: 11, color: c || 'var(--text-secondary)', fontWeight: c ? 700 : 400, flexShrink: 0 }}>{fmt.date(ob.data, lang)}</span>}
-                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                    <button className="btn-icon" onClick={() => { setObForm({ ...ob, pessoas: ob.pessoas || [], categorias: ob.categorias || [] }); setObModal(true) }}><i className="fas fa-pen" /></button>
-                    <button className="btn-icon danger" onClick={() => setConfirmObId(ob.id)}><i className="fas fa-trash" /></button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      
 
       {/* Subcategory chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 18 }}>
@@ -446,50 +338,64 @@ export function PersonalDocsPage() {
           })}
         </div>
       ) : (
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>Documento</th><th>Pessoa</th><th>Categoria</th><th>Status</th><th>Upload</th><th>Vencimento</th><th>Ações</th></tr></thead>
-            <tbody>
-              {filtered.length === 0 && <tr><td colSpan={7}><div className="empty-state"><i className="fas fa-id-card" /><p>Nenhum documento encontrado.</p></div></td></tr>}
-              {filtered.map(r => {
-                const sub = SUBCATS.find(s => s.key === r.categoria)
-                const st = STATUS_MAP[r.status || 'ativo']
-                const c = alertColor(r.vencimento)
-                return (
-                  <tr key={r.id}>
-                    <td>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{r.nome}</div>
-                      {r.descricao && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.descricao}</div>}
-                    </td>
-                    <td style={{ fontSize: 12 }}>{r.pessoa}</td>
-                    <td>
-                      {sub && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: COLOR_VAR[sub.color], fontWeight: 600 }}>
-                        <i className={`fas ${sub.icon}`} style={{ fontSize: 10 }} />{r.categoria}
-                      </span>}
-                    </td>
-                    <td><span className={`badge badge-${st.badge}`}>{st.label}</span></td>
-                    <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.dataUpload ? fmt.date(r.dataUpload, lang) : '—'}</td>
-                    <td style={{ fontSize: 12, color: c || 'var(--text-secondary)', fontWeight: c ? 700 : 400 }}>
-                      {r.vencimento ? fmt.date(r.vencimento, lang) : '—'}
-                      {c && <span style={{ marginLeft: 4, fontSize: 10 }}>⚠</span>}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {r.conteudo && (
-                          <button className="btn-icon" title="Download" onClick={() => download(r)}><i className="fas fa-download" /></button>
-                        )}
-                        <button className="btn-icon" onClick={() => { setForm({ ...r }); setDocModal(true) }}><i className="fas fa-pen" /></button>
-                        <button className="btn-icon danger" onClick={() => setConfirmId(r.id!)}><i className="fas fa-trash" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {SUBCATS.filter(cat => cat.key !== 'Seguros' && (!filterCat || filterCat === cat.key)).map(cat => {
+            const items = filtered.filter(d => d.categoria === cat.key)
+            return (
+              <div key={cat.key} className="card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid var(--surface-border)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLOR_BG[cat.color] }}>
+                    <i className={`fas ${cat.icon}`} style={{ fontSize: 16, color: COLOR_VAR[cat.color] }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{cat.key}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} documento{items.length !== 1 ? 's' : ''}</div>
+                  </div>
+                  <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setForm({ ...EMPTY_DOC, pessoa: activePerson || EMPTY_DOC.pessoa, categoria: cat.key, dataUpload: today }); setDocModal(true) }}>
+                    <i className="fas fa-plus" />Adicionar
+                  </button>
+                </div>
+
+                {items.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)', fontSize: 12, background: 'var(--surface-hover)', borderRadius: 8, border: '1px dashed var(--surface-border)' }}>
+                    <i className="fas fa-folder-open" style={{ fontSize: 18, display: 'block', marginBottom: 6 }} />
+                    Nenhum documento adicionado
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {items.map(r => {
+                      const st = STATUS_MAP[r.status || 'ativo']
+                      const c = alertColor(r.vencimento)
+                      const isPdf = r.tipo?.toUpperCase() === 'PDF'
+                      const isImg = !!r.tipo && ['JPG','JPEG','PNG','WEBP','GIF'].includes(r.tipo.toUpperCase())
+                      return (
+                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)' }}>
+                          <i className={`fas ${isPdf ? 'fa-file-pdf' : isImg ? 'fa-file-image' : 'fa-file'}`} style={{ fontSize: 16, color: isPdf ? '#ef4444' : isImg ? '#3b82f6' : 'var(--text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nome}</div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 1 }}>
+                              <span><i className="fas fa-user" style={{ marginRight: 3 }} />{r.pessoa}</span>
+                              {r.subcategoria && <span><i className="fas fa-tag" style={{ marginRight: 3 }} />{r.subcategoria}</span>}
+                              {r.tipo && <span>{r.tipo}</span>}
+                              {r.dataUpload && <span>{fmt.date(r.dataUpload, lang)}</span>}
+                              {r.vencimento && <span style={{ color: c || 'var(--text-muted)', fontWeight: c ? 700 : 400 }}>Venc: {fmt.date(r.vencimento, lang)}{c && ' ⚠'}</span>}
+                            </div>
+                          </div>
+                          <span className={`badge badge-${st.badge}`} style={{ flexShrink: 0 }}>{st.label}</span>
+                          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                            {r.conteudo && <button className="btn-icon" title="Download" onClick={() => download(r)}><i className="fas fa-download" /></button>}
+                            <button className="btn-icon" title="Editar" onClick={() => { setForm({ ...r }); setDocModal(true) }}><i className="fas fa-pen" /></button>
+                            <button className="btn-icon danger" title="Excluir" onClick={() => setConfirmId(r.id!)}><i className="fas fa-trash" /></button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
-      </div>
       )}
 
       {/* Doc Modal */}
@@ -611,6 +517,115 @@ export function PersonalDocsPage() {
           </div>
         </Modal>
       )}
+
+      {/* Próximas Obrigações — sempre o último bloco da página */}
+      <div className="card" style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>
+            <i className="fas fa-clock-rotate-left" style={{ marginRight: 8, color: 'var(--brand)' }} />
+            Próximas Obrigações
+            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>
+              ({obFiltered.length}{obFiltered.length !== obList.length ? ` de ${obList.length}` : ''})
+            </span>
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ fontSize: 12 }}
+            onClick={() => {
+              if (pessoas.length === 0 && categorias.length === 0) {
+                toast('Cadastre ao menos um documento (com pessoa e categoria) antes de criar obrigações.', 'error')
+                return
+              }
+              setObForm({ pessoas: [], categorias: [] })
+              setObModal(true)
+            }}
+          >
+            <i className="fas fa-plus" />Adicionar
+          </button>
+        </div>
+
+        {obList.length > 0 && (pessoas.length > 0 || categorias.length > 0) && (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 12, padding: 10, background: 'var(--surface-hover)', borderRadius: 8 }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Filtrar por pessoa</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {pessoas.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Nenhuma cadastrada</span>}
+                {pessoas.map(p => {
+                  const active = obFilterPessoas.includes(p)
+                  return (
+                    <button key={p} onClick={() => setObFilterPessoas(prev => active ? prev.filter(x => x !== p) : [...prev, p])}
+                      style={{ fontSize: 11, padding: '3px 8px', borderRadius: 12, border: `1px solid ${active ? 'var(--brand)' : 'var(--surface-border)'}`, background: active ? 'var(--brand-dim)' : 'var(--surface-card)', color: active ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: active ? 600 : 400 }}>
+                      {active && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 9 }} />}{p}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Filtrar por categoria</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {categorias.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Nenhuma cadastrada</span>}
+                {categorias.map(c => {
+                  const active = obFilterCats.includes(c)
+                  return (
+                    <button key={c} onClick={() => setObFilterCats(prev => active ? prev.filter(x => x !== c) : [...prev, c])}
+                      style={{ fontSize: 11, padding: '3px 8px', borderRadius: 12, border: `1px solid ${active ? 'var(--brand)' : 'var(--surface-border)'}`, background: active ? 'var(--brand-dim)' : 'var(--surface-card)', color: active ? 'var(--brand)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: active ? 600 : 400 }}>
+                      {active && <i className="fas fa-check" style={{ marginRight: 4, fontSize: 9 }} />}{c}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {(obFilterPessoas.length > 0 || obFilterCats.length > 0) && (
+              <button className="btn btn-ghost" style={{ fontSize: 11, alignSelf: 'flex-end' }} onClick={() => { setObFilterPessoas([]); setObFilterCats([]) }}>
+                <i className="fas fa-xmark" />Limpar
+              </button>
+            )}
+          </div>
+        )}
+
+        {obList.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '8px 0' }}>Nenhuma obrigação cadastrada.</div>
+        ) : obFiltered.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px', textAlign: 'center' }}>
+            <i className="fas fa-filter" style={{ marginRight: 6 }} />Nenhuma obrigação corresponde aos filtros.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {obFiltered.map(ob => {
+              const c = alertColor(ob.data)
+              return (
+                <div key={ob.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 8, border: `1px solid ${c ? c + '44' : 'var(--surface-border)'}` }}>
+                  <i className="fas fa-calendar-check" style={{ color: c || 'var(--brand)', fontSize: 14, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{ob.label}</div>
+                    {ob.info && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ob.info}</div>}
+                    {((ob.pessoas && ob.pessoas.length > 0) || (ob.categorias && ob.categorias.length > 0)) && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+                        {(ob.pessoas || []).map(p => (
+                          <span key={'p' + p} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600 }}>
+                            <i className="fas fa-user" style={{ marginRight: 3, fontSize: 8 }} />{p}
+                          </span>
+                        ))}
+                        {(ob.categorias || []).map(cat => (
+                          <span key={'c' + cat} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: 'rgba(245,158,11,.15)', color: 'var(--yellow)', fontWeight: 600 }}>
+                            <i className="fas fa-folder" style={{ marginRight: 3, fontSize: 8 }} />{cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {ob.data && <span style={{ fontSize: 11, color: c || 'var(--text-secondary)', fontWeight: c ? 700 : 400, flexShrink: 0 }}>{fmt.date(ob.data, lang)}</span>}
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    <button className="btn-icon" onClick={() => { setObForm({ ...ob, pessoas: ob.pessoas || [], categorias: ob.categorias || [] }); setObModal(true) }}><i className="fas fa-pen" /></button>
+                    <button className="btn-icon danger" onClick={() => setConfirmObId(ob.id)}><i className="fas fa-trash" /></button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {confirmId !== null && <ConfirmDialog msg="Deseja realmente excluir este documento?" onConfirm={() => deleteDoc(confirmId)} onCancel={() => setConfirmId(null)} />}
       {confirmObId !== null && <ConfirmDialog msg="Excluir esta obrigação?" onConfirm={() => deleteOb(confirmObId)} onCancel={() => setConfirmObId(null)} />}
