@@ -352,16 +352,17 @@ export function PersonalDocsPage() {
             <i className="fas fa-search" />
             <input placeholder="Buscar documento..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <select className="form-select" style={{ maxWidth: 160 }} value={filterPessoa} onChange={e => setFilterPessoa(e.target.value)}>
-            <option value="">Todas as pessoas</option>
-            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
+          {activePerson && (
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 12, background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <i className="fas fa-user" style={{ fontSize: 10 }} />Filtrando por: {activePerson}
+            </span>
+          )}
           <select className="form-select" style={{ maxWidth: 160 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
             <option value="">Todas as categorias</option>
             {SUBCATS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
           </select>
-          {(search || filterPessoa || filterCat) && (
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setSearch(''); setFilterPessoa(''); setFilterCat('') }}>
+          {(search || filterCat) && (
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setSearch(''); setFilterCat('') }}>
               <i className="fas fa-xmark" />Limpar
             </button>
           )}
