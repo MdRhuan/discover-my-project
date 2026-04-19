@@ -267,19 +267,14 @@ export function FixedExpensesPage() {
         })}
       </div>
 
-      {/* Filters + Table */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <div className="tabs">
-          {[['all', 'Todos'], ['BR', 'Brasil'], ['US', 'EUA']].map(([v, l]) => (
-            <button key={v} className={`tab ${filterPais === v ? 'active' : ''}`} onClick={() => setFilterPais(v as 'all' | 'BR' | 'US')}>{l}</button>
-          ))}
-        </div>
-        {filterCat && (
+      {/* Filtro de categoria ativo */}
+      {filterCat && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setFilterCat('')}>
-            <i className="fas fa-xmark" />Limpar filtro
+            <i className="fas fa-xmark" />Limpar filtro: {filterCat}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="table-wrap">
