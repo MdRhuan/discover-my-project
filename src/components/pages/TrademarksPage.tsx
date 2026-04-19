@@ -9,17 +9,53 @@ import type { Trademark, Empresa } from '@/types'
 import { STATUS_OPTIONS, statusInfo, EMPTY_BR, EMPTY_US } from './trademarks/types'
 import { CountryPicker } from './trademarks/CountryPicker'
 import { TrademarkForm } from './trademarks/TrademarkForm'
+import { MultiSelect } from './trademarks/MultiSelect'
+
+const FILTERS_KEY = 'trademarks.filters.v1'
+
+type PaisFilter = 'all' | 'BR' | 'US'
+interface PersistedFilters {
+  search: string
+  pais: PaisFilter
+  status: string[]
+  classes: string[]
+}
+
+function loadFilters(): PersistedFilters {
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY)
+    if (raw) {
+      const p = JSON.parse(raw)
+      return {
+        search: typeof p.search === 'string' ? p.search : '',
+        pais: ['all', 'BR', 'US'].includes(p.pais) ? p.pais : 'all',
+        status: Array.isArray(p.status) ? p.status : [],
+        classes: Array.isArray(p.classes) ? p.classes : [],
+      }
+    }
+  } catch { /* empty */ }
+  return { search: '', pais: 'all', status: [], classes: [] }
+}
 
 export function TrademarksPage() {
   const { lang, toast } = useApp()
   const [rows, setRows] = useState<Trademark[]>([])
   const [empresas, setEmpresas] = useState<Empresa[]>([])
-  const [search, setSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterPais, setFilterPais] = useState<'all' | 'BR' | 'US'>('all')
+  const initial = loadFilters()
+  const [search, setSearch] = useState(initial.search)
+  const [filterStatus, setFilterStatus] = useState<string[]>(initial.status)
+  const [filterClasses, setFilterClasses] = useState<string[]>(initial.classes)
+  const [filterPais, setFilterPais] = useState<PaisFilter>(initial.pais)
   const [picker, setPicker] = useState(false)
   const [editing, setEditing] = useState<Partial<Trademark> | null>(null)
   const [confirmId, setConfirmId] = useState<number | null>(null)
+
+  // Persist filters
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTERS_KEY, JSON.stringify({ search, pais: filterPais, status: filterStatus, classes: filterClasses }))
+    } catch { /* empty */ }
+  }, [search, filterPais, filterStatus, filterClasses])
 
   const load = useCallback(async () => {
     const [tm, emps] = await Promise.all([db.trademarks.toArray(), db.empresas.toArray()])
