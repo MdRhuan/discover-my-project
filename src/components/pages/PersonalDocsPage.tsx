@@ -215,7 +215,10 @@ export function PersonalDocsPage() {
         </button>
       </div>
 
-      {/* Próximas Obrigações */}
+      {/* Pessoas (abas) */}
+      <PeopleTabs activePersonName={activePerson} onActivePersonChange={setActivePerson} />
+
+
       <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontWeight: 700, fontSize: 14 }}>
