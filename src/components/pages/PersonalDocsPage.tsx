@@ -49,8 +49,7 @@ const OB_DEFAULTS: Obrigacao[] = [
 const SUBCATS = [
   { key: 'Identidade',            icon: 'fa-id-card',         color: 'brand'  },
   { key: 'Residência',            icon: 'fa-house',            color: 'blue'   },
-  { key: 'Passaporte',            icon: 'fa-passport',         color: 'green'  },
-  { key: 'Visto',                 icon: 'fa-stamp',            color: 'yellow' },
+  { key: 'Passaporte / Visto',    icon: 'fa-passport',         color: 'green'  },
   { key: 'Seguros',               icon: 'fa-shield-halved',    color: 'purple' },
   { key: 'Plano de saúde',        icon: 'fa-hospital',         color: 'pink'   },
   { key: 'Greencard / Imigração', icon: 'fa-id-badge',         color: 'teal'   },
@@ -63,7 +62,7 @@ const STATUS_MAP: Record<string, { badge: string; label: string }> = {
   vencido: { badge: 'red', label: 'Vencido' }, renovado: { badge: 'green', label: 'Renovado' },
 }
 
-const EMPTY_DOC: Partial<DocPessoal> = { pessoa: 'Eduardo', categoria: 'Identidade', subcategoria: 'CPF', nome: '', tipo: 'PDF', descricao: '', status: 'ativo', dataUpload: new Date().toISOString().slice(0, 10), vencimento: '' }
+const EMPTY_DOC: Partial<DocPessoal> = { pessoa: '', categoria: 'Identidade', subcategoria: '', nome: '', tipo: 'PDF', descricao: '', status: 'ativo', dataUpload: new Date().toISOString().slice(0, 10), vencimento: '' }
 
 export function PersonalDocsPage() {
   const { lang, toast, setPage } = useApp()
