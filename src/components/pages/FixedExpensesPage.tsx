@@ -120,29 +120,64 @@ export function FixedExpensesPage() {
     } catch { toast('Erro ao excluir.', 'error') }
   }
 
+  const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
   return (
     <div className="page-content">
-      <div className="page-header">
+      <div className="page-header" style={{ alignItems: 'flex-start' }}>
         <div className="page-header-info">
           <div className="page-header-title">Despesas Fixas</div>
-          <div className="page-header-sub">{ativas.length} despesa{ativas.length !== 1 ? 's' : ''} ativa{ativas.length !== 1 ? 's' : ''}</div>
-        </div>
-        <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY, id: Date.now() }); setModal(true) }}>
-          <i className="fas fa-plus" />Nova Despesa
-        </button>
-      </div>
-
-      {/* Filtro de mês + Cotação */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
-        <MonthFilter value={filterMonth} onChange={setFilterMonth} year={currentYear} />
-        {cotacaoInfo && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-            <i className="fas fa-circle-info" style={{ color: 'var(--brand)' }} />
-            {cotacaoInfo.erro
-              ? cotacaoInfo.erro
-              : `USD/BRL: R$ ${cotacaoInfo.valor.toFixed(2)} (${cotacaoInfo.hora})`}
+          <div className="page-header-sub" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span>
+              {ativas.length} Despesa{ativas.length !== 1 ? 's' : ''} ativa{ativas.length !== 1 ? 's' : ''} · {MESES_ABREV[filterMonth]} {currentYear}
+            </span>
+            {cotacaoInfo && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '3px 9px', borderRadius: 999,
+                background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.25)',
+                fontSize: 11, fontWeight: 600,
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
+                {cotacaoInfo.erro
+                  ? <span style={{ color: 'var(--red)' }}>{cotacaoInfo.erro}</span>
+                  : <>
+                      <span style={{ color: 'var(--green)' }}>USD 1 = R$ {cotacaoInfo.valor.toFixed(4)}</span>
+                      {cotacaoInfo.hora && <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>· {cotacaoInfo.hora}</span>}
+                    </>
+                }
+              </span>
+            )}
           </div>
-        )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <MonthFilter value={filterMonth} onChange={setFilterMonth} year={currentYear} />
+            <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY, id: Date.now() }); setModal(true) }}>
+              <i className="fas fa-plus" />Nova Despesa
+            </button>
+          </div>
+          <div className="tabs">
+            {([
+              ['all', 'Global', 'fa-globe'],
+              ['US', 'EUA', null],
+              ['BR', 'Brasil', null],
+            ] as const).map(([v, l, icon]) => (
+              <button
+                key={v}
+                className={`tab ${filterPais === v ? 'active' : ''}`}
+                onClick={() => setFilterPais(v as 'all' | 'BR' | 'US')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                {icon
+                  ? <i className={`fas ${icon}`} style={{ fontSize: 11, color: 'var(--brand)' }} />
+                  : <span className={`badge badge-${v === 'US' ? 'blue' : 'brand'}`} style={{ fontSize: 9, padding: '1px 5px' }}>{v === 'US' ? 'US' : 'BR'}</span>
+                }
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* KPIs */}

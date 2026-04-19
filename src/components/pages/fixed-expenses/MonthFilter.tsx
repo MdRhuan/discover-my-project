@@ -6,34 +6,23 @@ interface Props {
   year: number
 }
 
-const MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-]
+const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 export function MonthFilter({ value, onChange, year }: Props) {
   const currentMonth = new Date().getMonth()
-  const months = MESES.map((label, idx) => ({ idx, label, disabled: idx < currentMonth }))
+  const months = MESES_ABREV.map((label, idx) => ({ idx, label, disabled: idx < currentMonth }))
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-        <i className="fas fa-calendar" />
-        <span>Período:</span>
-      </div>
-      <select
-        className="form-select"
-        style={{ minWidth: 160, fontSize: 13 }}
-        value={value}
-        onChange={e => onChange(parseInt(e.target.value))}
-      >
-        {months.filter(m => !m.disabled).map(m => (
-          <option key={m.idx} value={m.idx}>{m.label} / {year}</option>
-        ))}
-      </select>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-        Disponível até dezembro/{year}
-      </div>
-    </div>
+    <select
+      className="form-select"
+      style={{ minWidth: 130, fontSize: 13, fontWeight: 600 }}
+      value={value}
+      onChange={e => onChange(parseInt(e.target.value))}
+      title={`Disponível até dezembro/${year}`}
+    >
+      {months.filter(m => !m.disabled).map(m => (
+        <option key={m.idx} value={m.idx}>{m.label} {year}</option>
+      ))}
+    </select>
   )
 }
