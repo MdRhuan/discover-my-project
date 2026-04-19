@@ -1272,7 +1272,57 @@ function EditIconModal({ node, onClose, onSave, onDelete }: {
   )
 }
 
-export function OrgChartPage() {
+function EditImageModal({ node, onClose, onSave, onDelete }: {
+  node: Node<ImageNodeData>
+  onClose: () => void
+  onSave: (patch: Partial<ImageNodeData>) => void
+  onDelete: () => void
+}) {
+  const [nome, setNome] = useState(node.data.nome || '')
+  const [rotacao, setRotacao] = useState(node.data.rotacao || 0)
+  const [opacidade, setOpacidade] = useState(node.data.opacidade ?? 1)
+  const [raio, setRaio] = useState(node.data.raio ?? 0)
+  return (
+    <Modal onClose={onClose} title="Editar imagem">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 12, background: 'hsl(var(--muted))', borderRadius: 8 }}>
+          {node.data.url ? (
+            <img src={node.data.url} alt={nome} style={{ maxWidth: 220, maxHeight: 160, objectFit: 'contain', borderRadius: raio, opacity: opacidade, transform: `rotate(${rotacao}deg)` }} />
+          ) : <div style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>Sem prévia</div>}
+        </div>
+        <div>
+          <label className="form-label">Nome</label>
+          <input className="form-input" value={nome} onChange={e => setNome(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label className="form-label">Rotação: {rotacao}°</label>
+            <input type="range" min={0} max={360} value={rotacao} onChange={e => setRotacao(Number(e.target.value))} style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label className="form-label">Opacidade: {Math.round(opacidade * 100)}%</label>
+            <input type="range" min={10} max={100} value={Math.round(opacidade * 100)} onChange={e => setOpacidade(Number(e.target.value) / 100)} style={{ width: '100%' }} />
+          </div>
+        </div>
+        <div>
+          <label className="form-label">Cantos arredondados: {raio}px</label>
+          <input type="range" min={0} max={80} value={raio} onChange={e => setRaio(Number(e.target.value))} style={{ width: '100%' }} />
+        </div>
+        <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+          Dica: arraste os cantos da imagem no canvas para redimensionar (mantém proporção).
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+          <button className="btn btn-danger" onClick={onDelete}><i className="fas fa-trash" /> Remover</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={() => onSave({ nome, rotacao, opacidade, raio })}>Salvar</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
   return (
     <ReactFlowProvider>
       <OrgChartEditor />
