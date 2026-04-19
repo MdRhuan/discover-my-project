@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useApp } from '@/context/AppContext'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
+import { HealthPlanDocs } from './HealthPlanDocs'
 
 export interface HealthPlan {
   id: number
