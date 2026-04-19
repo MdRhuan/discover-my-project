@@ -519,6 +519,7 @@ function OrgChartEditor() {
           if (kind === 'text') return db.orgTextsCanvas.update(dbId, { posX: n.position.x, posY: n.position.y })
           if (kind === 'shape') return db.orgShapes.update(dbId, { posX: n.position.x, posY: n.position.y })
           if (kind === 'icon') return db.orgIcons.update(dbId, { posX: n.position.x, posY: n.position.y })
+          if (kind === 'image') return db.orgImages.update(dbId, { posX: n.position.x, posY: n.position.y })
           return Promise.resolve()
         }))
       } catch (err) { console.error('autosave', err) }
