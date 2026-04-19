@@ -1,37 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
-
-interface Despesa {
-  id: number
-  categoria: string
-  descricao: string
-  pais: 'BR' | 'US'
-  moeda: 'BRL' | 'USD'
-  valor: number
-  ativo: boolean
-  notas?: string
-}
-
-const CATEGORIAS = [
-  { key: 'Moradia',         icon: 'fa-house',            colorVar: 'var(--brand)',   bg: 'var(--brand-dim)'         },
-  { key: 'Funcionários',    icon: 'fa-user-tie',         colorVar: 'var(--blue)',    bg: 'rgba(59,130,246,.12)'     },
-  { key: 'Transporte',      icon: 'fa-car',              colorVar: 'var(--yellow)',  bg: 'rgba(245,158,11,.12)'     },
-  { key: 'Seguros',         icon: 'fa-shield-halved',    colorVar: 'var(--green)',   bg: 'rgba(34,197,94,.12)'      },
-  { key: 'Assinaturas',     icon: 'fa-credit-card',      colorVar: 'var(--orange)',  bg: 'rgba(249,115,22,.12)'     },
-  { key: 'Contabilidade',   icon: 'fa-calculator',       colorVar: '#a78bfa',        bg: 'rgba(167,139,250,.12)'    },
-  { key: 'Educação',        icon: 'fa-graduation-cap',   colorVar: 'var(--brand)',   bg: 'var(--brand-dim)'         },
-  { key: 'Saúde',           icon: 'fa-heart-pulse',      colorVar: 'var(--red)',     bg: 'rgba(239,68,68,.12)'      },
-  { key: 'Outros',          icon: 'fa-ellipsis',         colorVar: 'var(--text-muted)', bg: 'var(--surface-hover)' },
-]
-
-const EMPTY: Partial<Despesa> = {
-  categoria: 'Moradia', descricao: '', pais: 'BR', moeda: 'BRL', valor: 0, ativo: true, notas: '',
-}
+import { CATEGORIAS, EMPTY, catInfo, type Despesa } from './fixed-expenses/types'
+import { MonthFilter } from './fixed-expenses/MonthFilter'
+import { ExpensesPieChart } from './fixed-expenses/ExpensesPieChart'
+import { InsightsPanel } from './fixed-expenses/InsightsPanel'
 
 export function FixedExpensesPage() {
   const { lang, toast } = useApp()
@@ -43,6 +20,11 @@ export function FixedExpensesPage() {
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [usdRate, setUsdRate] = useState(5.05)
   const [cotacaoInfo, setCotacaoInfo] = useState<{ valor: number; hora: string; erro?: string } | null>(null)
+
+  // Filtro de mês: inicia no mês atual, vai até dezembro do ano vigente
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const [filterMonth, setFilterMonth] = useState(now.getMonth())
 
   useEffect(() => {
     fetch('https://economia.awesomeapi.com.br/last/USD-BRL')
@@ -66,18 +48,57 @@ export function FixedExpensesPage() {
 
   const ativas = despesas.filter(d => d.ativo !== false)
 
+  // Conversões — para gráficos e insights todos os ativos contam (despesas fixas mensais)
+  // O filterMonth serve para o contexto de "qual mês estou planejando"; valores fixos se repetem.
+  const toUSD = (d: Despesa) => d.moeda === 'USD' ? d.valor : d.valor / usdRate
+  const toBRL = (d: Despesa) => d.moeda === 'BRL' ? d.valor : d.valor * usdRate
+
+  // Agregações por categoria por país
+  const aggBR = useMemo(() => {
+    const m: Record<string, number> = {}
+    ativas.filter(d => d.pais === 'BR').forEach(d => {
+      m[d.categoria] = (m[d.categoria] || 0) + toBRL(d)
+    })
+    return m
+  }, [ativas, usdRate])
+
+  const aggUS = useMemo(() => {
+    const m: Record<string, number> = {}
+    ativas.filter(d => d.pais === 'US').forEach(d => {
+      m[d.categoria] = (m[d.categoria] || 0) + toUSD(d)
+    })
+    return m
+  }, [ativas, usdRate])
+
+  const aggConsolidadoUSD = useMemo(() => {
+    const m: Record<string, number> = {}
+    ativas.forEach(d => {
+      m[d.categoria] = (m[d.categoria] || 0) + toUSD(d)
+    })
+    return m
+  }, [ativas, usdRate])
+
+  const totalBRL = Object.values(aggBR).reduce((s, v) => s + v, 0)
+  const totalUSD_us = Object.values(aggUS).reduce((s, v) => s + v, 0)
+  const totalConsolidadoUSD = Object.values(aggConsolidadoUSD).reduce((s, v) => s + v, 0)
+  const totalConsolidadoBRL = totalBRL + totalUSD_us * usdRate
+
+  // Insights
+  const totalBR_USD = totalBRL / usdRate
+  const pctBR = totalConsolidadoUSD > 0 ? (totalBR_USD / totalConsolidadoUSD) * 100 : 0
+  const topCat = useMemo(() => {
+    const entries = Object.entries(aggConsolidadoUSD)
+    if (!entries.length) return null
+    entries.sort((a, b) => b[1] - a[1])
+    const [nome, val] = entries[0]
+    return { nome, pct: totalConsolidadoUSD > 0 ? (val / totalConsolidadoUSD) * 100 : 0 }
+  }, [aggConsolidadoUSD, totalConsolidadoUSD])
+
+  // Tabela: filtros legados
   const filtered = ativas.filter(d =>
     (filterPais === 'all' || d.pais === filterPais) &&
     (!filterCat || d.categoria === filterCat)
   )
-
-  const totalBRL = ativas.filter(d => d.pais === 'BR').reduce((s, d) => s + (d.moeda === 'BRL' ? d.valor : d.valor * usdRate), 0)
-  const totalUSD = ativas.filter(d => d.pais === 'US').reduce((s, d) => s + (d.moeda === 'USD' ? d.valor : d.valor / usdRate), 0)
-  const totalConsolidadoBRL = totalBRL + totalUSD * usdRate
-
-  function toDisplayVal(d: Despesa): number {
-    return d.valor || 0
-  }
 
   async function handleSave() {
     if (!form.descricao?.trim()) { toast('Descrição obrigatória.', 'error'); return }
@@ -98,8 +119,6 @@ export function FixedExpensesPage() {
     } catch { toast('Erro ao excluir.', 'error') }
   }
 
-  const catInfo = (key: string) => CATEGORIAS.find(c => c.key === key) || CATEGORIAS[CATEGORIAS.length - 1]
-
   return (
     <div className="page-content">
       <div className="page-header">
@@ -112,23 +131,26 @@ export function FixedExpensesPage() {
         </button>
       </div>
 
-      {/* Cotação */}
-      {cotacaoInfo && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 12, color: 'var(--text-muted)' }}>
-          <i className="fas fa-circle-info" style={{ color: 'var(--brand)' }} />
-          {cotacaoInfo.erro
-            ? cotacaoInfo.erro
-            : `Cotação USD/BRL: R$ ${cotacaoInfo.valor.toFixed(2)} (atualizada às ${cotacaoInfo.hora})`}
-        </div>
-      )}
+      {/* Filtro de mês + Cotação */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+        <MonthFilter value={filterMonth} onChange={setFilterMonth} year={currentYear} />
+        {cotacaoInfo && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+            <i className="fas fa-circle-info" style={{ color: 'var(--brand)' }} />
+            {cotacaoInfo.erro
+              ? cotacaoInfo.erro
+              : `USD/BRL: R$ ${cotacaoInfo.valor.toFixed(2)} (${cotacaoInfo.hora})`}
+          </div>
+        )}
+      </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 14, marginBottom: 20 }}>
         {[
           { label: 'Total BR (BRL)', val: fmt.currency(totalBRL, 'BRL', lang), icon: 'fa-flag', color: 'var(--brand)', bg: 'var(--brand-dim)' },
-          { label: 'Total US (USD)', val: fmt.currency(totalUSD, 'USD', lang), icon: 'fa-flag-usa', color: 'var(--blue)', bg: 'rgba(59,130,246,.12)' },
-          { label: 'Consolidado (BRL)', val: fmt.currency(totalConsolidadoBRL, 'BRL', lang), icon: 'fa-globe', color: 'var(--green)', bg: 'rgba(34,197,94,.12)' },
-          { label: 'Despesas ativas', val: ativas.length, icon: 'fa-receipt', color: 'var(--yellow)', bg: 'rgba(245,158,11,.12)' },
+          { label: 'Total US (USD)', val: fmt.currency(totalUSD_us, 'USD', lang), icon: 'fa-flag-usa', color: 'var(--blue)', bg: 'rgba(59,130,246,.12)' },
+          { label: 'Consolidado (USD)', val: fmt.currency(totalConsolidadoUSD, 'USD', lang), icon: 'fa-globe', color: 'var(--green)', bg: 'rgba(34,197,94,.12)' },
+          { label: 'Consolidado (BRL)', val: fmt.currency(totalConsolidadoBRL, 'BRL', lang), icon: 'fa-coins', color: 'var(--yellow)', bg: 'rgba(245,158,11,.12)' },
         ].map(k => (
           <div key={k.label} className="card" style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -144,8 +166,50 @@ export function FixedExpensesPage() {
         ))}
       </div>
 
+      {/* Gráficos por país */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 16, marginBottom: 16 }}>
+        <ExpensesPieChart
+          title="Despesas no Brasil"
+          subtitle="Distribuição por categoria"
+          icon="fa-flag"
+          iconColor="var(--brand)"
+          iconBg="var(--brand-dim)"
+          data={aggBR}
+          currency="BRL"
+          total={totalBRL}
+          emptyMessage="Nenhuma despesa no Brasil no período"
+        />
+        <ExpensesPieChart
+          title="Despesas nos EUA"
+          subtitle="Distribuição por categoria"
+          icon="fa-flag-usa"
+          iconColor="var(--blue)"
+          iconBg="rgba(59,130,246,.12)"
+          data={aggUS}
+          currency="USD"
+          total={totalUSD_us}
+          emptyMessage="Nenhuma despesa nos EUA no período"
+        />
+      </div>
+
+      {/* Gráfico consolidado */}
+      <ExpensesPieChart
+        title="Consolidado Global (BR + EUA)"
+        subtitle="Total geral convertido para USD"
+        icon="fa-globe"
+        iconColor="var(--green)"
+        iconBg="rgba(34,197,94,.12)"
+        data={aggConsolidadoUSD}
+        currency="USD"
+        total={totalConsolidadoUSD}
+        emptyMessage="Nenhuma despesa encontrada no período"
+      />
+
+      {/* Insights */}
+      <InsightsPanel pctBR={pctBR} topCategoria={topCat} totalUSD={totalConsolidadoUSD} />
+
       {/* Category chips */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginTop: 24, marginBottom: 18 }}>
         {CATEGORIAS.map(cat => {
           const count = ativas.filter(d => d.categoria === cat.key).length
           if (count === 0) return null
@@ -199,7 +263,7 @@ export function FixedExpensesPage() {
                     </td>
                     <td><span className={`badge badge-${d.pais === 'US' ? 'blue' : 'brand'}`} style={{ fontSize: 10 }}>{d.pais}</span></td>
                     <td><span className="badge badge-brand" style={{ fontSize: 10 }}>{d.moeda}</span></td>
-                    <td style={{ fontWeight: 700, fontSize: 13 }}>{fmt.currency(toDisplayVal(d), d.moeda, lang)}</td>
+                    <td style={{ fontWeight: 700, fontSize: 13 }}>{fmt.currency(d.valor || 0, d.moeda, lang)}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button className="btn-icon" onClick={() => { setForm({ ...d }); setModal(true) }}><i className="fas fa-pen" /></button>
