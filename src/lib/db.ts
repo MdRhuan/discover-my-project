@@ -18,6 +18,12 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   posX: 'pos_x', posY: 'pos_y', espessuraBorda: 'espessura_borda',
   estiloBorda: 'estilo_borda', sourceId: 'source_id', targetId: 'target_id',
   zIndex: 'z_index', svgContent: 'svg_content',
+  // Trademarks
+  tipoMarca: 'tipo_marca', numProcesso: 'num_processo', numRegistro: 'num_registro',
+  dataConcessao: 'data_concessao', nextDeadline: 'next_deadline',
+  usSerialNumber: 'us_serial_number', usRegistration: 'us_registration',
+  filingDate: 'filing_date', dueDate: 'due_date', proposedGoods: 'proposed_goods',
+  trademarkId: 'trademark_id',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
@@ -216,7 +222,7 @@ const configTable = {
 
 import type {
   Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon,
-  Task, Alerta, DocPessoal, FiscalDoc, Trademark, AuditLog
+  Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog
 } from '@/types'
 
 export const db = {
@@ -236,6 +242,7 @@ export const db = {
   docsPessoais: makeTable<DocPessoal>('docs_pessoais'),
   fiscalDocs: makeTable<FiscalDoc>('fiscal_docs'),
   trademarks: makeTable<Trademark>('trademarks'),
+  trademarkFiles: makeTable<TrademarkFile>('trademark_files'),
   config: configTable,
 }
 
