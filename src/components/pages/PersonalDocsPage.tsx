@@ -210,7 +210,7 @@ export function PersonalDocsPage() {
           <div className="page-header-title">Documentos Pessoais</div>
           <div className="page-header-sub">{docs.length} documento{docs.length !== 1 ? 's' : ''}</div>
         </div>
-        <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY_DOC, dataUpload: today }); setDocModal(true) }}>
+        <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY_DOC, pessoa: activePerson || EMPTY_DOC.pessoa, dataUpload: today }); setDocModal(true) }}>
           <i className="fas fa-plus" />Novo Documento
         </button>
       </div>
