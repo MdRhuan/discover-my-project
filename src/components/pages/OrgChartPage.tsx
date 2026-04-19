@@ -725,6 +725,13 @@ function OrgChartEditor() {
     else if (kind === 'text') await db.orgTextsCanvas.delete(dbId)
     else if (kind === 'shape') await db.orgShapes.delete(dbId)
     else if (kind === 'icon') await db.orgIcons.delete(dbId)
+    else if (kind === 'image') {
+      const rec = await db.orgImages.get(dbId)
+      if (rec?.arquivoPath) {
+        await supabase.storage.from('org-images').remove([rec.arquivoPath]).catch(console.error)
+      }
+      await db.orgImages.delete(dbId)
+    }
   }
 
   const deleteSelection = useCallback(async () => {
