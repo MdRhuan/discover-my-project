@@ -263,3 +263,24 @@ export function TrademarksPage() {
     </div>
   )
 }
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontSize: 11, padding: '3px 8px', borderRadius: 999,
+      background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600,
+      border: '1px solid var(--surface-border)',
+    }}>
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
+        title="Remover"
+      >
+        ✕
+      </button>
+    </span>
+  )
+}
