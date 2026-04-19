@@ -20,8 +20,9 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
+import { supabase } from '@/integrations/supabase/client'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
-import type { OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, Empresa } from '@/types'
+import type { OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, OrgImage, Empresa } from '@/types'
 
 type PageKey = Parameters<ReturnType<typeof useApp>['setPage']>[0]
 
@@ -249,7 +250,62 @@ function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
   )
 }
 
-const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode }
+// ============ Image Node (PNG / JPG / WEBP / GIF) ============
+interface ImageNodeData {
+  url: string
+  nome?: string
+  rotacao?: number
+  opacidade?: number
+  raio?: number
+  onEdit?: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
+}
+function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
+  return (
+    <>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={32}
+        minHeight={32}
+        keepAspectRatio
+        onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
+        lineStyle={{ borderColor: '#3b82f6' }}
+        handleStyle={{ background: '#3b82f6', width: 8, height: 8 }}
+      />
+      <div
+        onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
+        style={{
+          width: '100%',
+          height: '100%',
+          transform: `rotate(${data.rotacao || 0}deg)`,
+          opacity: data.opacidade ?? 1,
+          borderRadius: data.raio ?? 0,
+          overflow: 'hidden',
+          outline: selected ? '1px dashed #3b82f6' : 'none',
+          background: data.url ? 'transparent' : 'hsl(var(--muted))',
+          cursor: 'move',
+          boxSizing: 'border-box',
+        }}
+        title={data.nome ? `${data.nome} · duplo clique p/ editar` : 'Duplo clique p/ editar'}
+      >
+        {data.url ? (
+          <img
+            src={data.url}
+            alt={data.nome || 'imagem'}
+            draggable={false}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+            <i className="fas fa-image" style={{ marginRight: 6 }} /> Carregando...
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode, image: ImageNode }
 
 // ============ Editor ============
 function OrgChartEditor() {
@@ -265,6 +321,8 @@ function OrgChartEditor() {
   const dirtyRef = useRef(false)
   const saveTimer = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const imageInputRef = useRef<HTMLInputElement | null>(null)
+  const signedUrlCache = useRef<Map<string, { url: string; exp: number }>>(new Map())
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
 
   // Identifies node kinds via prefix in id
@@ -274,16 +332,28 @@ function OrgChartEditor() {
     return { kind, dbId: Number(dbId) }
   }
 
+  // Signed URL helper for org-images bucket (cached, refreshes before expiry)
+  const getSignedUrl = useCallback(async (path: string): Promise<string> => {
+    const cached = signedUrlCache.current.get(path)
+    const now = Date.now()
+    if (cached && cached.exp > now + 30_000) return cached.url
+    const { data, error } = await supabase.storage.from('org-images').createSignedUrl(path, 3600)
+    if (error || !data?.signedUrl) { console.error('signedUrl', error); return '' }
+    signedUrlCache.current.set(path, { url: data.signedUrl, exp: now + 3600 * 1000 })
+    return data.signedUrl
+  }, [])
+
   // ============ Load ============
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [emps, n, e, txs, shs, ics] = await Promise.all([
+    const [emps, n, e, txs, shs, ics, imgs] = await Promise.all([
       db.empresas.toArray(),
       db.orgNodes.toArray(),
       db.orgEdges.toArray(),
       db.orgTextsCanvas.toArray(),
       db.orgShapes.toArray(),
       db.orgIcons.toArray(),
+      db.orgImages.toArray(),
     ])
     setEmpresas(emps)
 
@@ -361,6 +431,25 @@ function OrgChartEditor() {
       },
     }))
 
+    // Resolve signed URLs for images in parallel
+    const imageNodes: Node[] = await Promise.all(imgs.map(async (im) => {
+      const url = im.arquivoPath ? await getSignedUrl(im.arquivoPath) : ''
+      return {
+        id: `image:${im.id}`,
+        type: 'image',
+        position: { x: Number(im.posX) || 0, y: Number(im.posY) || 0 },
+        style: { width: Number(im.largura) || 160, height: Number(im.altura) || 160 },
+        zIndex: im.zIndex || 1,
+        data: {
+          url,
+          nome: im.nome,
+          rotacao: Number(im.rotacao) || 0,
+          opacidade: im.opacidade ?? 1,
+          raio: im.raio ?? 0,
+        },
+      } as Node
+    }))
+
     const flowEdges: Edge[] = e.map(ed => ({
       id: `edge:${ed.id}`,
       source: `company:${ed.sourceId}`,
@@ -374,10 +463,10 @@ function OrgChartEditor() {
       data: { cor: ed.cor || '#94a3b8', espessura: ed.espessura || 2, estilo: ed.estilo || 'solid' },
     }))
 
-    setNodes([...shapeNodes, ...companyNodes, ...iconNodes, ...textNodes])
+    setNodes([...shapeNodes, ...companyNodes, ...imageNodes, ...iconNodes, ...textNodes])
     setEdges(flowEdges)
     setLoading(false)
-  }, [setNodes, setEdges])
+  }, [setNodes, setEdges, getSignedUrl])
 
   useEffect(() => { loadAll() }, [loadAll])
 
@@ -397,6 +486,11 @@ function OrgChartEditor() {
     db.orgIcons.update(dbId, { largura: w, altura: h }).catch(console.error)
   }, [])
 
+  const handleImageResize = useCallback((id: string, w: number, h: number) => {
+    const { dbId } = parseId(id)
+    db.orgImages.update(dbId, { largura: w, altura: h }).catch(console.error)
+  }, [])
+
   useEffect(() => {
     setNodes(curr => curr.map(n => {
       if (n.type === 'company') {
@@ -405,10 +499,11 @@ function OrgChartEditor() {
       if (n.type === 'freetext') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid) } }
       if (n.type === 'shape') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize } }
       if (n.type === 'icon') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleIconResize } }
+      if (n.type === 'image') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleImageResize } }
       return n
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleOpenEmpresa, handleShapeResize, handleIconResize])
+  }, [handleOpenEmpresa, handleShapeResize, handleIconResize, handleImageResize])
 
   // ============ Auto-save positions ============
   const scheduleSave = useCallback(() => {
@@ -424,6 +519,7 @@ function OrgChartEditor() {
           if (kind === 'text') return db.orgTextsCanvas.update(dbId, { posX: n.position.x, posY: n.position.y })
           if (kind === 'shape') return db.orgShapes.update(dbId, { posX: n.position.x, posY: n.position.y })
           if (kind === 'icon') return db.orgIcons.update(dbId, { posX: n.position.x, posY: n.position.y })
+          if (kind === 'image') return db.orgImages.update(dbId, { posX: n.position.x, posY: n.position.y })
           return Promise.resolve()
         }))
       } catch (err) { console.error('autosave', err) }
@@ -554,6 +650,56 @@ function OrgChartEditor() {
       toast('Ícone adicionado · duplo clique para editar', 'success')
     } catch (err) { console.error(err); toast('Erro ao adicionar ícone', 'error') }
   }
+
+  async function handleAddImageFromFile(file: File) {
+    const ALLOWED = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+    if (!ALLOWED.includes(file.type)) {
+      toast('Formato inválido (PNG, JPG, WEBP ou GIF)', 'error'); return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Imagem muito grande (máx 5MB)', 'error'); return
+    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { toast('Sessão expirada', 'error'); return }
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase()
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+      const up = await supabase.storage.from('org-images').upload(path, file, {
+        contentType: file.type, upsert: false,
+      })
+      if (up.error) throw up.error
+
+      const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+        const img = new Image()
+        const objUrl = URL.createObjectURL(file)
+        img.onload = () => { resolve({ w: img.naturalWidth, h: img.naturalHeight }); URL.revokeObjectURL(objUrl) }
+        img.onerror = () => { resolve({ w: 200, h: 200 }); URL.revokeObjectURL(objUrl) }
+        img.src = objUrl
+      })
+      const maxSide = 220
+      const ratio = dims.w / dims.h
+      const w = ratio >= 1 ? maxSide : Math.round(maxSide * ratio)
+      const h = ratio >= 1 ? Math.round(maxSide / ratio) : maxSide
+
+      const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      const id = await db.orgImages.add({
+        nome: file.name, arquivoPath: path,
+        posX: pos.x, posY: pos.y, largura: w, altura: h,
+        rotacao: 0, opacidade: 1, raio: 0, zIndex: 1,
+      } as OrgImage)
+      const signedUrl = await getSignedUrl(path)
+      setNodes(curr => [...curr, {
+        id: `image:${id}`, type: 'image', position: pos,
+        style: { width: w, height: h }, zIndex: 1,
+        data: {
+          url: signedUrl, nome: file.name, rotacao: 0, opacidade: 1, raio: 0,
+          onEdit: (nid: string) => setEditNodeId(nid), onResize: handleImageResize,
+        },
+      }])
+      toast('Imagem adicionada · duplo clique para editar', 'success')
+    } catch (err) { console.error(err); toast('Erro ao enviar imagem', 'error') }
+  }
+
   const onConnect = useCallback(async (conn: Connection) => {
     if (!conn.source || !conn.target) return
     const src = parseId(conn.source); const tgt = parseId(conn.target)
@@ -579,6 +725,13 @@ function OrgChartEditor() {
     else if (kind === 'text') await db.orgTextsCanvas.delete(dbId)
     else if (kind === 'shape') await db.orgShapes.delete(dbId)
     else if (kind === 'icon') await db.orgIcons.delete(dbId)
+    else if (kind === 'image') {
+      const rec = await db.orgImages.get(dbId)
+      if (rec?.arquivoPath) {
+        await supabase.storage.from('org-images').remove([rec.arquivoPath]).catch(console.error)
+      }
+      await db.orgImages.delete(dbId)
+    }
   }
 
   const deleteSelection = useCallback(async () => {
@@ -635,6 +788,17 @@ function OrgChartEditor() {
             svgContent: d.svgContent, cor: d.cor, rotacao: d.rotacao, nome: d.nome,
           } as OrgIcon)
           setNodes(c => [...c, { ...n, id: `icon:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
+        } else if (kind === 'image') {
+          const d = n.data as ImageNodeData
+          const w = (n.style?.width as number) || 160; const h = (n.style?.height as number) || 160
+          const orig = await db.orgImages.get(parseId(n.id).dbId)
+          if (!orig?.arquivoPath) continue
+          const id = await db.orgImages.add({
+            posX: newPos.x, posY: newPos.y, largura: w, altura: h,
+            arquivoPath: orig.arquivoPath, nome: d.nome,
+            rotacao: d.rotacao, opacidade: d.opacidade, raio: d.raio,
+          } as OrgImage)
+          setNodes(c => [...c, { ...n, id: `image:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
         }
       }
       toast(`${selN.length} duplicado(s)`, 'success')
@@ -652,6 +816,7 @@ function OrgChartEditor() {
       const tbl = kind === 'company' ? db.orgNodes
         : kind === 'text' ? db.orgTextsCanvas
         : kind === 'icon' ? db.orgIcons
+        : kind === 'image' ? db.orgImages
         : db.orgShapes
       tbl.update(dbId, { zIndex: target } as never).catch(console.error)
     })
@@ -720,6 +885,18 @@ function OrgChartEditor() {
     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }
 
+  async function saveImageEdit(patch: Partial<ImageNodeData>) {
+    if (!editNodeId) return
+    const { dbId } = parseId(editNodeId)
+    try {
+      await db.orgImages.update(dbId, {
+        nome: patch.nome, rotacao: patch.rotacao, opacidade: patch.opacidade, raio: patch.raio,
+      } as Partial<OrgImage>)
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      setEditNodeId(null); toast('Imagem atualizada', 'success')
+    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+  }
+
   return (
     <div className="page-content" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
       <div className="page-header">
@@ -748,6 +925,16 @@ function OrgChartEditor() {
             onChange={async (ev) => {
               const f = ev.target.files?.[0]; if (f) await handleAddIconFromFile(f)
               if (fileInputRef.current) fileInputRef.current.value = ''
+            }}
+          />
+          <button className="btn btn-secondary" onClick={() => imageInputRef.current?.click()} title="Adicionar imagem (PNG, JPG, WEBP, GIF)">
+            <i className="fas fa-image" /> Imagem
+          </button>
+          <input
+            ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{ display: 'none' }}
+            onChange={async (ev) => {
+              const f = ev.target.files?.[0]; if (f) await handleAddImageFromFile(f)
+              if (imageInputRef.current) imageInputRef.current.value = ''
             }}
           />
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
@@ -833,6 +1020,10 @@ function OrgChartEditor() {
       {editNode && editNode.type === 'icon' && (
         <EditIconModal node={editNode as Node<IconNodeData>} onClose={() => setEditNodeId(null)} onSave={saveIconEdit}
           onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'icon' })} />
+      )}
+      {editNode && editNode.type === 'image' && (
+        <EditImageModal node={editNode as Node<ImageNodeData>} onClose={() => setEditNodeId(null)} onSave={saveImageEdit}
+          onDelete={() => setConfirmDelete({ id: editNode.id, kind: 'image' })} />
       )}
 
       {confirmDelete && (
@@ -1074,6 +1265,57 @@ function EditIconModal({ node, onClose, onSave, onDelete }: {
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
             <button className="btn btn-primary" onClick={() => onSave({ cor, rotacao, nome })}>Salvar</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function EditImageModal({ node, onClose, onSave, onDelete }: {
+  node: Node<ImageNodeData>
+  onClose: () => void
+  onSave: (patch: Partial<ImageNodeData>) => void
+  onDelete: () => void
+}) {
+  const [nome, setNome] = useState(node.data.nome || '')
+  const [rotacao, setRotacao] = useState(node.data.rotacao || 0)
+  const [opacidade, setOpacidade] = useState(node.data.opacidade ?? 1)
+  const [raio, setRaio] = useState(node.data.raio ?? 0)
+  return (
+    <Modal onClose={onClose} title="Editar imagem">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 12, background: 'hsl(var(--muted))', borderRadius: 8 }}>
+          {node.data.url ? (
+            <img src={node.data.url} alt={nome} style={{ maxWidth: 220, maxHeight: 160, objectFit: 'contain', borderRadius: raio, opacity: opacidade, transform: `rotate(${rotacao}deg)` }} />
+          ) : <div style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>Sem prévia</div>}
+        </div>
+        <div>
+          <label className="form-label">Nome</label>
+          <input className="form-input" value={nome} onChange={e => setNome(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label className="form-label">Rotação: {rotacao}°</label>
+            <input type="range" min={0} max={360} value={rotacao} onChange={e => setRotacao(Number(e.target.value))} style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label className="form-label">Opacidade: {Math.round(opacidade * 100)}%</label>
+            <input type="range" min={10} max={100} value={Math.round(opacidade * 100)} onChange={e => setOpacidade(Number(e.target.value) / 100)} style={{ width: '100%' }} />
+          </div>
+        </div>
+        <div>
+          <label className="form-label">Cantos arredondados: {raio}px</label>
+          <input type="range" min={0} max={80} value={raio} onChange={e => setRaio(Number(e.target.value))} style={{ width: '100%' }} />
+        </div>
+        <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+          Dica: arraste os cantos da imagem no canvas para redimensionar (mantém proporção).
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+          <button className="btn btn-danger" onClick={onDelete}><i className="fas fa-trash" /> Remover</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={() => onSave({ nome, rotacao, opacidade, raio })}>Salvar</button>
           </div>
         </div>
       </div>
