@@ -321,6 +321,8 @@ function OrgChartEditor() {
   const dirtyRef = useRef(false)
   const saveTimer = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const imageInputRef = useRef<HTMLInputElement | null>(null)
+  const signedUrlCache = useRef<Map<string, { url: string; exp: number }>>(new Map())
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
 
   // Identifies node kinds via prefix in id
