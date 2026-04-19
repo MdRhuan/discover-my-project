@@ -927,6 +927,16 @@ function OrgChartEditor() {
               if (fileInputRef.current) fileInputRef.current.value = ''
             }}
           />
+          <button className="btn btn-secondary" onClick={() => imageInputRef.current?.click()} title="Adicionar imagem (PNG, JPG, WEBP, GIF)">
+            <i className="fas fa-image" /> Imagem
+          </button>
+          <input
+            ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{ display: 'none' }}
+            onChange={async (ev) => {
+              const f = ev.target.files?.[0]; if (f) await handleAddImageFromFile(f)
+              if (imageInputRef.current) imageInputRef.current.value = ''
+            }}
+          />
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
           <button className="btn btn-secondary" onClick={() => { const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento', 'info'); return } setEditNodeId(sel.id) }} title="Editar elemento selecionado">
             <i className="fas fa-pen" /> Editar
