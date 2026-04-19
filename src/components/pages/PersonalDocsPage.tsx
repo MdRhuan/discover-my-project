@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
 import { supabase } from '@/integrations/supabase/client'
+import { PeopleTabs } from '@/components/people/PeopleTabs'
 import type { DocPessoal } from '@/types'
 
 interface InsuranceDocLite {
@@ -67,7 +68,7 @@ export function PersonalDocsPage() {
   const [docs, setDocs] = useState<DocPessoal[]>([])
   const [obList, setObList] = useState<Obrigacao[]>([])
   const [search, setSearch] = useState('')
-  const [filterPessoa, setFilterPessoa] = useState('')
+  const [activePerson, setActivePerson] = useState<string | null>(null)
   const [filterCat, setFilterCat] = useState('')
   const [docModal, setDocModal] = useState(false)
   const [obModal, setObModal] = useState(false)
@@ -128,7 +129,7 @@ export function PersonalDocsPage() {
   const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
   const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
   const filtered = docs.filter(d =>
-    (!filterPessoa || d.pessoa === filterPessoa) &&
+    (!activePerson || d.pessoa === activePerson) &&
     (!filterCat || d.categoria === filterCat) &&
     (!search || d.nome?.toLowerCase().includes(search.toLowerCase()) || d.pessoa?.toLowerCase().includes(search.toLowerCase()))
   )
@@ -209,10 +210,13 @@ export function PersonalDocsPage() {
           <div className="page-header-title">Documentos Pessoais</div>
           <div className="page-header-sub">{docs.length} documento{docs.length !== 1 ? 's' : ''}</div>
         </div>
-        <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY_DOC, dataUpload: today }); setDocModal(true) }}>
+        <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY_DOC, pessoa: activePerson || EMPTY_DOC.pessoa, dataUpload: today }); setDocModal(true) }}>
           <i className="fas fa-plus" />Novo Documento
         </button>
       </div>
+
+      {/* Pessoas (abas) */}
+      <PeopleTabs activePersonName={activePerson} onActivePersonChange={setActivePerson} />
 
       {/* Próximas Obrigações */}
       <div className="card" style={{ marginBottom: 20 }}>
@@ -351,16 +355,17 @@ export function PersonalDocsPage() {
             <i className="fas fa-search" />
             <input placeholder="Buscar documento..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <select className="form-select" style={{ maxWidth: 160 }} value={filterPessoa} onChange={e => setFilterPessoa(e.target.value)}>
-            <option value="">Todas as pessoas</option>
-            {pessoas.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
+          {activePerson && (
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 12, background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <i className="fas fa-user" style={{ fontSize: 10 }} />Filtrando por: {activePerson}
+            </span>
+          )}
           <select className="form-select" style={{ maxWidth: 160 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
             <option value="">Todas as categorias</option>
             {SUBCATS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
           </select>
-          {(search || filterPessoa || filterCat) && (
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setSearch(''); setFilterPessoa(''); setFilterCat('') }}>
+          {(search || filterCat) && (
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setSearch(''); setFilterCat('') }}>
               <i className="fas fa-xmark" />Limpar
             </button>
           )}
