@@ -57,7 +57,6 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState<number | null>(null)
-  const [activeExtra, setActiveExtra] = useState<ExtraKey | null>(null)
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState<Partial<Pessoa>>(EMPTY_FORM)
   const [confirmId, setConfirmId] = useState<number | null>(null)
