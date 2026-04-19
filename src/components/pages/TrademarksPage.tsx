@@ -9,17 +9,53 @@ import type { Trademark, Empresa } from '@/types'
 import { STATUS_OPTIONS, statusInfo, EMPTY_BR, EMPTY_US } from './trademarks/types'
 import { CountryPicker } from './trademarks/CountryPicker'
 import { TrademarkForm } from './trademarks/TrademarkForm'
+import { MultiSelect } from './trademarks/MultiSelect'
+
+const FILTERS_KEY = 'trademarks.filters.v1'
+
+type PaisFilter = 'all' | 'BR' | 'US'
+interface PersistedFilters {
+  search: string
+  pais: PaisFilter
+  status: string[]
+  classes: string[]
+}
+
+function loadFilters(): PersistedFilters {
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY)
+    if (raw) {
+      const p = JSON.parse(raw)
+      return {
+        search: typeof p.search === 'string' ? p.search : '',
+        pais: ['all', 'BR', 'US'].includes(p.pais) ? p.pais : 'all',
+        status: Array.isArray(p.status) ? p.status : [],
+        classes: Array.isArray(p.classes) ? p.classes : [],
+      }
+    }
+  } catch { /* empty */ }
+  return { search: '', pais: 'all', status: [], classes: [] }
+}
 
 export function TrademarksPage() {
   const { lang, toast } = useApp()
   const [rows, setRows] = useState<Trademark[]>([])
   const [empresas, setEmpresas] = useState<Empresa[]>([])
-  const [search, setSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterPais, setFilterPais] = useState<'all' | 'BR' | 'US'>('all')
+  const initial = loadFilters()
+  const [search, setSearch] = useState(initial.search)
+  const [filterStatus, setFilterStatus] = useState<string[]>(initial.status)
+  const [filterClasses, setFilterClasses] = useState<string[]>(initial.classes)
+  const [filterPais, setFilterPais] = useState<PaisFilter>(initial.pais)
   const [picker, setPicker] = useState(false)
   const [editing, setEditing] = useState<Partial<Trademark> | null>(null)
   const [confirmId, setConfirmId] = useState<number | null>(null)
+
+  // Persist filters
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTERS_KEY, JSON.stringify({ search, pais: filterPais, status: filterStatus, classes: filterClasses }))
+    } catch { /* empty */ }
+  }, [search, filterPais, filterStatus, filterClasses])
 
   const load = useCallback(async () => {
     const [tm, emps] = await Promise.all([db.trademarks.toArray(), db.empresas.toArray()])
@@ -31,9 +67,13 @@ export function TrademarksPage() {
   const today = new Date().toISOString().slice(0, 10)
   const in90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10)
 
+  // Available classes derived from data (sorted)
+  const classOptions = Array.from(new Set(rows.map(r => (r.classe || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b))
+
   const filtered = rows.filter(r =>
     (filterPais === 'all' || (r.pais || 'BR') === filterPais) &&
-    (!filterStatus || r.status === filterStatus) &&
+    (filterStatus.length === 0 || (r.status && filterStatus.includes(r.status))) &&
+    (filterClasses.length === 0 || (r.classe && filterClasses.includes(r.classe.trim()))) &&
     (!search ||
       r.nome?.toLowerCase().includes(search.toLowerCase()) ||
       r.numero?.toLowerCase().includes(search.toLowerCase()) ||
@@ -103,19 +143,55 @@ export function TrademarksPage() {
           </div>
           <div className="tabs">
             {[['all', 'Todos'], ['BR', '🇧🇷 Brasil'], ['US', '🇺🇸 EUA']].map(([v, l]) => (
-              <button key={v} className={`tab ${filterPais === v ? 'active' : ''}`} onClick={() => setFilterPais(v as 'all' | 'BR' | 'US')}>{l}</button>
+              <button key={v} className={`tab ${filterPais === v ? 'active' : ''}`} onClick={() => setFilterPais(v as PaisFilter)}>{l}</button>
             ))}
           </div>
-          <select className="form-select" style={{ maxWidth: 220 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="">Todos os status</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          {(search || filterStatus || filterPais !== 'all') && (
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setSearch(''); setFilterStatus(''); setFilterPais('all') }}>
-              <i className="fas fa-xmark" />Limpar
+          <MultiSelect
+            label="Status"
+            icon="fa-flag"
+            options={[...STATUS_OPTIONS]}
+            selected={filterStatus}
+            onChange={setFilterStatus}
+            placeholder="Todos"
+            width={220}
+          />
+          <MultiSelect
+            label="Classe"
+            icon="fa-tag"
+            options={classOptions}
+            selected={filterClasses}
+            onChange={setFilterClasses}
+            placeholder={classOptions.length ? 'Todas' : 'Sem classes'}
+            width={200}
+          />
+          {(search || filterStatus.length > 0 || filterClasses.length > 0 || filterPais !== 'all') && (
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: 12 }}
+              onClick={() => { setSearch(''); setFilterStatus([]); setFilterClasses([]); setFilterPais('all') }}
+            >
+              <i className="fas fa-xmark" />Limpar filtros
             </button>
           )}
         </div>
+
+        {/* Active filter chips + result count */}
+        {(filterStatus.length > 0 || filterClasses.length > 0 || filterPais !== 'all' || search) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginRight: 4 }}>
+              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}:
+            </span>
+            {filterPais !== 'all' && (
+              <FilterChip label={filterPais === 'BR' ? '🇧🇷 Brasil' : '🇺🇸 EUA'} onRemove={() => setFilterPais('all')} />
+            )}
+            {filterStatus.map(s => (
+              <FilterChip key={`s-${s}`} label={s} onRemove={() => setFilterStatus(filterStatus.filter(x => x !== s))} />
+            ))}
+            {filterClasses.map(c => (
+              <FilterChip key={`c-${c}`} label={`Classe ${c}`} onRemove={() => setFilterClasses(filterClasses.filter(x => x !== c))} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -185,5 +261,26 @@ export function TrademarksPage() {
 
       {confirmId !== null && <ConfirmDialog msg="Deseja realmente excluir esta marca?" onConfirm={() => handleDelete(confirmId)} onCancel={() => setConfirmId(null)} />}
     </div>
+  )
+}
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontSize: 11, padding: '3px 8px', borderRadius: 999,
+      background: 'var(--brand-dim)', color: 'var(--brand)', fontWeight: 600,
+      border: '1px solid var(--surface-border)',
+    }}>
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
+        title="Remover"
+      >
+        ✕
+      </button>
+    </span>
   )
 }
