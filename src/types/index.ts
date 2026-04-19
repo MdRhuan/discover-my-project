@@ -146,6 +146,21 @@ export interface OrgShape {
   zIndex?: number
 }
 
+export interface OrgImage {
+  id?: number
+  empresaId?: number | null
+  nome?: string
+  arquivoPath: string
+  posX: number
+  posY: number
+  largura: number
+  altura: number
+  rotacao?: number
+  opacidade?: number
+  raio?: number
+  zIndex?: number
+}
+
 export interface Task {
   id?: number
   empresaId?: number
