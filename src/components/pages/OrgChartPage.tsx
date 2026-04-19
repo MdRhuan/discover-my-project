@@ -1323,6 +1323,7 @@ function EditImageModal({ node, onClose, onSave, onDelete }: {
   )
 }
 
+export function OrgChartPage() {
   return (
     <ReactFlowProvider>
       <OrgChartEditor />
