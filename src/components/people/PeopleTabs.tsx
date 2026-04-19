@@ -134,9 +134,9 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
       {/* Tabs */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, borderBottom: '1px solid var(--surface-border)', overflowX: 'auto', marginBottom: 14, paddingBottom: 0 }}>
         {pessoas.map(p => {
-          const isActive = !activeExtra && p.id === activeId
+          const isActive = p.id === activeId
           return (
-            <button key={p.id} onClick={() => { setActiveId(p.id); setActiveExtra(null) }}
+            <button key={p.id} onClick={() => { setActiveId(p.id) }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px',
                 background: 'transparent', border: 0,
