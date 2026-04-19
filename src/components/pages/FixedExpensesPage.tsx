@@ -9,6 +9,7 @@ import { CATEGORIAS, EMPTY, catInfo, type Despesa } from './fixed-expenses/types
 import { MonthFilter } from './fixed-expenses/MonthFilter'
 import { ExpensesPieChart } from './fixed-expenses/ExpensesPieChart'
 import { InsightsPanel } from './fixed-expenses/InsightsPanel'
+import { CategoryCards } from './fixed-expenses/CategoryCards'
 
 export function FixedExpensesPage() {
   const { lang, toast } = useApp()
@@ -150,7 +151,7 @@ export function FixedExpensesPage() {
           { label: 'Total BR (BRL)', val: fmt.currency(totalBRL, 'BRL', lang), icon: 'fa-flag', color: 'var(--brand)', bg: 'var(--brand-dim)' },
           { label: 'Total US (USD)', val: fmt.currency(totalUSD_us, 'USD', lang), icon: 'fa-flag-usa', color: 'var(--blue)', bg: 'rgba(59,130,246,.12)' },
           { label: 'Consolidado (USD)', val: fmt.currency(totalConsolidadoUSD, 'USD', lang), icon: 'fa-globe', color: 'var(--green)', bg: 'rgba(34,197,94,.12)' },
-          { label: 'Consolidado (BRL)', val: fmt.currency(totalConsolidadoBRL, 'BRL', lang), icon: 'fa-coins', color: 'var(--yellow)', bg: 'rgba(245,158,11,.12)' },
+          { label: 'Despesas Ativas', val: `${ativas.length}`, icon: 'fa-list-check', color: 'var(--orange)', bg: 'rgba(249,115,22,.12)' },
         ].map(k => (
           <div key={k.label} className="card" style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -207,6 +208,9 @@ export function FixedExpensesPage() {
 
       {/* Insights */}
       <InsightsPanel pctBR={pctBR} topCategoria={topCat} totalUSD={totalConsolidadoUSD} />
+
+      {/* Categorias detalhadas (estilo do print) */}
+      <CategoryCards data={aggConsolidadoUSD} total={totalConsolidadoUSD} />
 
       {/* Category chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginTop: 24, marginBottom: 18 }}>
