@@ -244,8 +244,19 @@ export function FixedExpensesPage() {
       {/* Insights */}
       <InsightsPanel pctBR={pctBR} topCategoria={topCat} totalUSD={totalConsolidadoUSD} />
 
-      {/* Categorias detalhadas (estilo do print) */}
-      <CategoryCards data={aggConsolidadoUSD} total={totalConsolidadoUSD} />
+      {/* Categorias detalhadas (estilo do print) — respeitam filtro de país */}
+      {(() => {
+        let dataUSD: Record<string, number>
+        if (filterPais === 'BR') {
+          dataUSD = Object.fromEntries(Object.entries(aggBR).map(([k, v]) => [k, v / usdRate]))
+        } else if (filterPais === 'US') {
+          dataUSD = aggUS
+        } else {
+          dataUSD = aggConsolidadoUSD
+        }
+        const totalUSD = Object.values(dataUSD).reduce((s, v) => s + v, 0)
+        return <CategoryCards data={dataUSD} total={totalUSD} />
+      })()}
 
       {/* Category chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginTop: 24, marginBottom: 18 }}>
