@@ -347,6 +347,9 @@ export function PersonalDocsPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {SUBCATS.filter(cat => cat.key !== 'Seguros' && (!filterCat || filterCat === cat.key)).map(cat => {
+            if (cat.key === 'Plano de saúde') {
+              return <HealthPlansSection key={cat.key} pessoa={activePerson} registeredPeople={registeredPeople} />
+            }
             const items = filtered.filter(d => d.categoria === cat.key)
             return (
               <div key={cat.key} className="card">
