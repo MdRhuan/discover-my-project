@@ -486,6 +486,11 @@ function OrgChartEditor() {
     db.orgIcons.update(dbId, { largura: w, altura: h }).catch(console.error)
   }, [])
 
+  const handleImageResize = useCallback((id: string, w: number, h: number) => {
+    const { dbId } = parseId(id)
+    db.orgImages.update(dbId, { largura: w, altura: h }).catch(console.error)
+  }, [])
+
   useEffect(() => {
     setNodes(curr => curr.map(n => {
       if (n.type === 'company') {
@@ -494,10 +499,11 @@ function OrgChartEditor() {
       if (n.type === 'freetext') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid) } }
       if (n.type === 'shape') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize } }
       if (n.type === 'icon') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleIconResize } }
+      if (n.type === 'image') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleImageResize } }
       return n
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleOpenEmpresa, handleShapeResize, handleIconResize])
+  }, [handleOpenEmpresa, handleShapeResize, handleIconResize, handleImageResize])
 
   // ============ Auto-save positions ============
   const scheduleSave = useCallback(() => {
