@@ -129,7 +129,7 @@ export function PersonalDocsPage() {
   const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
   const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
   const filtered = docs.filter(d =>
-    (!filterPessoa || d.pessoa === filterPessoa) &&
+    (!activePerson || d.pessoa === activePerson) &&
     (!filterCat || d.categoria === filterCat) &&
     (!search || d.nome?.toLowerCase().includes(search.toLowerCase()) || d.pessoa?.toLowerCase().includes(search.toLowerCase()))
   )
