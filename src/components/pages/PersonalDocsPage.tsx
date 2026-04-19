@@ -68,7 +68,7 @@ export function PersonalDocsPage() {
   const [docs, setDocs] = useState<DocPessoal[]>([])
   const [obList, setObList] = useState<Obrigacao[]>([])
   const [search, setSearch] = useState('')
-  const [filterPessoa, setFilterPessoa] = useState('')
+  const [activePerson, setActivePerson] = useState<string | null>(null)
   const [filterCat, setFilterCat] = useState('')
   const [docModal, setDocModal] = useState(false)
   const [obModal, setObModal] = useState(false)
