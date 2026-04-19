@@ -77,18 +77,16 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
 
   // Auto-selecionar primeira pessoa
   useEffect(() => {
-    if (activeExtra) return
     if (activeId && pessoas.some(p => p.id === activeId)) return
     if (pessoas.length > 0) setActiveId(pessoas[0].id)
     else setActiveId(null)
-  }, [pessoas, activeId, activeExtra])
+  }, [pessoas, activeId])
 
   // Notificar pai sobre a pessoa ativa
   useEffect(() => {
-    if (activeExtra) { onActivePersonChange?.(null); return }
     const p = pessoas.find(x => x.id === activeId)
     onActivePersonChange?.(p?.nome || null)
-  }, [activeId, activeExtra, pessoas, onActivePersonChange])
+  }, [activeId, pessoas, onActivePersonChange])
 
   const active = pessoas.find(p => p.id === activeId) || null
 
