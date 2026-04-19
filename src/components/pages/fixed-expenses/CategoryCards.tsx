@@ -12,8 +12,8 @@ export function CategoryCards({ data, total }: Props) {
   const fmtUSD = (v: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v)
 
-  // Mostrar todas as categorias que possuem valor + sempre incluir as principais com 0 para visão completa
-  const categoriasComValor = CATEGORIAS.filter(c => (data[c.key] || 0) > 0 || ['Moradia', 'Funcionários', 'Transporte', 'Seguros', 'Outros'].includes(c.key))
+  // Sempre mostra TODAS as categorias, mesmo zeradas
+  const categoriasComValor = CATEGORIAS
 
   return (
     <div style={{ marginTop: 24, marginBottom: 18 }}>
