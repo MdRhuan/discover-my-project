@@ -327,8 +327,8 @@ export function PersonalDocsPage() {
       {/* Subcategory chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 18 }}>
         {SUBCATS.map(cat => {
-          const count = docs.filter(d => d.categoria === cat.key).length
-          if (count === 0) return null
+          const count = cat.key === 'Seguros' ? insuranceDocs.length : docs.filter(d => d.categoria === cat.key).length
+          if (count === 0 && cat.key !== 'Seguros') return null
           return (
             <button key={cat.key} onClick={() => setFilterCat(filterCat === cat.key ? '' : cat.key)}
               style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', background: filterCat === cat.key ? 'var(--surface-hover)' : 'var(--surface-card)', border: `1px solid ${filterCat === cat.key ? 'var(--brand)' : 'var(--surface-border)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
