@@ -431,6 +431,25 @@ function OrgChartEditor() {
       },
     }))
 
+    // Resolve signed URLs for images in parallel
+    const imageNodes: Node[] = await Promise.all(imgs.map(async (im) => {
+      const url = im.arquivoPath ? await getSignedUrl(im.arquivoPath) : ''
+      return {
+        id: `image:${im.id}`,
+        type: 'image',
+        position: { x: Number(im.posX) || 0, y: Number(im.posY) || 0 },
+        style: { width: Number(im.largura) || 160, height: Number(im.altura) || 160 },
+        zIndex: im.zIndex || 1,
+        data: {
+          url,
+          nome: im.nome,
+          rotacao: Number(im.rotacao) || 0,
+          opacidade: im.opacidade ?? 1,
+          raio: im.raio ?? 0,
+        },
+      } as Node
+    }))
+
     const flowEdges: Edge[] = e.map(ed => ({
       id: `edge:${ed.id}`,
       source: `company:${ed.sourceId}`,
@@ -444,10 +463,10 @@ function OrgChartEditor() {
       data: { cor: ed.cor || '#94a3b8', espessura: ed.espessura || 2, estilo: ed.estilo || 'solid' },
     }))
 
-    setNodes([...shapeNodes, ...companyNodes, ...iconNodes, ...textNodes])
+    setNodes([...shapeNodes, ...companyNodes, ...imageNodes, ...iconNodes, ...textNodes])
     setEdges(flowEdges)
     setLoading(false)
-  }, [setNodes, setEdges])
+  }, [setNodes, setEdges, getSignedUrl])
 
   useEffect(() => { loadAll() }, [loadAll])
 
