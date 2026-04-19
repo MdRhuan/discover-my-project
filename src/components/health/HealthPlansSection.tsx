@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useApp } from '@/context/AppContext'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
+import { HealthPlanDocs } from './HealthPlanDocs'
 
 export interface HealthPlan {
   id: number
@@ -150,27 +151,30 @@ export function HealthPlansSection({ pessoa, registeredPeople }: Props) {
           {plans.map(p => {
             const badge = STATUS_BADGE[p.status || ''] || 'brand'
             return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--surface-hover)', borderRadius: 8, border: '1px solid var(--surface-border)' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(236,72,153,.12)', flexShrink: 0 }}>
-                  <i className="fas fa-hospital-user" style={{ fontSize: 15, color: '#ec4899' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{p.operadora}{p.nome_plano ? ` — ${p.nome_plano}` : ''}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
-                    {p.modalidade && <span><i className="fas fa-layer-group" style={{ marginRight: 3 }} />{p.modalidade}</span>}
-                    {p.acomodacao && <span><i className="fas fa-bed" style={{ marginRight: 3 }} />{p.acomodacao}</span>}
-                    {p.beneficiario_principal && <span><i className="fas fa-user" style={{ marginRight: 3 }} />{p.beneficiario_principal}</span>}
-                    {p.vigencia_inicio && p.vigencia_fim && <span><i className="fas fa-calendar" style={{ marginRight: 3 }} />{fmt.date(p.vigencia_inicio, lang)} → {fmt.date(p.vigencia_fim, lang)}</span>}
-                    {p.mensalidade != null && <span><i className="fas fa-money-bill" style={{ marginRight: 3 }} />{p.moeda?.split(' ')[0] || 'BRL'} {Number(p.mensalidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>}
+              <div key={p.id} style={{ padding: 12, background: 'var(--surface-hover)', borderRadius: 8, border: '1px solid var(--surface-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(236,72,153,.12)', flexShrink: 0 }}>
+                    <i className="fas fa-hospital-user" style={{ fontSize: 15, color: '#ec4899' }} />
                   </div>
-                  {p.dependentes && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3 }}><i className="fas fa-users" style={{ marginRight: 4 }} />Dependentes: {p.dependentes}</div>}
-                  {p.observacoes && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3, fontStyle: 'italic' }}>{p.observacoes}</div>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{p.operadora}{p.nome_plano ? ` — ${p.nome_plano}` : ''}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
+                      {p.modalidade && <span><i className="fas fa-layer-group" style={{ marginRight: 3 }} />{p.modalidade}</span>}
+                      {p.acomodacao && <span><i className="fas fa-bed" style={{ marginRight: 3 }} />{p.acomodacao}</span>}
+                      {p.beneficiario_principal && <span><i className="fas fa-user" style={{ marginRight: 3 }} />{p.beneficiario_principal}</span>}
+                      {p.vigencia_inicio && p.vigencia_fim && <span><i className="fas fa-calendar" style={{ marginRight: 3 }} />{fmt.date(p.vigencia_inicio, lang)} → {fmt.date(p.vigencia_fim, lang)}</span>}
+                      {p.mensalidade != null && <span><i className="fas fa-money-bill" style={{ marginRight: 3 }} />{p.moeda?.split(' ')[0] || 'BRL'} {Number(p.mensalidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>}
+                    </div>
+                    {p.dependentes && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3 }}><i className="fas fa-users" style={{ marginRight: 4 }} />Dependentes: {p.dependentes}</div>}
+                    {p.observacoes && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3, fontStyle: 'italic' }}>{p.observacoes}</div>}
+                  </div>
+                  {p.status && <span className={`badge badge-${badge}`} style={{ flexShrink: 0 }}>{p.status}</span>}
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    <button className="btn-icon" title="Editar" onClick={() => openEdit(p)}><i className="fas fa-pen" /></button>
+                    <button className="btn-icon danger" title="Excluir" onClick={() => setConfirmId(p.id)}><i className="fas fa-trash" /></button>
+                  </div>
                 </div>
-                {p.status && <span className={`badge badge-${badge}`} style={{ flexShrink: 0 }}>{p.status}</span>}
-                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                  <button className="btn-icon" title="Editar" onClick={() => openEdit(p)}><i className="fas fa-pen" /></button>
-                  <button className="btn-icon danger" title="Excluir" onClick={() => setConfirmId(p.id)}><i className="fas fa-trash" /></button>
-                </div>
+                <HealthPlanDocs healthPlanId={p.id} planLabel={`${p.operadora}${p.nome_plano ? ' — ' + p.nome_plano : ''}`} />
               </div>
             )
           })}
