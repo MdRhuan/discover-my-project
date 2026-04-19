@@ -67,9 +67,13 @@ export function TrademarksPage() {
   const today = new Date().toISOString().slice(0, 10)
   const in90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10)
 
+  // Available classes derived from data (sorted)
+  const classOptions = Array.from(new Set(rows.map(r => (r.classe || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b))
+
   const filtered = rows.filter(r =>
     (filterPais === 'all' || (r.pais || 'BR') === filterPais) &&
-    (!filterStatus || r.status === filterStatus) &&
+    (filterStatus.length === 0 || (r.status && filterStatus.includes(r.status))) &&
+    (filterClasses.length === 0 || (r.classe && filterClasses.includes(r.classe.trim()))) &&
     (!search ||
       r.nome?.toLowerCase().includes(search.toLowerCase()) ||
       r.numero?.toLowerCase().includes(search.toLowerCase()) ||
