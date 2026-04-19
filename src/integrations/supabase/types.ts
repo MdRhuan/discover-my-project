@@ -446,6 +446,69 @@ export type Database = {
           },
         ]
       }
+      health_plans: {
+        Row: {
+          acomodacao: string | null
+          beneficiario_principal: string | null
+          coparticipacao: boolean | null
+          created_at: string
+          dependentes: string | null
+          id: number
+          mensalidade: number | null
+          modalidade: string | null
+          moeda: string | null
+          nome_plano: string | null
+          observacoes: string | null
+          operadora: string
+          owner_id: string
+          pessoa: string
+          status: string | null
+          updated_at: string
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+        }
+        Insert: {
+          acomodacao?: string | null
+          beneficiario_principal?: string | null
+          coparticipacao?: boolean | null
+          created_at?: string
+          dependentes?: string | null
+          id?: number
+          mensalidade?: number | null
+          modalidade?: string | null
+          moeda?: string | null
+          nome_plano?: string | null
+          observacoes?: string | null
+          operadora: string
+          owner_id?: string
+          pessoa: string
+          status?: string | null
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Update: {
+          acomodacao?: string | null
+          beneficiario_principal?: string | null
+          coparticipacao?: boolean | null
+          created_at?: string
+          dependentes?: string | null
+          id?: number
+          mensalidade?: number | null
+          modalidade?: string | null
+          moeda?: string | null
+          nome_plano?: string | null
+          observacoes?: string | null
+          operadora?: string
+          owner_id?: string
+          pessoa?: string
+          status?: string | null
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Relationships: []
+      }
       insurance_docs: {
         Row: {
           apolice_id: number | null
@@ -454,6 +517,7 @@ export type Database = {
           categoria: string | null
           created_at: string
           data_upload: string | null
+          health_plan_id: number | null
           id: number
           insurance_type: string
           nome: string
@@ -470,6 +534,7 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           data_upload?: string | null
+          health_plan_id?: number | null
           id?: number
           insurance_type: string
           nome: string
@@ -486,6 +551,7 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           data_upload?: string | null
+          health_plan_id?: number | null
           id?: number
           insurance_type?: string
           nome?: string
@@ -495,7 +561,15 @@ export type Database = {
           tipo?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "insurance_docs_health_plan_id_fkey"
+            columns: ["health_plan_id"]
+            isOneToOne: false
+            referencedRelation: "health_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       org_edges: {
         Row: {
