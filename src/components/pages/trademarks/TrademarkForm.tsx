@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import type { Trademark, Empresa } from '@/types'
-import { STATUS_OPTIONS, TIPO_MARCA_OPTIONS } from './types'
+import { TIPO_MARCA_OPTIONS } from './types'
 import { TrademarkFiles } from './TrademarkFiles'
 
 interface Props {
