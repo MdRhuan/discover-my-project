@@ -62,7 +62,12 @@ const NAV_STRUCTURE: NavItemDef[] = [
         children: [
           { key: 'fiscalTax',   icon: 'fa-file-invoice-dollar', label: { pt: 'Tax Return – IRS', en: 'Tax Return – IRS' } },
           { key: 'taxPlanning', icon: 'fa-chess',               label: { pt: 'Tax Planning',     en: 'Tax Planning'    } },
-          { key: 'checkBox',    icon: 'fa-square-check',        label: { pt: 'Check-the-box',    en: 'Check-the-box'  } },
+        ],
+      },
+      {
+        key: 'rotinas-controles', icon: 'fa-list-check', label: { pt: 'Rotinas & Controles', en: 'Routines & Controls' },
+        children: [
+          { key: 'checkBox', icon: 'fa-square-check', label: { pt: 'Check-the-box', en: 'Check-the-box' } },
         ],
       },
     ],
