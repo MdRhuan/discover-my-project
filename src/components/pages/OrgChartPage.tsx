@@ -896,6 +896,12 @@ function OrgChartEditor() {
       setEditNodeId(null); toast('Imagem atualizada', 'success')
     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }
+
+  return (
+    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
+      <div className="page-header">
+        <div className="page-header-info">
+          <div className="page-header-title">Organograma Societário</div>
           <div className="page-header-sub">Arraste · Conecte das bordas · Delete remove · Ctrl+D duplica · Duplo clique edita textos/caixas</div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
