@@ -205,13 +205,37 @@ export interface Trademark {
   id?: number
   nome: string
   empresaId?: number
+  pais?: 'BR' | 'US'
+  owner?: string
+  tipoMarca?: string
   numero?: string
   classe?: string
   jurisdicao?: string
   status?: string
   dataDeposito?: string
   dataVencimento?: string
+  dataConcessao?: string
+  nextDeadline?: string
+  numProcesso?: string
+  numRegistro?: string
+  valor?: number
+  // US-specific
+  usSerialNumber?: string
+  usRegistration?: string
+  filingDate?: string
+  dueDate?: string
+  proposedGoods?: string
   notas?: string
+}
+
+export interface TrademarkFile {
+  id?: number
+  trademarkId: number
+  nome: string
+  arquivoPath: string
+  tipo?: string
+  tamanho?: string
+  dataUpload?: string
 }
 
 export interface AuditLog {

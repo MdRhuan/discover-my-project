@@ -1016,51 +1016,137 @@ export type Database = {
           },
         ]
       }
+      trademark_files: {
+        Row: {
+          arquivo_path: string
+          created_at: string
+          data_upload: string | null
+          id: number
+          nome: string
+          owner_id: string
+          tamanho: string | null
+          tipo: string | null
+          trademark_id: number
+          updated_at: string
+        }
+        Insert: {
+          arquivo_path: string
+          created_at?: string
+          data_upload?: string | null
+          id?: number
+          nome: string
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          trademark_id: number
+          updated_at?: string
+        }
+        Update: {
+          arquivo_path?: string
+          created_at?: string
+          data_upload?: string | null
+          id?: number
+          nome?: string
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          trademark_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trademark_files_trademark_id_fkey"
+            columns: ["trademark_id"]
+            isOneToOne: false
+            referencedRelation: "trademarks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trademarks: {
         Row: {
           classe: string | null
           created_at: string
+          data_concessao: string | null
           data_deposito: string | null
           data_vencimento: string | null
+          due_date: string | null
           empresa_id: number | null
+          filing_date: string | null
           id: number
           jurisdicao: string | null
+          next_deadline: string | null
           nome: string
           notas: string | null
+          num_processo: string | null
+          num_registro: string | null
           numero: string | null
+          owner: string | null
           owner_id: string
+          pais: string
+          proposed_goods: string | null
           status: string | null
+          tipo_marca: string | null
           updated_at: string
+          us_registration: string | null
+          us_serial_number: string | null
+          valor: number | null
         }
         Insert: {
           classe?: string | null
           created_at?: string
+          data_concessao?: string | null
           data_deposito?: string | null
           data_vencimento?: string | null
+          due_date?: string | null
           empresa_id?: number | null
+          filing_date?: string | null
           id?: number
           jurisdicao?: string | null
+          next_deadline?: string | null
           nome: string
           notas?: string | null
+          num_processo?: string | null
+          num_registro?: string | null
           numero?: string | null
+          owner?: string | null
           owner_id?: string
+          pais?: string
+          proposed_goods?: string | null
           status?: string | null
+          tipo_marca?: string | null
           updated_at?: string
+          us_registration?: string | null
+          us_serial_number?: string | null
+          valor?: number | null
         }
         Update: {
           classe?: string | null
           created_at?: string
+          data_concessao?: string | null
           data_deposito?: string | null
           data_vencimento?: string | null
+          due_date?: string | null
           empresa_id?: number | null
+          filing_date?: string | null
           id?: number
           jurisdicao?: string | null
+          next_deadline?: string | null
           nome?: string
           notas?: string | null
+          num_processo?: string | null
+          num_registro?: string | null
           numero?: string | null
+          owner?: string | null
           owner_id?: string
+          pais?: string
+          proposed_goods?: string | null
           status?: string | null
+          tipo_marca?: string | null
           updated_at?: string
+          us_registration?: string | null
+          us_serial_number?: string | null
+          valor?: number | null
         }
         Relationships: [
           {
