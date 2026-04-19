@@ -5,7 +5,28 @@ import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
+import { supabase } from '@/integrations/supabase/client'
 import type { DocPessoal } from '@/types'
+
+interface InsuranceDocLite {
+  id: number
+  insurance_type: 'life' | 'apt' | 'car'
+  apolice_label: string | null
+  nome: string
+  categoria: string | null
+  arquivo_path: string
+  tipo: string | null
+  tamanho: string | null
+  data_upload: string | null
+}
+
+const INSURANCE_TYPES = [
+  { key: 'life' as const, label: 'Seguro de vida',         icon: 'fa-heart-pulse', page: 'lifeInsurance' as const, color: 'red' },
+  { key: 'apt'  as const, label: 'Seguro de apartamento',  icon: 'fa-building',    page: 'aptInsurance'  as const, color: 'blue' },
+  { key: 'car'  as const, label: 'Seguro de carro',        icon: 'fa-car',         page: 'carInsurance'  as const, color: 'green' },
+]
+const INSURANCE_COLOR_VAR: Record<string, string> = { red: 'var(--red)', blue: 'var(--blue)', green: 'var(--green)' }
+const INSURANCE_COLOR_BG: Record<string, string>  = { red: 'rgba(239,68,68,.12)', blue: 'rgba(59,130,246,.12)', green: 'rgba(34,197,94,.12)' }
 
 const OB_KEY = 'proximas_obrigacoes'
 
@@ -29,10 +50,11 @@ const SUBCATS = [
   { key: 'Residência',  icon: 'fa-house',            color: 'blue'   },
   { key: 'Passaporte',  icon: 'fa-passport',         color: 'green'  },
   { key: 'Visto',       icon: 'fa-stamp',            color: 'yellow' },
+  { key: 'Seguros',     icon: 'fa-shield-halved',    color: 'purple' },
   { key: 'Outros',      icon: 'fa-folder',           color: 'orange' },
 ]
-const COLOR_VAR: Record<string, string> = { brand: 'var(--brand)', blue: 'var(--blue)', green: 'var(--green)', yellow: 'var(--yellow)', orange: 'var(--orange)' }
-const COLOR_BG: Record<string, string>  = { brand: 'var(--brand-dim)', blue: 'rgba(59,130,246,.12)', green: 'rgba(34,197,94,.12)', yellow: 'rgba(245,158,11,.12)', orange: 'rgba(249,115,22,.12)' }
+const COLOR_VAR: Record<string, string> = { brand: 'var(--brand)', blue: 'var(--blue)', green: 'var(--green)', yellow: 'var(--yellow)', orange: 'var(--orange)', purple: '#a855f7' }
+const COLOR_BG: Record<string, string>  = { brand: 'var(--brand-dim)', blue: 'rgba(59,130,246,.12)', green: 'rgba(34,197,94,.12)', yellow: 'rgba(245,158,11,.12)', orange: 'rgba(249,115,22,.12)', purple: 'rgba(168,85,247,.12)' }
 const STATUS_MAP: Record<string, { badge: string; label: string }> = {
   ativo: { badge: 'brand', label: 'Ativo' }, pendente: { badge: 'yellow', label: 'Pendente' },
   vencido: { badge: 'red', label: 'Vencido' }, renovado: { badge: 'green', label: 'Renovado' },
@@ -41,7 +63,7 @@ const STATUS_MAP: Record<string, { badge: string; label: string }> = {
 const EMPTY_DOC: Partial<DocPessoal> = { pessoa: 'Eduardo', categoria: 'Identidade', subcategoria: 'CPF', nome: '', tipo: 'PDF', descricao: '', status: 'ativo', dataUpload: new Date().toISOString().slice(0, 10), vencimento: '' }
 
 export function PersonalDocsPage() {
-  const { lang, toast } = useApp()
+  const { lang, toast, setPage } = useApp()
   const [docs, setDocs] = useState<DocPessoal[]>([])
   const [obList, setObList] = useState<Obrigacao[]>([])
   const [search, setSearch] = useState('')
@@ -55,6 +77,8 @@ export function PersonalDocsPage() {
   const [confirmObId, setConfirmObId] = useState<number | null>(null)
   const [obFilterPessoas, setObFilterPessoas] = useState<string[]>([])
   const [obFilterCats, setObFilterCats] = useState<string[]>([])
+  const [insuranceDocs, setInsuranceDocs] = useState<InsuranceDocLite[]>([])
+  const [loadingIns, setLoadingIns] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -66,7 +90,40 @@ export function PersonalDocsPage() {
     setObList((ob?.value as Obrigacao[]) || OB_DEFAULTS)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  const loadInsurance = useCallback(async () => {
+    setLoadingIns(true)
+    const { data, error } = await supabase
+      .from('insurance_docs')
+      .select('id, insurance_type, apolice_label, nome, categoria, arquivo_path, tipo, tamanho, data_upload')
+      .order('created_at', { ascending: false })
+    if (error) { toast(error.message, 'error'); setInsuranceDocs([]) }
+    else setInsuranceDocs((data as InsuranceDocLite[]) || [])
+    setLoadingIns(false)
+  }, [toast])
+
+  useEffect(() => { load(); loadInsurance() }, [load, loadInsurance])
+
+  async function downloadInsurance(d: InsuranceDocLite) {
+    try {
+      const { data, error } = await supabase.storage.from('insurance-documents').createSignedUrl(d.arquivo_path, 3600)
+      if (error) throw error
+      const a = document.createElement('a')
+      a.href = data.signedUrl; a.download = d.nome; a.target = '_blank'
+      document.body.appendChild(a); a.click(); a.remove()
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao baixar.', 'error')
+    }
+  }
+
+  async function previewInsurance(d: InsuranceDocLite) {
+    try {
+      const { data, error } = await supabase.storage.from('insurance-documents').createSignedUrl(d.arquivo_path, 3600)
+      if (error) throw error
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao visualizar.', 'error')
+    }
+  }
 
   const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
   const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
@@ -270,8 +327,8 @@ export function PersonalDocsPage() {
       {/* Subcategory chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 18 }}>
         {SUBCATS.map(cat => {
-          const count = docs.filter(d => d.categoria === cat.key).length
-          if (count === 0) return null
+          const count = cat.key === 'Seguros' ? insuranceDocs.length : docs.filter(d => d.categoria === cat.key).length
+          if (count === 0 && cat.key !== 'Seguros') return null
           return (
             <button key={cat.key} onClick={() => setFilterCat(filterCat === cat.key ? '' : cat.key)}
               style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', background: filterCat === cat.key ? 'var(--surface-hover)' : 'var(--surface-card)', border: `1px solid ${filterCat === cat.key ? 'var(--brand)' : 'var(--surface-border)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
@@ -310,7 +367,78 @@ export function PersonalDocsPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Seção especial: Seguros (read-only, sincronizada com insurance_docs) */}
+      {filterCat === 'Seguros' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="card" style={{ background: 'rgba(168,85,247,.06)', border: '1px solid rgba(168,85,247,.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <i className="fas fa-info-circle" style={{ color: '#a855f7' }} />
+              Esta categoria é <strong>sincronizada automaticamente</strong> com as páginas de seguros. Documentos não podem ser cadastrados aqui — adicione-os diretamente na apólice correspondente.
+            </div>
+          </div>
+
+          {INSURANCE_TYPES.map(t => {
+            const items = insuranceDocs.filter(d => d.insurance_type === t.key)
+              .filter(d => !search || d.nome.toLowerCase().includes(search.toLowerCase()) || (d.apolice_label || '').toLowerCase().includes(search.toLowerCase()))
+            return (
+              <div key={t.key} className="card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid var(--surface-border)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: INSURANCE_COLOR_BG[t.color] }}>
+                    <i className={`fas ${t.icon}`} style={{ fontSize: 16, color: INSURANCE_COLOR_VAR[t.color] }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{t.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} documento{items.length !== 1 ? 's' : ''}</div>
+                  </div>
+                  <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setPage(t.page)}>
+                    <i className="fas fa-arrow-up-right-from-square" />Ir para a página
+                  </button>
+                </div>
+
+                {loadingIns ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: 12 }}>
+                    <i className="fas fa-spinner fa-spin" style={{ marginRight: 6 }} />Carregando…
+                  </div>
+                ) : items.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)', fontSize: 12, background: 'var(--surface-hover)', borderRadius: 8, border: '1px dashed var(--surface-border)' }}>
+                    <i className="fas fa-folder-open" style={{ fontSize: 18, display: 'block', marginBottom: 6 }} />
+                    Nenhum documento encontrado
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {items.map(d => {
+                      const isImg = !!d.tipo && ['JPG','JPEG','PNG','WEBP','GIF'].includes(d.tipo.toUpperCase())
+                      const isPdf = d.tipo?.toUpperCase() === 'PDF'
+                      return (
+                        <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)' }}>
+                          <i className={`fas ${isPdf ? 'fa-file-pdf' : isImg ? 'fa-file-image' : 'fa-file'}`} style={{ fontSize: 16, color: isPdf ? '#ef4444' : isImg ? '#3b82f6' : 'var(--text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.nome}</div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 1 }}>
+                              {d.apolice_label && <span><i className="fas fa-shield" style={{ marginRight: 3 }} />{d.apolice_label}</span>}
+                              {d.categoria && <span><i className="fas fa-tag" style={{ marginRight: 3 }} />{d.categoria}</span>}
+                              {d.tipo && <span>{d.tipo}</span>}
+                              {d.tamanho && <span>{d.tamanho}</span>}
+                              {d.data_upload && <span>{fmt.date(d.data_upload, lang)}</span>}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                            {(isImg || isPdf) && (
+                              <button className="btn-icon" title="Visualizar" onClick={() => previewInsurance(d)}><i className="fas fa-eye" /></button>
+                            )}
+                            <button className="btn-icon" title="Baixar" onClick={() => downloadInsurance(d)}><i className="fas fa-download" /></button>
+                            <button className="btn-icon" title="Ir para origem" onClick={() => setPage(t.page)}><i className="fas fa-arrow-up-right-from-square" /></button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : (
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="table-wrap">
           <table className="data-table">
@@ -355,6 +483,7 @@ export function PersonalDocsPage() {
           </table>
         </div>
       </div>
+      )}
 
       {/* Doc Modal */}
       {docModal && (
