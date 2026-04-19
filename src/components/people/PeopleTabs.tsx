@@ -24,7 +24,7 @@ export interface Pessoa {
   residencia_fiscal: string | null
 }
 
-type ExtraKey = never
+
 
 interface Props {
   /** Notifica o pai sobre a pessoa ativa (para filtrar documentos). null = sem filtro */
