@@ -63,7 +63,7 @@ const STATUS_MAP: Record<string, { badge: string; label: string }> = {
 const EMPTY_DOC: Partial<DocPessoal> = { pessoa: 'Eduardo', categoria: 'Identidade', subcategoria: 'CPF', nome: '', tipo: 'PDF', descricao: '', status: 'ativo', dataUpload: new Date().toISOString().slice(0, 10), vencimento: '' }
 
 export function PersonalDocsPage() {
-  const { lang, toast } = useApp()
+  const { lang, toast, setPage } = useApp()
   const [docs, setDocs] = useState<DocPessoal[]>([])
   const [obList, setObList] = useState<Obrigacao[]>([])
   const [search, setSearch] = useState('')
@@ -77,6 +77,8 @@ export function PersonalDocsPage() {
   const [confirmObId, setConfirmObId] = useState<number | null>(null)
   const [obFilterPessoas, setObFilterPessoas] = useState<string[]>([])
   const [obFilterCats, setObFilterCats] = useState<string[]>([])
+  const [insuranceDocs, setInsuranceDocs] = useState<InsuranceDocLite[]>([])
+  const [loadingIns, setLoadingIns] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -88,7 +90,41 @@ export function PersonalDocsPage() {
     setObList((ob?.value as Obrigacao[]) || OB_DEFAULTS)
   }, [])
 
+  const loadInsurance = useCallback(async () => {
+    setLoadingIns(true)
+    const { data, error } = await supabase
+      .from('insurance_docs')
+      .select('id, insurance_type, apolice_label, nome, categoria, arquivo_path, tipo, tamanho, data_upload')
+      .order('created_at', { ascending: false })
+    if (error) { toast(error.message, 'error'); setInsuranceDocs([]) }
+    else setInsuranceDocs((data as InsuranceDocLite[]) || [])
+    setLoadingIns(false)
+  }, [toast])
+
   useEffect(() => { load() }, [load])
+  useEffect(() => { if (filterCat === 'Seguros') loadInsurance() }, [filterCat, loadInsurance])
+
+  async function downloadInsurance(d: InsuranceDocLite) {
+    try {
+      const { data, error } = await supabase.storage.from('insurance-documents').createSignedUrl(d.arquivo_path, 3600)
+      if (error) throw error
+      const a = document.createElement('a')
+      a.href = data.signedUrl; a.download = d.nome; a.target = '_blank'
+      document.body.appendChild(a); a.click(); a.remove()
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao baixar.', 'error')
+    }
+  }
+
+  async function previewInsurance(d: InsuranceDocLite) {
+    try {
+      const { data, error } = await supabase.storage.from('insurance-documents').createSignedUrl(d.arquivo_path, 3600)
+      if (error) throw error
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao visualizar.', 'error')
+    }
+  }
 
   const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
   const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
