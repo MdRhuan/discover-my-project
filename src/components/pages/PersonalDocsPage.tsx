@@ -101,8 +101,7 @@ export function PersonalDocsPage() {
     setLoadingIns(false)
   }, [toast])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { if (filterCat === 'Seguros') loadInsurance() }, [filterCat, loadInsurance])
+  useEffect(() => { load(); loadInsurance() }, [load, loadInsurance])
 
   async function downloadInsurance(d: InsuranceDocLite) {
     try {
