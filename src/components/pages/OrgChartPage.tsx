@@ -885,11 +885,17 @@ function OrgChartEditor() {
     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }
 
-  return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
-      <div className="page-header">
-        <div className="page-header-info">
-          <div className="page-header-title">Organograma Societário</div>
+  async function saveImageEdit(patch: Partial<ImageNodeData>) {
+    if (!editNodeId) return
+    const { dbId } = parseId(editNodeId)
+    try {
+      await db.orgImages.update(dbId, {
+        nome: patch.nome, rotacao: patch.rotacao, opacidade: patch.opacidade, raio: patch.raio,
+      } as Partial<OrgImage>)
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      setEditNodeId(null); toast('Imagem atualizada', 'success')
+    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+  }
           <div className="page-header-sub">Arraste · Conecte das bordas · Delete remove · Ctrl+D duplica · Duplo clique edita textos/caixas</div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
