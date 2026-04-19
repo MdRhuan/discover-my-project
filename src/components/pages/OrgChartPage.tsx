@@ -250,7 +250,62 @@ function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
   )
 }
 
-const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode }
+// ============ Image Node (PNG / JPG / WEBP / GIF) ============
+interface ImageNodeData {
+  url: string
+  nome?: string
+  rotacao?: number
+  opacidade?: number
+  raio?: number
+  onEdit?: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
+}
+function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
+  return (
+    <>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={32}
+        minHeight={32}
+        keepAspectRatio
+        onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
+        lineStyle={{ borderColor: '#3b82f6' }}
+        handleStyle={{ background: '#3b82f6', width: 8, height: 8 }}
+      />
+      <div
+        onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
+        style={{
+          width: '100%',
+          height: '100%',
+          transform: `rotate(${data.rotacao || 0}deg)`,
+          opacity: data.opacidade ?? 1,
+          borderRadius: data.raio ?? 0,
+          overflow: 'hidden',
+          outline: selected ? '1px dashed #3b82f6' : 'none',
+          background: data.url ? 'transparent' : 'hsl(var(--muted))',
+          cursor: 'move',
+          boxSizing: 'border-box',
+        }}
+        title={data.nome ? `${data.nome} · duplo clique p/ editar` : 'Duplo clique p/ editar'}
+      >
+        {data.url ? (
+          <img
+            src={data.url}
+            alt={data.nome || 'imagem'}
+            draggable={false}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+            <i className="fas fa-image" style={{ marginRight: 6 }} /> Carregando...
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode, image: ImageNode }
 
 // ============ Editor ============
 function OrgChartEditor() {
