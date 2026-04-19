@@ -414,18 +414,45 @@ export function PersonalDocsPage() {
               <input className="form-input" value={form.nome || ''} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Ex: Passaporte Eduardo — 2025" />
             </div>
             <div className="form-group">
-              <label className="form-label">Pessoa</label>
-              <input className="form-input" value={form.pessoa || ''} onChange={e => setForm(f => ({ ...f, pessoa: e.target.value }))} placeholder="Ex: Eduardo" />
+              <label className="form-label">Pessoa *</label>
+              {registeredPeople.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--yellow)', padding: 8, background: 'rgba(245,158,11,.1)', borderRadius: 6, border: '1px solid rgba(245,158,11,.3)' }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: 6 }} />
+                  Nenhuma pessoa cadastrada. Cadastre uma pessoa antes de adicionar documentos.
+                </div>
+              ) : (
+                <>
+                  {registeredPeople.length > 6 && (
+                    <input
+                      className="form-input"
+                      style={{ marginBottom: 6 }}
+                      placeholder="Buscar pessoa..."
+                      value={personSearch}
+                      onChange={e => setPersonSearch(e.target.value)}
+                    />
+                  )}
+                  <select
+                    className="form-select"
+                    value={form.pessoa || ''}
+                    onChange={e => setForm(f => ({ ...f, pessoa: e.target.value }))}
+                  >
+                    <option value="">— Selecione —</option>
+                    {registeredPeople
+                      .filter(p => !personSearch || p.toLowerCase().includes(personSearch.toLowerCase()))
+                      .map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </>
+              )}
             </div>
             <div className="form-group">
-              <label className="form-label">Categoria</label>
+              <label className="form-label">Categoria *</label>
               <select className="form-select" value={form.categoria || 'Identidade'} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}>
-                {SUBCATS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
+                {SUBCATS.filter(s => s.key !== 'Seguros').map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Subcategoria</label>
-              <input className="form-input" value={form.subcategoria || ''} onChange={e => setForm(f => ({ ...f, subcategoria: e.target.value }))} placeholder="Ex: CPF, RG, Green Card" />
+              <input className="form-input" value={form.subcategoria || ''} onChange={e => setForm(f => ({ ...f, subcategoria: e.target.value }))} placeholder="Opcional — Ex: CPF, RG, Green Card" />
             </div>
             <div className="form-group">
               <label className="form-label">Status</label>
