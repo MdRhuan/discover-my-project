@@ -81,6 +81,8 @@ export function PersonalDocsPage() {
   const [obFilterCats, setObFilterCats] = useState<string[]>([])
   const [insuranceDocs, setInsuranceDocs] = useState<InsuranceDocLite[]>([])
   const [loadingIns, setLoadingIns] = useState(false)
+  const [registeredPeople, setRegisteredPeople] = useState<string[]>([])
+  const [personSearch, setPersonSearch] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -90,6 +92,11 @@ export function PersonalDocsPage() {
     const [d, ob] = await Promise.all([db.docsPessoais.toArray(), db.config.get(OB_KEY)])
     setDocs(d)
     setObList((ob?.value as Obrigacao[]) || OB_DEFAULTS)
+  }, [])
+
+  const loadPeople = useCallback(async () => {
+    const { data, error } = await supabase.from('pessoas').select('nome').order('ordem', { ascending: true })
+    if (!error && data) setRegisteredPeople((data as { nome: string }[]).map(p => p.nome).filter(Boolean))
   }, [])
 
   const loadInsurance = useCallback(async () => {
@@ -103,7 +110,7 @@ export function PersonalDocsPage() {
     setLoadingIns(false)
   }, [toast])
 
-  useEffect(() => { load(); loadInsurance() }, [load, loadInsurance])
+  useEffect(() => { load(); loadInsurance(); loadPeople() }, [load, loadInsurance, loadPeople])
 
   async function downloadInsurance(d: InsuranceDocLite) {
     try {
