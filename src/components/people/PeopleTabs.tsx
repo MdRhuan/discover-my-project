@@ -161,32 +161,10 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
           }}>
           <i className="fas fa-plus" />Pessoa
         </button>
-        <div style={{ width: 1, height: 22, background: 'var(--surface-border)', margin: '0 8px' }} />
-        {EXTRA_TABS.map(t => {
-          const isActive = activeExtra === t.key
-          return (
-            <button key={t.key} onClick={() => { setActiveExtra(t.key) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px',
-                background: 'transparent', border: 0,
-                borderBottom: `2px solid ${isActive ? 'var(--brand)' : 'transparent'}`,
-                color: isActive ? 'var(--brand)' : 'var(--text-muted)',
-                fontSize: 12, fontWeight: isActive ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1,
-              }}>
-              <i className={`fas ${t.icon}`} style={{ fontSize: 11 }} />{t.label}
-            </button>
-          )
-        })}
       </div>
 
       {/* Painel */}
-      {activeExtra ? (
-        <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-          <i className={`fas ${EXTRA_TABS.find(t => t.key === activeExtra)?.icon}`} style={{ fontSize: 32, marginBottom: 10, display: 'block', color: 'var(--brand)' }} />
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{EXTRA_TABS.find(t => t.key === activeExtra)?.label}</div>
-          <div style={{ fontSize: 12 }}>Em breve</div>
-        </div>
-      ) : loading ? (
+      {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>
           <i className="fas fa-spinner fa-spin" style={{ marginRight: 6 }} />Carregando…
         </div>
