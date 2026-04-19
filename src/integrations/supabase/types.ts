@@ -820,6 +820,72 @@ export type Database = {
         }
         Relationships: []
       }
+      pessoas: {
+        Row: {
+          conjuge: string | null
+          cpf: string | null
+          created_at: string
+          data_nascimento: string | null
+          descricao: string | null
+          estado_civil: string | null
+          id: number
+          label: string | null
+          nacionalidade: string | null
+          naturalidade: string | null
+          nome: string
+          ordem: number
+          owner_id: string
+          passaporte_br: string | null
+          passaporte_us: string | null
+          residencia_fiscal: string | null
+          rg: string | null
+          ssn: string | null
+          updated_at: string
+        }
+        Insert: {
+          conjuge?: string | null
+          cpf?: string | null
+          created_at?: string
+          data_nascimento?: string | null
+          descricao?: string | null
+          estado_civil?: string | null
+          id?: number
+          label?: string | null
+          nacionalidade?: string | null
+          naturalidade?: string | null
+          nome: string
+          ordem?: number
+          owner_id?: string
+          passaporte_br?: string | null
+          passaporte_us?: string | null
+          residencia_fiscal?: string | null
+          rg?: string | null
+          ssn?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conjuge?: string | null
+          cpf?: string | null
+          created_at?: string
+          data_nascimento?: string | null
+          descricao?: string | null
+          estado_civil?: string | null
+          id?: number
+          label?: string | null
+          nacionalidade?: string | null
+          naturalidade?: string | null
+          nome?: string
+          ordem?: number
+          owner_id?: string
+          passaporte_br?: string | null
+          passaporte_us?: string | null
+          residencia_fiscal?: string | null
+          rg?: string | null
+          ssn?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           categoria: string | null
