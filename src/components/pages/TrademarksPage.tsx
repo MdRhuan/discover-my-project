@@ -143,19 +143,55 @@ export function TrademarksPage() {
           </div>
           <div className="tabs">
             {[['all', 'Todos'], ['BR', '🇧🇷 Brasil'], ['US', '🇺🇸 EUA']].map(([v, l]) => (
-              <button key={v} className={`tab ${filterPais === v ? 'active' : ''}`} onClick={() => setFilterPais(v as 'all' | 'BR' | 'US')}>{l}</button>
+              <button key={v} className={`tab ${filterPais === v ? 'active' : ''}`} onClick={() => setFilterPais(v as PaisFilter)}>{l}</button>
             ))}
           </div>
-          <select className="form-select" style={{ maxWidth: 220 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="">Todos os status</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          {(search || filterStatus || filterPais !== 'all') && (
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setSearch(''); setFilterStatus(''); setFilterPais('all') }}>
-              <i className="fas fa-xmark" />Limpar
+          <MultiSelect
+            label="Status"
+            icon="fa-flag"
+            options={[...STATUS_OPTIONS]}
+            selected={filterStatus}
+            onChange={setFilterStatus}
+            placeholder="Todos"
+            width={220}
+          />
+          <MultiSelect
+            label="Classe"
+            icon="fa-tag"
+            options={classOptions}
+            selected={filterClasses}
+            onChange={setFilterClasses}
+            placeholder={classOptions.length ? 'Todas' : 'Sem classes'}
+            width={200}
+          />
+          {(search || filterStatus.length > 0 || filterClasses.length > 0 || filterPais !== 'all') && (
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: 12 }}
+              onClick={() => { setSearch(''); setFilterStatus([]); setFilterClasses([]); setFilterPais('all') }}
+            >
+              <i className="fas fa-xmark" />Limpar filtros
             </button>
           )}
         </div>
+
+        {/* Active filter chips + result count */}
+        {(filterStatus.length > 0 || filterClasses.length > 0 || filterPais !== 'all' || search) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginRight: 4 }}>
+              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}:
+            </span>
+            {filterPais !== 'all' && (
+              <FilterChip label={filterPais === 'BR' ? '🇧🇷 Brasil' : '🇺🇸 EUA'} onRemove={() => setFilterPais('all')} />
+            )}
+            {filterStatus.map(s => (
+              <FilterChip key={`s-${s}`} label={s} onRemove={() => setFilterStatus(filterStatus.filter(x => x !== s))} />
+            ))}
+            {filterClasses.map(c => (
+              <FilterChip key={`c-${c}`} label={`Classe ${c}`} onRemove={() => setFilterClasses(filterClasses.filter(x => x !== c))} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
