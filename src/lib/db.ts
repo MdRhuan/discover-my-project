@@ -221,7 +221,7 @@ const configTable = {
 }
 
 import type {
-  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon,
+  Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, OrgImage,
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog
 } from '@/types'
 
@@ -236,6 +236,7 @@ export const db = {
   orgTextsCanvas: makeTable<OrgTextCanvas>('org_texts_canvas'),
   orgShapes: makeTable<OrgShape>('org_shapes'),
   orgIcons: makeTable<OrgIcon>('org_icons'),
+  orgImages: makeTable<OrgImage>('org_images'),
   auditLog: makeTable<AuditLog>('audit_log'),
   tasks: makeTable<Task>('tasks'),
   alertas: makeTable<Alerta>('alertas'),
