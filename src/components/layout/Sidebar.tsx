@@ -66,10 +66,10 @@ const NAV_STRUCTURE: NavItemDef[] = [
       {
         key: 'rotinas-controles', icon: 'fa-list-check', label: { pt: 'Rotinas & Controles', en: 'Routines & Controls' },
         children: [
-          { key: 'checkBox',      icon: 'fa-square-check', label: { pt: 'Check-the-box',  en: 'Check-the-box'  } },
-          { key: 'fixedExpenses', icon: 'fa-file-invoice', label: { pt: 'Despesas Fixas', en: 'Fixed Expenses' } },
+          { key: 'checkBox', icon: 'fa-square-check', label: { pt: 'Check-the-box', en: 'Check-the-box' } },
         ],
       },
+      { key: 'fixedExpenses', icon: 'fa-file-invoice', label: { pt: 'Despesas Fixas', en: 'Fixed Expenses' } },
     ],
   },
   {
