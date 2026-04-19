@@ -49,8 +49,7 @@ const OB_DEFAULTS: Obrigacao[] = [
 const SUBCATS = [
   { key: 'Identidade',            icon: 'fa-id-card',         color: 'brand'  },
   { key: 'Residência',            icon: 'fa-house',            color: 'blue'   },
-  { key: 'Passaporte',            icon: 'fa-passport',         color: 'green'  },
-  { key: 'Visto',                 icon: 'fa-stamp',            color: 'yellow' },
+  { key: 'Passaporte / Visto',    icon: 'fa-passport',         color: 'green'  },
   { key: 'Seguros',               icon: 'fa-shield-halved',    color: 'purple' },
   { key: 'Plano de saúde',        icon: 'fa-hospital',         color: 'pink'   },
   { key: 'Greencard / Imigração', icon: 'fa-id-badge',         color: 'teal'   },
@@ -63,7 +62,7 @@ const STATUS_MAP: Record<string, { badge: string; label: string }> = {
   vencido: { badge: 'red', label: 'Vencido' }, renovado: { badge: 'green', label: 'Renovado' },
 }
 
-const EMPTY_DOC: Partial<DocPessoal> = { pessoa: 'Eduardo', categoria: 'Identidade', subcategoria: 'CPF', nome: '', tipo: 'PDF', descricao: '', status: 'ativo', dataUpload: new Date().toISOString().slice(0, 10), vencimento: '' }
+const EMPTY_DOC: Partial<DocPessoal> = { pessoa: '', categoria: 'Identidade', subcategoria: '', nome: '', tipo: 'PDF', descricao: '', status: 'ativo', dataUpload: new Date().toISOString().slice(0, 10), vencimento: '' }
 
 export function PersonalDocsPage() {
   const { lang, toast, setPage } = useApp()
@@ -82,6 +81,8 @@ export function PersonalDocsPage() {
   const [obFilterCats, setObFilterCats] = useState<string[]>([])
   const [insuranceDocs, setInsuranceDocs] = useState<InsuranceDocLite[]>([])
   const [loadingIns, setLoadingIns] = useState(false)
+  const [registeredPeople, setRegisteredPeople] = useState<string[]>([])
+  const [personSearch, setPersonSearch] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -91,6 +92,11 @@ export function PersonalDocsPage() {
     const [d, ob] = await Promise.all([db.docsPessoais.toArray(), db.config.get(OB_KEY)])
     setDocs(d)
     setObList((ob?.value as Obrigacao[]) || OB_DEFAULTS)
+  }, [])
+
+  const loadPeople = useCallback(async () => {
+    const { data, error } = await supabase.from('pessoas').select('nome').order('ordem', { ascending: true })
+    if (!error && data) setRegisteredPeople((data as { nome: string }[]).map(p => p.nome).filter(Boolean))
   }, [])
 
   const loadInsurance = useCallback(async () => {
@@ -104,7 +110,7 @@ export function PersonalDocsPage() {
     setLoadingIns(false)
   }, [toast])
 
-  useEffect(() => { load(); loadInsurance() }, [load, loadInsurance])
+  useEffect(() => { load(); loadInsurance(); loadPeople() }, [load, loadInsurance, loadPeople])
 
   async function downloadInsurance(d: InsuranceDocLite) {
     try {
@@ -168,9 +174,9 @@ export function PersonalDocsPage() {
 
   async function saveDoc() {
     if (!form.nome?.trim()) { toast('Nome obrigatório.', 'error'); return }
-    if (!form.pessoa?.trim()) { toast('Pessoa obrigatória.', 'error'); return }
-    if (!form.categoria?.trim()) { toast('Categoria obrigatória.', 'error'); return }
-    if (!form.subcategoria?.trim()) { toast('Subcategoria obrigatória.', 'error'); return }
+    if (!form.pessoa?.trim()) { toast('Selecione uma pessoa cadastrada.', 'error'); return }
+    if (!registeredPeople.includes(form.pessoa)) { toast('Pessoa inválida. Selecione uma pessoa já cadastrada.', 'error'); return }
+    if (!form.categoria?.trim() || !SUBCATS.some(s => s.key === form.categoria)) { toast('Categoria inválida.', 'error'); return }
     try {
       const payload = { ...form }
       const editingId = payload.id
@@ -408,18 +414,45 @@ export function PersonalDocsPage() {
               <input className="form-input" value={form.nome || ''} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Ex: Passaporte Eduardo — 2025" />
             </div>
             <div className="form-group">
-              <label className="form-label">Pessoa</label>
-              <input className="form-input" value={form.pessoa || ''} onChange={e => setForm(f => ({ ...f, pessoa: e.target.value }))} placeholder="Ex: Eduardo" />
+              <label className="form-label">Pessoa *</label>
+              {registeredPeople.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--yellow)', padding: 8, background: 'rgba(245,158,11,.1)', borderRadius: 6, border: '1px solid rgba(245,158,11,.3)' }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: 6 }} />
+                  Nenhuma pessoa cadastrada. Cadastre uma pessoa antes de adicionar documentos.
+                </div>
+              ) : (
+                <>
+                  {registeredPeople.length > 6 && (
+                    <input
+                      className="form-input"
+                      style={{ marginBottom: 6 }}
+                      placeholder="Buscar pessoa..."
+                      value={personSearch}
+                      onChange={e => setPersonSearch(e.target.value)}
+                    />
+                  )}
+                  <select
+                    className="form-select"
+                    value={form.pessoa || ''}
+                    onChange={e => setForm(f => ({ ...f, pessoa: e.target.value }))}
+                  >
+                    <option value="">— Selecione —</option>
+                    {registeredPeople
+                      .filter(p => !personSearch || p.toLowerCase().includes(personSearch.toLowerCase()))
+                      .map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </>
+              )}
             </div>
             <div className="form-group">
-              <label className="form-label">Categoria</label>
+              <label className="form-label">Categoria *</label>
               <select className="form-select" value={form.categoria || 'Identidade'} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}>
-                {SUBCATS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
+                {SUBCATS.filter(s => s.key !== 'Seguros').map(s => <option key={s.key} value={s.key}>{s.key}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Subcategoria</label>
-              <input className="form-input" value={form.subcategoria || ''} onChange={e => setForm(f => ({ ...f, subcategoria: e.target.value }))} placeholder="Ex: CPF, RG, Green Card" />
+              <input className="form-input" value={form.subcategoria || ''} onChange={e => setForm(f => ({ ...f, subcategoria: e.target.value }))} placeholder="Opcional — Ex: CPF, RG, Green Card" />
             </div>
             <div className="form-group">
               <label className="form-label">Status</label>
