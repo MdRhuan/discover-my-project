@@ -220,7 +220,7 @@ export function PersonalDocsPage() {
       {/* Pessoas (abas) */}
       <PeopleTabs activePersonName={activePerson} onActivePersonChange={setActivePerson} />
 
-      {/* Próximas Obrigações foi movida para o final da página */}
+      
 
       {/* Subcategory chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 18 }}>
