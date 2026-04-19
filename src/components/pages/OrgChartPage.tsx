@@ -332,6 +332,17 @@ function OrgChartEditor() {
     return { kind, dbId: Number(dbId) }
   }
 
+  // Signed URL helper for org-images bucket (cached, refreshes before expiry)
+  const getSignedUrl = useCallback(async (path: string): Promise<string> => {
+    const cached = signedUrlCache.current.get(path)
+    const now = Date.now()
+    if (cached && cached.exp > now + 30_000) return cached.url
+    const { data, error } = await supabase.storage.from('org-images').createSignedUrl(path, 3600)
+    if (error || !data?.signedUrl) { console.error('signedUrl', error); return '' }
+    signedUrlCache.current.set(path, { url: data.signedUrl, exp: now + 3600 * 1000 })
+    return data.signedUrl
+  }, [])
+
   // ============ Load ============
   const loadAll = useCallback(async () => {
     setLoading(true)
