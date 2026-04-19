@@ -5,7 +5,28 @@ import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
+import { supabase } from '@/integrations/supabase/client'
 import type { DocPessoal } from '@/types'
+
+interface InsuranceDocLite {
+  id: number
+  insurance_type: 'life' | 'apt' | 'car'
+  apolice_label: string | null
+  nome: string
+  categoria: string | null
+  arquivo_path: string
+  tipo: string | null
+  tamanho: string | null
+  data_upload: string | null
+}
+
+const INSURANCE_TYPES = [
+  { key: 'life' as const, label: 'Seguro de vida',         icon: 'fa-heart-pulse', page: 'lifeInsurance' as const, color: 'red' },
+  { key: 'apt'  as const, label: 'Seguro de apartamento',  icon: 'fa-building',    page: 'aptInsurance'  as const, color: 'blue' },
+  { key: 'car'  as const, label: 'Seguro de carro',        icon: 'fa-car',         page: 'carInsurance'  as const, color: 'green' },
+]
+const INSURANCE_COLOR_VAR: Record<string, string> = { red: 'var(--red)', blue: 'var(--blue)', green: 'var(--green)' }
+const INSURANCE_COLOR_BG: Record<string, string>  = { red: 'rgba(239,68,68,.12)', blue: 'rgba(59,130,246,.12)', green: 'rgba(34,197,94,.12)' }
 
 const OB_KEY = 'proximas_obrigacoes'
 
