@@ -126,7 +126,7 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
     if (activePersonName === undefined) return
     if (!activePersonName) return
     const p = pessoas.find(x => x.nome === activePersonName)
-    if (p && p.id !== activeId) { setActiveId(p.id); setActiveExtra(null) }
+    if (p && p.id !== activeId) { setActiveId(p.id) }
   }, [activePersonName, pessoas, activeId])
 
   return (
