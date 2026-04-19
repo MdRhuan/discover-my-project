@@ -788,6 +788,17 @@ function OrgChartEditor() {
             svgContent: d.svgContent, cor: d.cor, rotacao: d.rotacao, nome: d.nome,
           } as OrgIcon)
           setNodes(c => [...c, { ...n, id: `icon:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
+        } else if (kind === 'image') {
+          const d = n.data as ImageNodeData
+          const w = (n.style?.width as number) || 160; const h = (n.style?.height as number) || 160
+          const orig = await db.orgImages.get(parseId(n.id).dbId)
+          if (!orig?.arquivoPath) continue
+          const id = await db.orgImages.add({
+            posX: newPos.x, posY: newPos.y, largura: w, altura: h,
+            arquivoPath: orig.arquivoPath, nome: d.nome,
+            rotacao: d.rotacao, opacidade: d.opacidade, raio: d.raio,
+          } as OrgImage)
+          setNodes(c => [...c, { ...n, id: `image:${id}`, position: newPos, selected: false, style: { width: w, height: h }, data: { ...d } }])
         }
       }
       toast(`${selN.length} duplicado(s)`, 'success')
@@ -805,6 +816,7 @@ function OrgChartEditor() {
       const tbl = kind === 'company' ? db.orgNodes
         : kind === 'text' ? db.orgTextsCanvas
         : kind === 'icon' ? db.orgIcons
+        : kind === 'image' ? db.orgImages
         : db.orgShapes
       tbl.update(dbId, { zIndex: target } as never).catch(console.error)
     })
