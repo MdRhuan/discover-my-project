@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { fmt } from '@/lib/utils'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
 import { supabase } from '@/integrations/supabase/client'
+import { PeopleTabs } from '@/components/people/PeopleTabs'
 import type { DocPessoal } from '@/types'
 
 interface InsuranceDocLite {
