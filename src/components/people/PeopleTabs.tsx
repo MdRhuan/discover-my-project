@@ -24,13 +24,7 @@ export interface Pessoa {
   residencia_fiscal: string | null
 }
 
-const EXTRA_TABS = [
-  { key: 'greencard', icon: 'fa-id-badge',     label: 'Greencard & Imigração' },
-  { key: 'assessores', icon: 'fa-user-tie',     label: 'Assessores' },
-  { key: 'plano',     icon: 'fa-hospital',     label: 'Plano de Saúde' },
-] as const
-
-type ExtraKey = typeof EXTRA_TABS[number]['key']
+type ExtraKey = never
 
 interface Props {
   /** Notifica o pai sobre a pessoa ativa (para filtrar documentos). null = sem filtro */
