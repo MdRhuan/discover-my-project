@@ -338,50 +338,64 @@ export function PersonalDocsPage() {
           })}
         </div>
       ) : (
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>Documento</th><th>Pessoa</th><th>Categoria</th><th>Status</th><th>Upload</th><th>Vencimento</th><th>Ações</th></tr></thead>
-            <tbody>
-              {filtered.length === 0 && <tr><td colSpan={7}><div className="empty-state"><i className="fas fa-id-card" /><p>Nenhum documento encontrado.</p></div></td></tr>}
-              {filtered.map(r => {
-                const sub = SUBCATS.find(s => s.key === r.categoria)
-                const st = STATUS_MAP[r.status || 'ativo']
-                const c = alertColor(r.vencimento)
-                return (
-                  <tr key={r.id}>
-                    <td>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{r.nome}</div>
-                      {r.descricao && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.descricao}</div>}
-                    </td>
-                    <td style={{ fontSize: 12 }}>{r.pessoa}</td>
-                    <td>
-                      {sub && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: COLOR_VAR[sub.color], fontWeight: 600 }}>
-                        <i className={`fas ${sub.icon}`} style={{ fontSize: 10 }} />{r.categoria}
-                      </span>}
-                    </td>
-                    <td><span className={`badge badge-${st.badge}`}>{st.label}</span></td>
-                    <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.dataUpload ? fmt.date(r.dataUpload, lang) : '—'}</td>
-                    <td style={{ fontSize: 12, color: c || 'var(--text-secondary)', fontWeight: c ? 700 : 400 }}>
-                      {r.vencimento ? fmt.date(r.vencimento, lang) : '—'}
-                      {c && <span style={{ marginLeft: 4, fontSize: 10 }}>⚠</span>}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {r.conteudo && (
-                          <button className="btn-icon" title="Download" onClick={() => download(r)}><i className="fas fa-download" /></button>
-                        )}
-                        <button className="btn-icon" onClick={() => { setForm({ ...r }); setDocModal(true) }}><i className="fas fa-pen" /></button>
-                        <button className="btn-icon danger" onClick={() => setConfirmId(r.id!)}><i className="fas fa-trash" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {SUBCATS.filter(cat => cat.key !== 'Seguros' && (!filterCat || filterCat === cat.key)).map(cat => {
+            const items = filtered.filter(d => d.categoria === cat.key)
+            return (
+              <div key={cat.key} className="card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid var(--surface-border)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLOR_BG[cat.color] }}>
+                    <i className={`fas ${cat.icon}`} style={{ fontSize: 16, color: COLOR_VAR[cat.color] }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{cat.key}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} documento{items.length !== 1 ? 's' : ''}</div>
+                  </div>
+                  <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => { setForm({ ...EMPTY_DOC, pessoa: activePerson || EMPTY_DOC.pessoa, categoria: cat.key, dataUpload: today }); setDocModal(true) }}>
+                    <i className="fas fa-plus" />Adicionar
+                  </button>
+                </div>
+
+                {items.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)', fontSize: 12, background: 'var(--surface-hover)', borderRadius: 8, border: '1px dashed var(--surface-border)' }}>
+                    <i className="fas fa-folder-open" style={{ fontSize: 18, display: 'block', marginBottom: 6 }} />
+                    Nenhum documento adicionado
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {items.map(r => {
+                      const st = STATUS_MAP[r.status || 'ativo']
+                      const c = alertColor(r.vencimento)
+                      const isPdf = r.tipo?.toUpperCase() === 'PDF'
+                      const isImg = !!r.tipo && ['JPG','JPEG','PNG','WEBP','GIF'].includes(r.tipo.toUpperCase())
+                      return (
+                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--surface-hover)', borderRadius: 6, border: '1px solid var(--surface-border)' }}>
+                          <i className={`fas ${isPdf ? 'fa-file-pdf' : isImg ? 'fa-file-image' : 'fa-file'}`} style={{ fontSize: 16, color: isPdf ? '#ef4444' : isImg ? '#3b82f6' : 'var(--text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nome}</div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 1 }}>
+                              <span><i className="fas fa-user" style={{ marginRight: 3 }} />{r.pessoa}</span>
+                              {r.subcategoria && <span><i className="fas fa-tag" style={{ marginRight: 3 }} />{r.subcategoria}</span>}
+                              {r.tipo && <span>{r.tipo}</span>}
+                              {r.dataUpload && <span>{fmt.date(r.dataUpload, lang)}</span>}
+                              {r.vencimento && <span style={{ color: c || 'var(--text-muted)', fontWeight: c ? 700 : 400 }}>Venc: {fmt.date(r.vencimento, lang)}{c && ' ⚠'}</span>}
+                            </div>
+                          </div>
+                          <span className={`badge badge-${st.badge}`} style={{ flexShrink: 0 }}>{st.label}</span>
+                          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                            {r.conteudo && <button className="btn-icon" title="Download" onClick={() => download(r)}><i className="fas fa-download" /></button>}
+                            <button className="btn-icon" title="Editar" onClick={() => { setForm({ ...r }); setDocModal(true) }}><i className="fas fa-pen" /></button>
+                            <button className="btn-icon danger" title="Excluir" onClick={() => setConfirmId(r.id!)}><i className="fas fa-trash" /></button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
-      </div>
       )}
 
       {/* Doc Modal */}
