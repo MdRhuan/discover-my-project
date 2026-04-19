@@ -20,8 +20,9 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
+import { supabase } from '@/integrations/supabase/client'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
-import type { OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, Empresa } from '@/types'
+import type { OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, OrgImage, Empresa } from '@/types'
 
 type PageKey = Parameters<ReturnType<typeof useApp>['setPage']>[0]
 
