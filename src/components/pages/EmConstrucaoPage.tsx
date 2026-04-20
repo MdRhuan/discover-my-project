@@ -593,7 +593,7 @@ export function EmConstrucaoPage() {
           footer={
             <>
               <button className="btn btn-ghost" onClick={resetDocModal}>Cancelar</button>
-              <button className="btn btn-primary" type="submit" form="construction-document-form" disabled={savingDoc} onClick={saveDoc}>
+              <button className="btn btn-primary" type="submit" form="construction-document-form" disabled={savingDoc}>
                 <i className={`fas ${savingDoc ? 'fa-spinner fa-spin' : 'fa-save'}`} /> {savingDoc ? 'Salvando…' : 'Salvar'}
               </button>
             </>
