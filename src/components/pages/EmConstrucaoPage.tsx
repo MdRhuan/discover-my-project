@@ -208,8 +208,8 @@ export function EmConstrucaoPage() {
       const payload: Partial<ConstructionDocument> = {
         nome: docForm.nome!.trim(),
         empresaNome: docForm.empresaNome!.trim(),
-        descricao: docForm.descricao || null,
-        data: docForm.data || null,
+        descricao: docForm.descricao || undefined,
+        data: docForm.data || undefined,
         folderId: docForm.folderId ?? currentFolderId ?? null,
       }
 
