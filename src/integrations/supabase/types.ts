@@ -118,6 +118,138 @@ export type Database = {
         }
         Relationships: []
       }
+      construction_documents: {
+        Row: {
+          created_at: string
+          data: string | null
+          descricao: string | null
+          empresa_nome: string
+          folder_id: number | null
+          id: number
+          nome: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: string | null
+          descricao?: string | null
+          empresa_nome: string
+          folder_id?: number | null
+          id?: number
+          nome: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: string | null
+          descricao?: string | null
+          empresa_nome?: string
+          folder_id?: number | null
+          id?: number
+          nome?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "construction_documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "construction_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      construction_files: {
+        Row: {
+          arquivo_path: string
+          created_at: string
+          data_upload: string | null
+          document_id: number
+          id: number
+          nome: string
+          owner_id: string
+          tamanho: string | null
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          arquivo_path: string
+          created_at?: string
+          data_upload?: string | null
+          document_id: number
+          id?: number
+          nome: string
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arquivo_path?: string
+          created_at?: string
+          data_upload?: string | null
+          document_id?: number
+          id?: number
+          nome?: string
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "construction_files_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "construction_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      construction_folders: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          empresa_nome: string | null
+          id: number
+          nome: string
+          owner_id: string
+          parent_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          empresa_nome?: string | null
+          id?: number
+          nome: string
+          owner_id?: string
+          parent_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          empresa_nome?: string | null
+          id?: number
+          nome?: string
+          owner_id?: string
+          parent_id?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "construction_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "construction_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       docs_pessoais: {
         Row: {
           categoria: string
