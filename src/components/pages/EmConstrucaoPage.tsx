@@ -589,17 +589,29 @@ export function EmConstrucaoPage() {
         <Modal
           title={editingDocId ? 'Editar Documento' : 'Adicionar Documento'}
           large
-          onClose={() => { setDocModal(false); setDocForm({}); setPendingFiles([]); setEditingDocId(null) }}
+          onClose={resetDocModal}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setDocModal(false); setDocForm({}); setPendingFiles([]); setEditingDocId(null) }}>Cancelar</button>
-              <button className="btn btn-primary" disabled={savingDoc} onClick={saveDoc}>
+              <button className="btn btn-ghost" onClick={resetDocModal}>Cancelar</button>
+              <button className="btn btn-primary" type="submit" form="construction-document-form" disabled={savingDoc} onClick={saveDoc}>
                 <i className={`fas ${savingDoc ? 'fa-spinner fa-spin' : 'fa-save'}`} /> {savingDoc ? 'Salvando…' : 'Salvar'}
               </button>
             </>
           }
         >
-          <div className="form-grid">
+          <form
+            id="construction-document-form"
+            className="form-grid"
+            onSubmit={async e => {
+              e.preventDefault()
+              await saveDoc()
+            }}
+          >
+            {docError && (
+              <div className="alert alert-error" style={{ gridColumn: '1/-1', marginBottom: 4 }}>
+                <i className="fas fa-circle-exclamation" /> {docError}
+              </div>
+            )}
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label">Nome do documento *</label>
               <input
@@ -631,7 +643,7 @@ export function EmConstrucaoPage() {
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
-              <label className="form-label">Pasta</label>
+              <label className="form-label">Pasta *</label>
               <select
                 className="form-select"
                 value={docForm.folderId ?? ''}
@@ -696,7 +708,7 @@ export function EmConstrucaoPage() {
                 </div>
               )}
             </div>
-          </div>
+          </form>
         </Modal>
       )}
 
