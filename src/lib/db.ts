@@ -35,10 +35,14 @@ SNAKE_TO_CAMEL['owner_id'] = 'ownerId'
 SNAKE_TO_CAMEL['created_at'] = 'createdAt'
 SNAKE_TO_CAMEL['updated_at'] = 'updatedAt'
 
+// Fields that are managed automatically by the DB and must never be sent on insert/update
+const MANAGED_FIELDS = new Set(['createdAt', 'updatedAt', 'ownerId', 'created_at', 'updated_at', 'owner_id'])
+
 function toSnake(obj: Record<string, unknown>): Record<string, unknown> {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(obj)) {
+    if (MANAGED_FIELDS.has(k)) continue
     out[CAMEL_TO_SNAKE[k] || k] = v
   }
   return out
