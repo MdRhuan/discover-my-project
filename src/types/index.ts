@@ -271,10 +271,38 @@ export interface Toast {
   type: 'success' | 'error' | 'info'
 }
 
+export interface ConstructionFolder {
+  id?: number
+  parentId?: number | null
+  nome: string
+  empresaNome?: string
+  descricao?: string
+}
+
+export interface ConstructionDocument {
+  id?: number
+  folderId?: number | null
+  nome: string
+  empresaNome: string
+  descricao?: string
+  data?: string
+}
+
+export interface ConstructionFile {
+  id?: number
+  documentId: number
+  nome: string
+  arquivoPath: string
+  tipo?: string
+  tamanho?: string
+  dataUpload?: string
+}
+
 export type PageKey =
   | 'dashboard'
   | 'tasks'
   | 'companies'
+  | 'emConstrucao'
   | 'employees'
   | 'documents'
   | 'billing'
