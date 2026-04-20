@@ -46,6 +46,7 @@ export function EmConstrucaoPage() {
   const [editingDocId, setEditingDocId] = useState<number | null>(null)
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [savingDoc, setSavingDoc] = useState(false)
+  const [docError, setDocError] = useState<string | null>(null)
 
   const [moveDocId, setMoveDocId] = useState<number | null>(null)
   const [moveTargetFolderId, setMoveTargetFolderId] = useState<number | null>(null)
@@ -163,6 +164,14 @@ export function EmConstrucaoPage() {
   }
 
   // -------- Document actions --------
+  function resetDocModal() {
+    setDocModal(false)
+    setDocForm({})
+    setPendingFiles([])
+    setEditingDocId(null)
+    setDocError(null)
+  }
+
   function openNewDoc() {
     setDocForm({
       folderId: currentFolderId,
@@ -173,6 +182,7 @@ export function EmConstrucaoPage() {
     })
     setPendingFiles([])
     setEditingDocId(null)
+    setDocError(null)
     setDocModal(true)
   }
 
@@ -180,6 +190,7 @@ export function EmConstrucaoPage() {
     setDocForm({ ...d })
     setPendingFiles([])
     setEditingDocId(d.id!)
+    setDocError(null)
     setDocModal(true)
   }
 
@@ -200,17 +211,35 @@ export function EmConstrucaoPage() {
   }
 
   async function saveDoc() {
-    if (!docForm.nome?.trim()) { toast('Informe o nome do documento.', 'error'); return }
-    if (!docForm.empresaNome?.trim()) { toast('Informe a empresa relacionada.', 'error'); return }
+    if (savingDoc) return
+
+    const folderId = docForm.folderId ?? currentFolderId ?? null
+
+    if (!docForm.nome?.trim()) {
+      setDocError('Informe o nome do documento.')
+      toast('Informe o nome do documento.', 'error')
+      return
+    }
+    if (!docForm.empresaNome?.trim()) {
+      setDocError('Informe a empresa relacionada.')
+      toast('Informe a empresa relacionada.', 'error')
+      return
+    }
+    if (folderId === null) {
+      setDocError('Selecione uma pasta antes de salvar o documento.')
+      toast('Selecione uma pasta antes de salvar o documento.', 'error')
+      return
+    }
+
+    setDocError(null)
     setSavingDoc(true)
     try {
-      // Build a clean payload — never send id, ownerId, createdAt, updatedAt
       const payload: Partial<ConstructionDocument> = {
         nome: docForm.nome!.trim(),
         empresaNome: docForm.empresaNome!.trim(),
         descricao: docForm.descricao || undefined,
         data: docForm.data || undefined,
-        folderId: docForm.folderId ?? currentFolderId ?? null,
+        folderId,
       }
 
       let id = editingDocId
@@ -219,18 +248,28 @@ export function EmConstrucaoPage() {
       } else {
         id = await db.constructionDocuments.add(payload as ConstructionDocument)
       }
+
       if (id && pendingFiles.length > 0) {
-        await uploadFilesForDoc(id, pendingFiles)
+        try {
+          await uploadFilesForDoc(id, pendingFiles)
+        } catch (uploadErr) {
+          console.error('Erro ao enviar arquivos do documento:', uploadErr)
+          await load()
+          setCurrentFolderId(folderId)
+          resetDocModal()
+          toast('Documento salvo, mas houve erro no upload de um ou mais arquivos.', 'error')
+          return
+        }
       }
-      toast('Documento salvo!', 'success')
-      setDocModal(false)
-      setDocForm({})
-      setPendingFiles([])
-      setEditingDocId(null)
+
       await load()
+      setCurrentFolderId(folderId)
+      toast('Documento salvo!', 'success')
+      resetDocModal()
     } catch (err) {
       console.error('Erro ao salvar documento:', err)
       const msg = err instanceof Error ? err.message : 'Verifique os campos.'
+      setDocError(msg)
       toast(`Erro ao salvar documento: ${msg}`, 'error')
     } finally {
       setSavingDoc(false)
