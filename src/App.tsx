@@ -8,6 +8,7 @@ import { ToastContainer } from '@/components/ui/Toast'
 const DashboardPage     = lazy(() => import('@/components/pages/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const TasksPage         = lazy(() => import('@/components/pages/TasksPage').then(m => ({ default: m.TasksPage })))
 const CompaniesPage     = lazy(() => import('@/components/pages/CompaniesPage').then(m => ({ default: m.CompaniesPage })))
+const EmConstrucaoPage  = lazy(() => import('@/components/pages/EmConstrucaoPage').then(m => ({ default: m.EmConstrucaoPage })))
 const EmployeesPage     = lazy(() => import('@/components/pages/EmployeesPage').then(m => ({ default: m.EmployeesPage })))
 const DocumentsPage     = lazy(() => import('@/components/pages/DocumentsPage').then(m => ({ default: m.DocumentsPage })))
 const BillingPage       = lazy(() => import('@/components/pages/BillingPage').then(m => ({ default: m.BillingPage })))
@@ -52,6 +53,7 @@ function Shell() {
     case 'dashboard':      content = <DashboardPage />; break
     case 'tasks':          content = <TasksPage />; break
     case 'companies':      content = <CompaniesPage />; break
+    case 'emConstrucao':   content = <EmConstrucaoPage />; break
     case 'employees':      content = <EmployeesPage />; break
     case 'documents':      content = <DocumentsPage />; break
     case 'billing':        content = <BillingPage />; break

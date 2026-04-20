@@ -24,6 +24,8 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   usSerialNumber: 'us_serial_number', usRegistration: 'us_registration',
   filingDate: 'filing_date', dueDate: 'due_date', proposedGoods: 'proposed_goods',
   trademarkId: 'trademark_id',
+  // Construction
+  empresaNome: 'empresa_nome', folderId: 'folder_id', documentId: 'document_id',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
@@ -222,7 +224,8 @@ const configTable = {
 
 import type {
   Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, OrgImage,
-  Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog
+  Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog,
+  ConstructionFolder, ConstructionDocument, ConstructionFile,
 } from '@/types'
 
 export const db = {
@@ -244,6 +247,9 @@ export const db = {
   fiscalDocs: makeTable<FiscalDoc>('fiscal_docs'),
   trademarks: makeTable<Trademark>('trademarks'),
   trademarkFiles: makeTable<TrademarkFile>('trademark_files'),
+  constructionFolders: makeTable<ConstructionFolder>('construction_folders'),
+  constructionDocuments: makeTable<ConstructionDocument>('construction_documents'),
+  constructionFiles: makeTable<ConstructionFile>('construction_files'),
   config: configTable,
 }
 
