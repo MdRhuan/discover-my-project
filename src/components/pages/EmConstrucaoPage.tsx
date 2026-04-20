@@ -204,11 +204,20 @@ export function EmConstrucaoPage() {
     if (!docForm.empresaNome?.trim()) { toast('Informe a empresa relacionada.', 'error'); return }
     setSavingDoc(true)
     try {
+      // Build a clean payload — never send id, ownerId, createdAt, updatedAt
+      const payload: Partial<ConstructionDocument> = {
+        nome: docForm.nome!.trim(),
+        empresaNome: docForm.empresaNome!.trim(),
+        descricao: docForm.descricao || null,
+        data: docForm.data || null,
+        folderId: docForm.folderId ?? currentFolderId ?? null,
+      }
+
       let id = editingDocId
       if (id) {
-        await db.constructionDocuments.update(id, docForm)
+        await db.constructionDocuments.update(id, payload)
       } else {
-        id = await db.constructionDocuments.add(docForm as ConstructionDocument)
+        id = await db.constructionDocuments.add(payload as ConstructionDocument)
       }
       if (id && pendingFiles.length > 0) {
         await uploadFilesForDoc(id, pendingFiles)
@@ -218,10 +227,11 @@ export function EmConstrucaoPage() {
       setDocForm({})
       setPendingFiles([])
       setEditingDocId(null)
-      load()
+      await load()
     } catch (err) {
-      console.error(err)
-      toast('Erro ao salvar documento.', 'error')
+      console.error('Erro ao salvar documento:', err)
+      const msg = err instanceof Error ? err.message : 'Verifique os campos.'
+      toast(`Erro ao salvar documento: ${msg}`, 'error')
     } finally {
       setSavingDoc(false)
     }
