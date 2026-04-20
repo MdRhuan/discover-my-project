@@ -19,7 +19,8 @@ const NAV_STRUCTURE: NavItemDef[] = [
   {
     key: 'sec-empresas', type: 'section', label: { pt: 'Empresas', en: 'Companies' },
     children: [
-      { key: 'companies',  icon: 'fa-building',    label: { pt: 'Empresas',     en: 'Companies'  } },
+      { key: 'companies',    icon: 'fa-building',       label: { pt: 'Empresas',      en: 'Companies'      } },
+      { key: 'emConstrucao', icon: 'fa-helmet-safety',  label: { pt: 'Em Construção', en: 'Under Construction' } },
       { key: 'orgchart',   icon: 'fa-sitemap',     label: { pt: 'Organograma',  en: 'Org Chart'  } },
       { key: 'valuations', icon: 'fa-chart-line',  label: { pt: 'Valuations',   en: 'Valuations' } },
     ],
