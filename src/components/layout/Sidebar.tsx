@@ -58,7 +58,7 @@ const NAV_STRUCTURE: NavItemDef[] = [
         ],
       },
       {
-        key: 'fiscalBRUS', icon: 'fa-receipt', label: { pt: 'Fiscal BR vs US', en: 'Fiscal BR vs US' },
+        key: 'fiscalBRUS', icon: 'fa-receipt', label: { pt: 'Fiscal BR & US', en: 'Fiscal BR & US' },
         children: [
           { key: 'fiscalTax',   icon: 'fa-file-invoice-dollar', label: { pt: 'Tax Return | IRS & Receita Federal', en: 'Tax Return | IRS & Receita Federal' } },
           { key: 'taxPlanning', icon: 'fa-chess',               label: { pt: 'Tax Planning',     en: 'Tax Planning'    } },
