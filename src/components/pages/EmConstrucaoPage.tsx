@@ -213,7 +213,9 @@ export function EmConstrucaoPage() {
   async function saveDoc() {
     if (savingDoc) return
 
-    const folderId = docForm.folderId ?? currentFolderId ?? null
+    // pasta é opcional — se não informada, salva na raiz
+    const folderId =
+      docForm.folderId === undefined ? (currentFolderId ?? null) : (docForm.folderId ?? null)
 
     if (!docForm.nome?.trim()) {
       setDocError('Informe o nome do documento.')
@@ -225,19 +227,15 @@ export function EmConstrucaoPage() {
       toast('Informe a empresa relacionada.', 'error')
       return
     }
-    if (folderId === null) {
-      setDocError('Selecione uma pasta antes de salvar o documento.')
-      toast('Selecione uma pasta antes de salvar o documento.', 'error')
-      return
-    }
 
     setDocError(null)
     setSavingDoc(true)
+    console.log('[EmConstrucao] Salvando documento', { editingDocId, folderId, docForm })
     try {
       const payload: Partial<ConstructionDocument> = {
         nome: docForm.nome!.trim(),
         empresaNome: docForm.empresaNome!.trim(),
-        descricao: docForm.descricao || undefined,
+        descricao: docForm.descricao?.trim() || undefined,
         data: docForm.data || undefined,
         folderId,
       }
@@ -248,12 +246,13 @@ export function EmConstrucaoPage() {
       } else {
         id = await db.constructionDocuments.add(payload as ConstructionDocument)
       }
+      console.log('[EmConstrucao] Documento salvo com id', id)
 
       if (id && pendingFiles.length > 0) {
         try {
           await uploadFilesForDoc(id, pendingFiles)
         } catch (uploadErr) {
-          console.error('Erro ao enviar arquivos do documento:', uploadErr)
+          console.error('[EmConstrucao] Erro ao enviar arquivos:', uploadErr)
           await load()
           setCurrentFolderId(folderId)
           resetDocModal()
@@ -267,7 +266,7 @@ export function EmConstrucaoPage() {
       toast('Documento salvo!', 'success')
       resetDocModal()
     } catch (err) {
-      console.error('Erro ao salvar documento:', err)
+      console.error('[EmConstrucao] Erro ao salvar documento:', err)
       const msg = err instanceof Error ? err.message : 'Verifique os campos.'
       setDocError(msg)
       toast(`Erro ao salvar documento: ${msg}`, 'error')
@@ -592,8 +591,13 @@ export function EmConstrucaoPage() {
           onClose={resetDocModal}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={resetDocModal}>Cancelar</button>
-              <button className="btn btn-primary" type="submit" form="construction-document-form" disabled={savingDoc}>
+              <button className="btn btn-ghost" onClick={resetDocModal} disabled={savingDoc}>Cancelar</button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => { void saveDoc() }}
+                disabled={savingDoc}
+              >
                 <i className={`fas ${savingDoc ? 'fa-spinner fa-spin' : 'fa-save'}`} /> {savingDoc ? 'Salvando…' : 'Salvar'}
               </button>
             </>
@@ -643,7 +647,7 @@ export function EmConstrucaoPage() {
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
-              <label className="form-label">Pasta *</label>
+              <label className="form-label">Pasta</label>
               <select
                 className="form-select"
                 value={docForm.folderId ?? ''}
