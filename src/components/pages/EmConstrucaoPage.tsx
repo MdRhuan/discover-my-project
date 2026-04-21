@@ -647,7 +647,7 @@ export function EmConstrucaoPage() {
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
-              <label className="form-label">Pasta *</label>
+              <label className="form-label">Pasta</label>
               <select
                 className="form-select"
                 value={docForm.folderId ?? ''}
