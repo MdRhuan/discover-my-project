@@ -21,6 +21,7 @@ const AptInsurancePage  = lazy(() => import('@/components/pages/AptInsurancePage
 const InvestmentsPage   = lazy(() => import('@/components/pages/InvestmentsPage').then(m => ({ default: m.InvestmentsPage })))
 const RealEstatePage    = lazy(() => import('@/components/pages/RealEstatePage').then(m => ({ default: m.RealEstatePage })))
 const FixedExpensesPage = lazy(() => import('@/components/pages/FixedExpensesPage').then(m => ({ default: m.FixedExpensesPage })))
+const FairsEventsPage   = lazy(() => import('@/components/pages/FairsEventsPage').then(m => ({ default: m.FairsEventsPage })))
 const JuridicoPage      = lazy(() => import('@/components/pages/JuridicoPage').then(m => ({ default: m.JuridicoPage })))
 const AcordoGavetaPage  = lazy(() => import('@/components/pages/AcordoGavetaPage').then(m => ({ default: m.AcordoGavetaPage })))
 const TrademarksPage    = lazy(() => import('@/components/pages/TrademarksPage').then(m => ({ default: m.TrademarksPage })))
@@ -66,6 +67,7 @@ function Shell() {
     case 'investments':    content = <InvestmentsPage />; break
     case 'realEstate':     content = <RealEstatePage />; break
     case 'fixedExpenses':  content = <FixedExpensesPage />; break
+    case 'fairsEvents':    content = <FairsEventsPage />; break
     case 'juridico':       content = <JuridicoPage />; break
     case 'acordoGaveta':   content = <AcordoGavetaPage />; break
     case 'trademarks':     content = <TrademarksPage />; break
