@@ -196,14 +196,28 @@ export function EmConstrucaoPage() {
 
   async function uploadFilesForDoc(documentId: number, list: File[]) {
     for (const file of list) {
-      const path = `${documentId}/${Date.now()}-${file.name}`
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file)
-      if (upErr) throw upErr
+      // Sanitiza o nome do arquivo: remove acentos e troca caracteres inválidos
+      const safeName = file.name
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+      const path = `${documentId}/${Date.now()}-${safeName}`
+      console.log('[EmConstrucao] Upload arquivo', { path, size: file.size, type: file.type })
+      const { error: upErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type || 'application/octet-stream',
+        })
+      if (upErr) {
+        console.error('[EmConstrucao] Erro storage.upload:', upErr)
+        throw upErr
+      }
       await db.constructionFiles.add({
         documentId,
         nome: file.name,
         arquivoPath: path,
-        tipo: file.type,
+        tipo: file.type || 'application/octet-stream',
         tamanho: formatSize(file.size),
         dataUpload: new Date().toISOString(),
       })
