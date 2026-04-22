@@ -10,6 +10,7 @@ import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
   NodeResizer,
+  MarkerType,
   type Node,
   type Edge,
   type Connection,
