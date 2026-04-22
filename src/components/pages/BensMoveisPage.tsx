@@ -354,14 +354,13 @@ export function BensMoveisPage() {
           <h1 className="page-title"><i className="fas fa-couch" /> Bens Móveis</h1>
           <p className="page-subtitle">Controle patrimonial completo: cadastro, depreciação, manutenções e documentos</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ position: 'relative' }}>
-            <i className="fas fa-search" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 12 }} />
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="search-bar" style={{ width: 300, maxWidth: 300 }}>
+            <i className="fas fa-search" />
             <input
               placeholder="Buscar por nome, código ou responsável…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ paddingLeft: 32, width: 280 }}
             />
           </div>
           <button className="btn btn-primary" onClick={openNew}>
