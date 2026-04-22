@@ -569,6 +569,14 @@ function OrgChartEditor() {
     })
   }, [edges, hoveredEdgeId])
 
+  // Realça nó de origem no modo Conectar
+  const displayedNodes = useMemo<Node[]>(() => {
+    if (!connectMode || !connectSourceId) return nodes
+    return nodes.map(n => n.id === connectSourceId
+      ? { ...n, style: { ...(n.style || {}), outline: '3px solid #2563eb', outlineOffset: 2, borderRadius: 8 } }
+      : n)
+  }, [nodes, connectMode, connectSourceId])
+
   // ============ Add elements ============
   async function handleAddEmpresa() {
     if (!selectedEmpresaId) { toast('Selecione uma empresa', 'error'); return }
