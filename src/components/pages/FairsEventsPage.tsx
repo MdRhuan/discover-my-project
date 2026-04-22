@@ -104,7 +104,7 @@ export function FairsEventsPage() {
         row = ins.data
       }
       setRowId(row.id as number)
-      setData((row.data || { notas: [], feiras: [], tags: [] }) as FairnotesData)
+      setData((row.data || { notas: [], feiras: [], tags: [] }) as unknown as FairnotesData)
       setLoaded(true)
     })()
 
