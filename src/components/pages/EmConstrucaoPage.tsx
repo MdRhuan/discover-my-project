@@ -741,7 +741,12 @@ export function EmConstrucaoPage() {
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
-              <label className="form-label">Arquivos {editingDocId ? '(adicionar mais)' : ''}</label>
+              <label className="form-label">
+                Arquivos {editingDocId ? '(adicionar mais)' : ''}
+                <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: 6, fontSize: 11 }}>
+                  PDF, DOCX, XLSX, PNG, JPG, ZIP — máx. 50MB cada
+                </span>
+              </label>
               <label
                 htmlFor="construction-file-input"
                 style={{
@@ -758,9 +763,21 @@ export function EmConstrucaoPage() {
                 id="construction-file-input"
                 type="file"
                 multiple
+                accept={ALLOWED_ACCEPT}
                 style={{ display: 'none' }}
                 onChange={e => {
-                  if (e.target.files) setPendingFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                  if (e.target.files) {
+                    const incoming = Array.from(e.target.files)
+                    const valid: File[] = []
+                    const errors: string[] = []
+                    for (const f of incoming) {
+                      const err = validateFile(f)
+                      if (err) errors.push(err)
+                      else valid.push(f)
+                    }
+                    if (errors.length > 0) toast(errors[0], 'error')
+                    if (valid.length > 0) setPendingFiles(prev => [...prev, ...valid])
+                  }
                   e.target.value = ''
                 }}
               />
