@@ -385,7 +385,7 @@ export function FairsEventsPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 16,
-                color: "#fff",
+                color: "#000000",
                 flexShrink: 0,
               }}
             ></span>
