@@ -68,6 +68,8 @@ function Shell() {
     case 'investments':    content = <InvestmentsPage />; break
     case 'realEstate':     content = <RealEstatePage />; break
     case 'bensMoveis':     content = <BensMoveisPage />; break
+    case 'bensImoveis':    content = <EmConstrucaoPlaceholder title="Bens Imóveis" />; break
+    case 'relatoriosPatr': content = <EmConstrucaoPlaceholder title="Relatórios de Patrimônio" />; break
     case 'fixedExpenses':  content = <FixedExpensesPage />; break
     case 'fairsEvents':    content = <FairsEventsPage />; break
     case 'juridico':       content = <JuridicoPage />; break
