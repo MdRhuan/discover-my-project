@@ -372,26 +372,35 @@ export function BensMoveisPage() {
 
       {/* KPIs */}
       <div className="stats-grid" style={{ marginBottom: 16 }}>
-        <div className="stat-card">
-          <div className="stat-label">Total de Bens</div>
-          <div className="stat-value">{kpis.total}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Valor do Patrimônio</div>
-          <div className="stat-value">{fmt.currency(kpis.valor, 'BRL')}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Em Manutenção</div>
-          <div className="stat-value" style={{ color: '#a16207' }}>{kpis.manutencao}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Depreciados (&lt;50%)</div>
-          <div className="stat-value" style={{ color: '#b91c1c' }}>{kpis.depreciados}</div>
-        </div>
+        {[
+          { label: 'Total de Bens',        value: String(kpis.total),                       icon: 'fa-boxes-stacked',      color: '#3b82f6' },
+          { label: 'Valor do Patrimônio',  value: fmt.currency(kpis.valor, 'BRL'),          icon: 'fa-sack-dollar',        color: '#10b981' },
+          { label: 'Em Manutenção',        value: String(kpis.manutencao),                  icon: 'fa-screwdriver-wrench', color: '#f59e0b' },
+          { label: 'Depreciados (<50%)',   value: String(kpis.depreciados),                 icon: 'fa-arrow-trend-down',   color: '#ef4444' },
+        ].map(k => (
+          <div key={k.label} className="stat-card" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="stat-label">{k.label}</div>
+                <div className="stat-value" style={{ color: k.color }}>{k.value}</div>
+              </div>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: k.color + '1a', color: k.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18, flexShrink: 0,
+              }}>
+                <i className={`fas ${k.icon}`} />
+              </div>
+            </div>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: k.color }} />
+          </div>
+        ))}
       </div>
 
       {/* Filtros */}
       <div className="card" style={{ padding: 12, marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+        <i className="fas fa-filter" style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 4 }} />
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ minWidth: 140 }}>
           <option value="">Todas categorias</option>
           {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.value}</option>)}
@@ -408,8 +417,19 @@ export function BensMoveisPage() {
           <option value="">Todos responsáveis</option>
           {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
+        {(filterCat || filterStatus || filterSetor || filterResp) && (
+          <button
+            className="btn"
+            style={{ padding: '4px 10px', fontSize: 12 }}
+            onClick={() => { setFilterCat(''); setFilterStatus(''); setFilterSetor(''); setFilterResp('') }}
+          >
+            <i className="fas fa-xmark" /> Limpar
+          </button>
+        )}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Ordenar:</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {visible.length} {visible.length === 1 ? 'item' : 'itens'} • Ordenar:
+          </span>
           <select value={orderBy} onChange={e => setOrderBy(e.target.value as 'nome' | 'valor' | 'data')}>
             <option value="nome">Nome</option>
             <option value="valor">Valor</option>
