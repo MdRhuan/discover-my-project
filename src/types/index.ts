@@ -315,6 +315,7 @@ export type PageKey =
   | 'aptInsurance'
   | 'investments'
   | 'realEstate'
+  | 'bensMoveis'
   | 'fixedExpenses'
   | 'fairsEvents'
   | 'juridico'
