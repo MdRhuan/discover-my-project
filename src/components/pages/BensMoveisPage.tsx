@@ -370,30 +370,18 @@ export function BensMoveisPage() {
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="stats-grid" style={{ marginBottom: 16 }}>
+      {/* KPIs (padrão kpi-card) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 20 }}>
         {[
-          { label: 'Total de Bens',        value: String(kpis.total),                       icon: 'fa-boxes-stacked',      color: '#3b82f6' },
-          { label: 'Valor do Patrimônio',  value: fmt.currency(kpis.valor, 'BRL'),          icon: 'fa-sack-dollar',        color: '#10b981' },
-          { label: 'Em Manutenção',        value: String(kpis.manutencao),                  icon: 'fa-screwdriver-wrench', color: '#f59e0b' },
-          { label: 'Depreciados (<50%)',   value: String(kpis.depreciados),                 icon: 'fa-arrow-trend-down',   color: '#ef4444' },
+          { label: 'Total de Bens',       value: String(kpis.total),              icon: 'fa-boxes-stacked' },
+          { label: 'Valor do Patrimônio', value: fmt.currency(kpis.valor, 'BRL'), icon: 'fa-sack-dollar' },
+          { label: 'Em Manutenção',       value: String(kpis.manutencao),         icon: 'fa-screwdriver-wrench' },
+          { label: 'Depreciados (<50%)',  value: String(kpis.depreciados),        icon: 'fa-arrow-trend-down' },
         ].map(k => (
-          <div key={k.label} className="stat-card" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="stat-label">{k.label}</div>
-                <div className="stat-value" style={{ color: k.color }}>{k.value}</div>
-              </div>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: k.color + '1a', color: k.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18, flexShrink: 0,
-              }}>
-                <i className={`fas ${k.icon}`} />
-              </div>
-            </div>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: k.color }} />
+          <div key={k.label} className="kpi-card">
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value">{k.value}</div>
+            <i className={`fas ${k.icon}`} style={{ position: 'absolute', top: 18, right: 18, fontSize: 22, color: 'var(--brand)', opacity: .35 }} />
           </div>
         ))}
       </div>
