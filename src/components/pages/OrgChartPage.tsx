@@ -308,6 +308,36 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
 
 const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode, image: ImageNode }
 
+// Build a ReactFlow Edge from a DB OrgEdge (or partial spec)
+function buildEdgeFromDb(ed: {
+  id?: number; sourceId?: number; targetId?: number;
+  cor?: string; espessura?: number; estilo?: string; label?: string; tipoPonta?: string;
+  source?: string; target?: string;
+}): Edge {
+  const cor = ed.cor || '#94a3b8'
+  const espessura = Number(ed.espessura) || 2
+  const estilo = ed.estilo || 'solid'
+  const tipoPonta = (ed.tipoPonta as 'one' | 'both' | 'none') || 'one'
+  const dash = estilo === 'dashed' ? '6 4' : estilo === 'dotted' ? '2 3' : undefined
+  const arrow = { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 }
+  return {
+    id: `edge:${ed.id}`,
+    source: ed.source || `company:${ed.sourceId}`,
+    target: ed.target || `company:${ed.targetId}`,
+    type: 'smoothstep',
+    label: ed.label,
+    labelShowBg: true,
+    labelBgPadding: [6, 3],
+    labelBgBorderRadius: 6,
+    labelBgStyle: { fill: '#ffffff', stroke: cor, strokeWidth: 1, fillOpacity: 0.95 },
+    labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
+    style: { stroke: cor, strokeWidth: espessura, strokeDasharray: dash },
+    markerEnd: tipoPonta === 'none' ? undefined : arrow,
+    markerStart: tipoPonta === 'both' ? arrow : undefined,
+    data: { cor, espessura, estilo, tipoPonta, label: ed.label },
+  }
+}
+
 // ============ Editor ============
 function OrgChartEditor() {
   const { toast, setPage } = useApp() as ReturnType<typeof useApp> & { setPage: (p: PageKey) => void }
