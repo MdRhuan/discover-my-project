@@ -1014,6 +1014,15 @@ function OrgChartEditor() {
             multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
             onEdgeMouseEnter={(_, ed) => setHoveredEdgeId(ed.id)}
             onEdgeMouseLeave={() => setHoveredEdgeId(null)}
+            onEdgeDoubleClick={(_, ed) => {
+              const dbId = parseId(ed.id).dbId
+              setEditingEdge({
+                id: dbId,
+                label: (ed.label as string) || '',
+                estilo: (ed.data?.estilo as string) || 'solid',
+                cor: (ed.data?.cor as string) || '#94a3b8',
+              })
+            }}
           >
             <Background gap={20} size={1} color="#e2e8f0" />
             <Controls />
