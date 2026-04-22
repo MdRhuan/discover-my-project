@@ -725,8 +725,15 @@ function OrgChartEditor() {
         sourceId: src.dbId, targetId: tgt.dbId, cor: '#94a3b8', espessura: 2, estilo: 'solid',
       } as OrgEdge)
       setEdges(curr => addEdge({
-        ...conn, id: `edge:${id}`,
+        ...conn,
+        id: `edge:${id}`,
+        type: 'smoothstep',
         style: { stroke: '#94a3b8', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 18, height: 18 },
+        labelBgPadding: [6, 3],
+        labelBgBorderRadius: 6,
+        labelBgStyle: { fill: '#ffffff', stroke: '#94a3b8', strokeWidth: 1, fillOpacity: 0.95 },
+        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
         data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
       }, curr))
     } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
