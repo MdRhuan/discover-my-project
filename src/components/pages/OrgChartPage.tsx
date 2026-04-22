@@ -1093,6 +1093,96 @@ function OrgChartEditor() {
           onCancel={() => setConfirmDelete(null)}
         />
       )}
+
+      {editingEdge && (
+        <Modal onClose={() => setEditingEdge(null)} title="Editar conexão">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label className="form-label">Percentual / rótulo (ex: 51%)</label>
+              <input
+                className="form-input"
+                value={editingEdge.label}
+                onChange={e => setEditingEdge(s => s ? { ...s, label: e.target.value } : s)}
+                placeholder="51%"
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label className="form-label">Tipo de controle</label>
+                <select
+                  className="form-input"
+                  value={editingEdge.estilo}
+                  onChange={e => setEditingEdge(s => s ? { ...s, estilo: e.target.value } : s)}
+                >
+                  <option value="solid">Direto (linha sólida)</option>
+                  <option value="dashed">Indireto (tracejada)</option>
+                  <option value="dotted">Pontilhada</option>
+                </select>
+              </div>
+              <div style={{ width: 110 }}>
+                <label className="form-label">Cor</label>
+                <input
+                  type="color"
+                  className="form-input"
+                  style={{ height: 38, padding: 2 }}
+                  value={editingEdge.cor}
+                  onChange={e => setEditingEdge(s => s ? { ...s, cor: e.target.value } : s)}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+              <button
+                className="btn btn-danger"
+                onClick={async () => {
+                  if (!editingEdge) return
+                  try {
+                    await db.orgEdges.delete(editingEdge.id)
+                    setEdges(c => c.filter(ed => ed.id !== `edge:${editingEdge.id}`))
+                    setEditingEdge(null)
+                    toast('Conexão removida', 'success')
+                  } catch (err) { console.error(err); toast('Erro ao remover conexão', 'error') }
+                }}
+              ><i className="fas fa-trash" /> Remover</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-secondary" onClick={() => setEditingEdge(null)}>Cancelar</button>
+                <button
+                  className="btn btn-primary"
+                  onClick={async () => {
+                    if (!editingEdge) return
+                    try {
+                      await db.orgEdges.update(editingEdge.id, {
+                        label: editingEdge.label,
+                        estilo: editingEdge.estilo,
+                        cor: editingEdge.cor,
+                      })
+                      setEdges(curr => curr.map(ed => {
+                        if (ed.id !== `edge:${editingEdge.id}`) return ed
+                        const cor = editingEdge.cor
+                        const espessura = (ed.style?.strokeWidth as number) || 2
+                        return {
+                          ...ed,
+                          label: editingEdge.label,
+                          style: {
+                            ...ed.style,
+                            stroke: cor,
+                            strokeDasharray: editingEdge.estilo === 'dashed' ? '6 4' : editingEdge.estilo === 'dotted' ? '2 3' : undefined,
+                          },
+                          markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
+                          labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: cor },
+                          data: { ...ed.data, cor, estilo: editingEdge.estilo, espessura },
+                        }
+                      }))
+                      setEditingEdge(null)
+                      toast('Conexão atualizada', 'success')
+                    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+                  }}
+                >Salvar</button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
