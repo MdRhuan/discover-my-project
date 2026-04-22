@@ -836,8 +836,37 @@ export function EmConstrucaoPage() {
             </div>
 
             <div>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8 }}>
-                Arquivos ({viewingDocFiles.length})
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  Arquivos ({viewingDocFiles.length})
+                </div>
+                <label
+                  htmlFor="construction-view-file-input"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 8, cursor: viewUploading ? 'wait' : 'pointer',
+                    background: 'var(--brand)', color: '#fff',
+                    fontSize: 12, fontWeight: 600, opacity: viewUploading ? 0.6 : 1,
+                  }}
+                >
+                  <i className={`fas ${viewUploading ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'}`} />
+                  {viewUploading ? 'Enviando…' : 'Adicionar arquivo'}
+                </label>
+                <input
+                  id="construction-view-file-input"
+                  type="file"
+                  multiple
+                  accept={ALLOWED_ACCEPT}
+                  disabled={viewUploading}
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    void uploadDirectToDoc(viewingDoc.id!, e.target.files)
+                    e.target.value = ''
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Permitidos: PDF, DOCX, XLSX, PNG, JPG, ZIP — máx. 50MB cada
               </div>
               {viewingDocFiles.length === 0 ? (
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Nenhum arquivo anexado.</div>
@@ -854,7 +883,9 @@ export function EmConstrucaoPage() {
                         <i className={`fas ${ic.icon}`} style={{ color: ic.color, fontSize: 16 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.nome}</div>
-                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{f.tamanho}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                            {f.tamanho} · enviado em {formatDate(f.dataUpload)}
+                          </div>
                         </div>
                         <button className="btn-icon" onClick={() => downloadFile(f)} title="Baixar"><i className="fas fa-download" /></button>
                         <button className="btn-icon danger" onClick={() => deleteFile(f)} title="Excluir"><i className="fas fa-trash" /></button>
