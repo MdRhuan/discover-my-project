@@ -715,6 +715,7 @@ export type Database = {
           owner_id: string
           source_id: number
           target_id: number
+          tipo_ponta: string | null
           updated_at: string
         }
         Insert: {
@@ -728,6 +729,7 @@ export type Database = {
           owner_id?: string
           source_id: number
           target_id: number
+          tipo_ponta?: string | null
           updated_at?: string
         }
         Update: {
@@ -741,6 +743,7 @@ export type Database = {
           owner_id?: string
           source_id?: number
           target_id?: number
+          tipo_ponta?: string | null
           updated_at?: string
         }
         Relationships: [
