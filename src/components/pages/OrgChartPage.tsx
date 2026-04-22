@@ -1086,13 +1086,20 @@ function OrgChartEditor() {
             <p>Carregando organograma...</p>
           </div>
         ) : (
+          <div style={{ width: '100%', height: '100%', cursor: connectMode ? 'crosshair' : undefined }}>
           <ReactFlow
             nodes={nodes} edges={displayedEdges}
             onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
             onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
             multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
+            nodesDraggable={!connectMode} nodesConnectable={!connectMode} elementsSelectable={!connectMode}
+            onNodeClick={handleNodeClickConnect}
             onEdgeMouseEnter={(_, ed) => setHoveredEdgeId(ed.id)}
             onEdgeMouseLeave={() => setHoveredEdgeId(null)}
+            onEdgeClick={(_, ed) => {
+              if (connectMode) return
+              if (window.confirm('Excluir esta conexão?')) deleteEdgeById(ed.id)
+            }}
             onEdgeDoubleClick={(_, ed) => {
               const dbId = parseId(ed.id).dbId
               setEditingEdge({
@@ -1106,6 +1113,7 @@ function OrgChartEditor() {
             <Background gap={20} size={1} color="#e2e8f0" />
             <Controls />
           </ReactFlow>
+          </div>
         )}
       </div>
 
