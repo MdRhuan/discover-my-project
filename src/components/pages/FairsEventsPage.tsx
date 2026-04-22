@@ -388,9 +388,7 @@ export function FairsEventsPage() {
                 color: "#fff",
                 flexShrink: 0,
               }}
-            >
-              ✧
-            </span>
+            ></span>
           </div>
         </div>
         <button
