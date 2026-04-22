@@ -1007,7 +1007,11 @@ function OrgChartEditor() {
       <div className="page-header">
         <div className="page-header-info">
           <div className="page-header-title">Organograma Societário</div>
-          <div className="page-header-sub">Arraste · Conecte das bordas · Delete remove · Ctrl+D duplica · Duplo clique edita textos/caixas</div>
+          <div className="page-header-sub">
+            {connectMode
+              ? (connectSourceId ? '🔗 Modo Conectar · clique no nó de DESTINO (ESC para cancelar)' : '🔗 Modo Conectar · clique no nó de ORIGEM (ESC para cancelar)')
+              : 'Arraste · Conecte das bordas · Clique numa seta para excluir · Duplo clique edita seta'}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => setAddEmpresaModal(true)} title="Adicionar bloco de empresa cadastrada">
