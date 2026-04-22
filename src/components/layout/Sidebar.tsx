@@ -68,6 +68,7 @@ const NAV_STRUCTURE: NavItemDef[] = [
       { key: 'fixedExpenses', icon: 'fa-file-invoice', label: { pt: 'Despesas Fixas', en: 'Fixed Expenses' } },
       { key: 'fairsEvents',   icon: 'fa-ticket',       label: { pt: 'Feiras & Eventos', en: 'Fairs & Events' } },
     ],
+  },
   {
     key: 'sec-financeiro-patrimonio', type: 'section', label: { pt: 'Financeiro e Patrimônio', en: 'Finance & Assets' },
     children: [
