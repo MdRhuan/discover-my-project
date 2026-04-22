@@ -549,6 +549,23 @@ function OrgChartEditor() {
 
   const wrappedEdgesChange = useCallback((changes: EdgeChange[]) => { onEdgesChange(changes) }, [onEdgesChange])
 
+  // Edges com destaque ao passar o mouse
+  const displayedEdges = useMemo<Edge[]>(() => {
+    const HOVER_COLOR = '#2563eb'
+    return edges.map(ed => {
+      if (ed.id !== hoveredEdgeId) return ed
+      const baseStroke = (ed.style?.strokeWidth as number) || 2
+      return {
+        ...ed,
+        zIndex: 10,
+        style: { ...ed.style, stroke: HOVER_COLOR, strokeWidth: baseStroke + 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: HOVER_COLOR, width: 20, height: 20 },
+        labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: HOVER_COLOR },
+        labelStyle: { ...(ed.labelStyle || {}), fill: HOVER_COLOR },
+      }
+    })
+  }, [edges, hoveredEdgeId])
+
   // ============ Add elements ============
   async function handleAddEmpresa() {
     if (!selectedEmpresaId) { toast('Selecione uma empresa', 'error'); return }
