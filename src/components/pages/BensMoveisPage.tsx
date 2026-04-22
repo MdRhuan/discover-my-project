@@ -388,26 +388,25 @@ export function BensMoveisPage() {
       {/* Filtros */}
       <div className="card" style={{ padding: 12, marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         <i className="fas fa-filter" style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 4 }} />
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="form-select" value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ width: 'auto', minWidth: 160 }}>
           <option value="">Todas categorias</option>
           {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.value}</option>)}
         </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="form-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: 'auto', minWidth: 150 }}>
           <option value="">Todos status</option>
           {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
-        <select value={filterSetor} onChange={e => setFilterSetor(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="form-select" value={filterSetor} onChange={e => setFilterSetor(e.target.value)} style={{ width: 'auto', minWidth: 150 }}>
           <option value="">Todos setores</option>
           {setores.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <select value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ minWidth: 160 }}>
+        <select className="form-select" value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ width: 'auto', minWidth: 170 }}>
           <option value="">Todos responsáveis</option>
           {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         {(filterCat || filterStatus || filterSetor || filterResp) && (
           <button
-            className="btn"
-            style={{ padding: '4px 10px', fontSize: 12 }}
+            className="btn btn-secondary btn-sm"
             onClick={() => { setFilterCat(''); setFilterStatus(''); setFilterSetor(''); setFilterResp('') }}
           >
             <i className="fas fa-xmark" /> Limpar
@@ -417,7 +416,7 @@ export function BensMoveisPage() {
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {visible.length} {visible.length === 1 ? 'item' : 'itens'} • Ordenar:
           </span>
-          <select value={orderBy} onChange={e => setOrderBy(e.target.value as 'nome' | 'valor' | 'data')}>
+          <select className="form-select" value={orderBy} onChange={e => setOrderBy(e.target.value as 'nome' | 'valor' | 'data')} style={{ width: 'auto', minWidth: 160 }}>
             <option value="nome">Nome</option>
             <option value="valor">Valor</option>
             <option value="data">Data de aquisição</option>
