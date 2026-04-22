@@ -18,7 +18,18 @@ import ReactFlow, {
   type NodeChange,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
+import DOMPurify from 'dompurify'
 import { useApp } from '@/context/AppContext'
+
+// Sanitize SVG content to prevent XSS via event handlers like onload, onclick, etc.
+function sanitizeSvg(raw: string): string {
+  if (!raw) return ''
+  return DOMPurify.sanitize(raw, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: ['script', 'foreignObject'],
+    FORBID_ATTR: ['onload', 'onclick', 'onerror', 'onmouseover', 'onmouseout', 'onfocus', 'onblur'],
+  })
+}
 import { db } from '@/lib/db'
 import { supabase } from '@/integrations/supabase/client'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
