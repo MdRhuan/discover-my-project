@@ -354,14 +354,13 @@ export function BensMoveisPage() {
           <h1 className="page-title"><i className="fas fa-couch" /> Bens Móveis</h1>
           <p className="page-subtitle">Controle patrimonial completo: cadastro, depreciação, manutenções e documentos</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ position: 'relative' }}>
-            <i className="fas fa-search" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 12 }} />
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="search-bar" style={{ width: 300, maxWidth: 300 }}>
+            <i className="fas fa-search" />
             <input
               placeholder="Buscar por nome, código ou responsável…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ paddingLeft: 32, width: 280 }}
             />
           </div>
           <button className="btn btn-primary" onClick={openNew}>
@@ -389,26 +388,25 @@ export function BensMoveisPage() {
       {/* Filtros */}
       <div className="card" style={{ padding: 12, marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         <i className="fas fa-filter" style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 4 }} />
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="form-select" value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ width: 'auto', minWidth: 160 }}>
           <option value="">Todas categorias</option>
           {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.value}</option>)}
         </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="form-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: 'auto', minWidth: 150 }}>
           <option value="">Todos status</option>
           {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
-        <select value={filterSetor} onChange={e => setFilterSetor(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="form-select" value={filterSetor} onChange={e => setFilterSetor(e.target.value)} style={{ width: 'auto', minWidth: 150 }}>
           <option value="">Todos setores</option>
           {setores.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <select value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ minWidth: 160 }}>
+        <select className="form-select" value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ width: 'auto', minWidth: 170 }}>
           <option value="">Todos responsáveis</option>
           {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         {(filterCat || filterStatus || filterSetor || filterResp) && (
           <button
-            className="btn"
-            style={{ padding: '4px 10px', fontSize: 12 }}
+            className="btn btn-secondary btn-sm"
             onClick={() => { setFilterCat(''); setFilterStatus(''); setFilterSetor(''); setFilterResp('') }}
           >
             <i className="fas fa-xmark" /> Limpar
@@ -418,7 +416,7 @@ export function BensMoveisPage() {
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {visible.length} {visible.length === 1 ? 'item' : 'itens'} • Ordenar:
           </span>
-          <select value={orderBy} onChange={e => setOrderBy(e.target.value as 'nome' | 'valor' | 'data')}>
+          <select className="form-select" value={orderBy} onChange={e => setOrderBy(e.target.value as 'nome' | 'valor' | 'data')} style={{ width: 'auto', minWidth: 160 }}>
             <option value="nome">Nome</option>
             <option value="valor">Valor</option>
             <option value="data">Data de aquisição</option>
@@ -530,103 +528,111 @@ export function BensMoveisPage() {
       {/* MODAL CADASTRO/EDIÇÃO */}
       {modal && (
         <Modal large title={editId != null ? 'Editar Bem' : 'Novo Bem'} onClose={() => !saving && setModal(false)}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-            <h4 style={{ gridColumn: '1 / -1', margin: '0 0 4px', fontSize: 13, color: 'var(--text-secondary)' }}>📌 Informações principais</h4>
-            <div className="form-row" style={{ gridColumn: '1 / -1' }}>
-              <label>Nome do bem *</label>
-              <input value={form.nome || ''} onChange={e => setForm({ ...form, nome: e.target.value })} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+            <h4 style={{ gridColumn: '1 / -1', margin: '0 0 4px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--text-muted)' }}>
+              <i className="fas fa-thumbtack" style={{ color: 'var(--brand)', marginRight: 6 }} /> Informações principais
+            </h4>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">Nome do bem *</label>
+              <input className="form-input" value={form.nome || ''} onChange={e => setForm({ ...form, nome: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Código patrimonial</label>
-              <input value={form.codigoPatrimonial || ''} onChange={e => setForm({ ...form, codigoPatrimonial: e.target.value })} />
+            <div>
+              <label className="form-label">Código patrimonial</label>
+              <input className="form-input" value={form.codigoPatrimonial || ''} onChange={e => setForm({ ...form, codigoPatrimonial: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Número de série</label>
-              <input value={form.numeroSerie || ''} onChange={e => setForm({ ...form, numeroSerie: e.target.value })} />
+            <div>
+              <label className="form-label">Número de série</label>
+              <input className="form-input" value={form.numeroSerie || ''} onChange={e => setForm({ ...form, numeroSerie: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Marca</label>
-              <input value={form.marca || ''} onChange={e => setForm({ ...form, marca: e.target.value })} />
+            <div>
+              <label className="form-label">Marca</label>
+              <input className="form-input" value={form.marca || ''} onChange={e => setForm({ ...form, marca: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Modelo</label>
-              <input value={form.modelo || ''} onChange={e => setForm({ ...form, modelo: e.target.value })} />
+            <div>
+              <label className="form-label">Modelo</label>
+              <input className="form-input" value={form.modelo || ''} onChange={e => setForm({ ...form, modelo: e.target.value })} />
             </div>
 
-            <h4 style={{ gridColumn: '1 / -1', margin: '8px 0 4px', fontSize: 13, color: 'var(--text-secondary)' }}>💰 Financeiro</h4>
-            <div className="form-row">
-              <label>Categoria</label>
-              <select value={form.categoria || ''} onChange={e => setForm({ ...form, categoria: e.target.value })}>
+            <h4 style={{ gridColumn: '1 / -1', margin: '8px 0 4px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--text-muted)' }}>
+              <i className="fas fa-coins" style={{ color: 'var(--brand)', marginRight: 6 }} /> Financeiro
+            </h4>
+            <div>
+              <label className="form-label">Categoria</label>
+              <select className="form-select" value={form.categoria || ''} onChange={e => setForm({ ...form, categoria: e.target.value })}>
                 {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.value}</option>)}
               </select>
             </div>
-            <div className="form-row">
-              <label>Fornecedor</label>
-              <input value={form.fornecedor || ''} onChange={e => setForm({ ...form, fornecedor: e.target.value })} />
+            <div>
+              <label className="form-label">Fornecedor</label>
+              <input className="form-input" value={form.fornecedor || ''} onChange={e => setForm({ ...form, fornecedor: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Data de compra</label>
-              <input type="date" value={form.dataCompra || ''} onChange={e => setForm({ ...form, dataCompra: e.target.value })} />
+            <div>
+              <label className="form-label">Data de compra</label>
+              <input className="form-input" type="date" value={form.dataCompra || ''} onChange={e => setForm({ ...form, dataCompra: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Moeda</label>
-              <select value={form.moeda || 'BRL'} onChange={e => setForm({ ...form, moeda: e.target.value as 'BRL' | 'USD' })}>
+            <div>
+              <label className="form-label">Moeda</label>
+              <select className="form-select" value={form.moeda || 'BRL'} onChange={e => setForm({ ...form, moeda: e.target.value as 'BRL' | 'USD' })}>
                 <option value="BRL">BRL</option>
                 <option value="USD">USD</option>
               </select>
             </div>
-            <div className="form-row">
-              <label>Valor de aquisição</label>
-              <input type="number" value={form.valorAquisicao ?? ''} onChange={e => setForm({ ...form, valorAquisicao: Number(e.target.value) })} />
+            <div>
+              <label className="form-label">Valor de aquisição</label>
+              <input className="form-input" type="number" value={form.valorAquisicao ?? ''} onChange={e => setForm({ ...form, valorAquisicao: Number(e.target.value) })} />
             </div>
-            <div className="form-row">
-              <label>Valor atual</label>
-              <input type="number" value={form.valorAtual ?? ''} onChange={e => setForm({ ...form, valorAtual: Number(e.target.value) })} />
-            </div>
-
-            <h4 style={{ gridColumn: '1 / -1', margin: '8px 0 4px', fontSize: 13, color: 'var(--text-secondary)' }}>👤 Responsabilidade</h4>
-            <div className="form-row">
-              <label>Setor responsável</label>
-              <input value={form.setorResponsavel || ''} onChange={e => setForm({ ...form, setorResponsavel: e.target.value })} />
-            </div>
-            <div className="form-row">
-              <label>Colaborador responsável</label>
-              <input value={form.colaboradorResponsavel || ''} onChange={e => setForm({ ...form, colaboradorResponsavel: e.target.value })} />
-            </div>
-            <div className="form-row" style={{ gridColumn: '1 / -1' }}>
-              <label>Localização</label>
-              <input placeholder="Ex.: escritório SP, filial RJ…" value={form.localizacao || ''} onChange={e => setForm({ ...form, localizacao: e.target.value })} />
+            <div>
+              <label className="form-label">Valor atual</label>
+              <input className="form-input" type="number" value={form.valorAtual ?? ''} onChange={e => setForm({ ...form, valorAtual: Number(e.target.value) })} />
             </div>
 
-            <h4 style={{ gridColumn: '1 / -1', margin: '8px 0 4px', fontSize: 13, color: 'var(--text-secondary)' }}>📉 Depreciação</h4>
-            <div className="form-row">
-              <label>Vida útil (meses)</label>
-              <input type="number" value={form.vidaUtil ?? ''} onChange={e => setForm({ ...form, vidaUtil: Number(e.target.value) })} />
+            <h4 style={{ gridColumn: '1 / -1', margin: '8px 0 4px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--text-muted)' }}>
+              <i className="fas fa-user" style={{ color: 'var(--brand)', marginRight: 6 }} /> Responsabilidade
+            </h4>
+            <div>
+              <label className="form-label">Setor responsável</label>
+              <input className="form-input" value={form.setorResponsavel || ''} onChange={e => setForm({ ...form, setorResponsavel: e.target.value })} />
             </div>
-            <div className="form-row">
-              <label>Método de depreciação</label>
-              <select value={form.metodoDepreciacao || 'Linear'} onChange={e => setForm({ ...form, metodoDepreciacao: e.target.value })}>
+            <div>
+              <label className="form-label">Colaborador responsável</label>
+              <input className="form-input" value={form.colaboradorResponsavel || ''} onChange={e => setForm({ ...form, colaboradorResponsavel: e.target.value })} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">Localização</label>
+              <input className="form-input" placeholder="Ex.: escritório SP, filial RJ…" value={form.localizacao || ''} onChange={e => setForm({ ...form, localizacao: e.target.value })} />
+            </div>
+
+            <h4 style={{ gridColumn: '1 / -1', margin: '8px 0 4px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--text-muted)' }}>
+              <i className="fas fa-arrow-trend-down" style={{ color: 'var(--brand)', marginRight: 6 }} /> Depreciação
+            </h4>
+            <div>
+              <label className="form-label">Vida útil (meses)</label>
+              <input className="form-input" type="number" value={form.vidaUtil ?? ''} onChange={e => setForm({ ...form, vidaUtil: Number(e.target.value) })} />
+            </div>
+            <div>
+              <label className="form-label">Método de depreciação</label>
+              <select className="form-select" value={form.metodoDepreciacao || 'Linear'} onChange={e => setForm({ ...form, metodoDepreciacao: e.target.value })}>
                 {METODOS_DEP.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-            <div className="form-row">
-              <label>Status</label>
-              <select value={form.status || 'ativo'} onChange={e => setForm({ ...form, status: e.target.value as BemMovel['status'] })}>
+            <div>
+              <label className="form-label">Status</label>
+              <select className="form-select" value={form.status || 'ativo'} onChange={e => setForm({ ...form, status: e.target.value as BemMovel['status'] })}>
                 {STATUS_OPTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            <div className="form-row">
-              <label>Foto do bem</label>
-              <input type="file" accept="image/*" onChange={e => setPendingPhoto(e.target.files?.[0] || null)} />
+            <div>
+              <label className="form-label">Foto do bem</label>
+              <input className="form-input" type="file" accept="image/*" onChange={e => setPendingPhoto(e.target.files?.[0] || null)} />
               {pendingPhoto && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{pendingPhoto.name}</div>}
             </div>
-            <div className="form-row" style={{ gridColumn: '1 / -1' }}>
-              <label>Notas</label>
-              <textarea rows={3} value={form.notas || ''} onChange={e => setForm({ ...form, notas: e.target.value })} />
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">Notas</label>
+              <textarea className="form-textarea" rows={3} value={form.notas || ''} onChange={e => setForm({ ...form, notas: e.target.value })} />
             </div>
           </div>
           <div className="modal-actions">
-            <button className="btn" onClick={() => setModal(false)} disabled={saving}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={() => setModal(false)} disabled={saving}>Cancelar</button>
             <button className="btn btn-primary" onClick={save} disabled={saving}>
               {saving ? <><i className="fas fa-spinner fa-spin" /> Salvando…</> : 'Salvar'}
             </button>
@@ -767,10 +773,10 @@ function DetailsView(p: DetailsProps) {
       {/* MANUTENÇÕES */}
       {tab === 'manut' && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 140px auto', gap: 8, marginBottom: 12 }}>
-            <input type="date" value={p.manutForm.data} onChange={e => p.setManutForm({ ...p.manutForm, data: e.target.value })} />
-            <input placeholder="Descrição da manutenção" value={p.manutForm.descricao} onChange={e => p.setManutForm({ ...p.manutForm, descricao: e.target.value })} />
-            <input type="number" placeholder="Custo" value={p.manutForm.custo || ''} onChange={e => p.setManutForm({ ...p.manutForm, custo: Number(e.target.value) })} />
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 160px auto', gap: 8, marginBottom: 12 }}>
+            <input className="form-input" type="date" value={p.manutForm.data} onChange={e => p.setManutForm({ ...p.manutForm, data: e.target.value })} />
+            <input className="form-input" placeholder="Descrição da manutenção" value={p.manutForm.descricao} onChange={e => p.setManutForm({ ...p.manutForm, descricao: e.target.value })} />
+            <input className="form-input" type="number" placeholder="Custo" value={p.manutForm.custo || ''} onChange={e => p.setManutForm({ ...p.manutForm, custo: Number(e.target.value) })} />
             <button className="btn btn-primary" onClick={p.addManutencao}><i className="fas fa-plus" /> Adicionar</button>
           </div>
           {p.manuts.length === 0 ? (
@@ -796,14 +802,14 @@ function DetailsView(p: DetailsProps) {
       {/* TRANSFERÊNCIAS */}
       {tab === 'transf' && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr auto', gap: 8, marginBottom: 8 }}>
-            <input type="date" value={p.transfForm.data} onChange={e => p.setTransfForm({ ...p.transfForm, data: e.target.value })} />
-            <input placeholder="Setor origem" value={p.transfForm.setorOrigem} onChange={e => p.setTransfForm({ ...p.transfForm, setorOrigem: e.target.value })} />
-            <input placeholder="Setor destino *" value={p.transfForm.setorDestino} onChange={e => p.setTransfForm({ ...p.transfForm, setorDestino: e.target.value })} />
-            <input placeholder="Responsável" value={p.transfForm.responsavel} onChange={e => p.setTransfForm({ ...p.transfForm, responsavel: e.target.value })} />
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr 1fr auto', gap: 8, marginBottom: 8 }}>
+            <input className="form-input" type="date" value={p.transfForm.data} onChange={e => p.setTransfForm({ ...p.transfForm, data: e.target.value })} />
+            <input className="form-input" placeholder="Setor origem" value={p.transfForm.setorOrigem} onChange={e => p.setTransfForm({ ...p.transfForm, setorOrigem: e.target.value })} />
+            <input className="form-input" placeholder="Setor destino *" value={p.transfForm.setorDestino} onChange={e => p.setTransfForm({ ...p.transfForm, setorDestino: e.target.value })} />
+            <input className="form-input" placeholder="Responsável" value={p.transfForm.responsavel} onChange={e => p.setTransfForm({ ...p.transfForm, responsavel: e.target.value })} />
             <button className="btn btn-primary" onClick={p.addTransferencia}><i className="fas fa-plus" /> Registrar</button>
           </div>
-          <input style={{ width: '100%', marginBottom: 12 }} placeholder="Observações" value={p.transfForm.observacoes} onChange={e => p.setTransfForm({ ...p.transfForm, observacoes: e.target.value })} />
+          <input className="form-input" style={{ marginBottom: 12 }} placeholder="Observações" value={p.transfForm.observacoes} onChange={e => p.setTransfForm({ ...p.transfForm, observacoes: e.target.value })} />
           {p.transfs.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Nenhuma transferência registrada</div>
           ) : (
