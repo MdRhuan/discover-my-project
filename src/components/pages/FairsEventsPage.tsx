@@ -391,9 +391,6 @@ export function FairsEventsPage() {
             >
               ✧
             </span>
-            <div className="page-header-title" style={{ fontSize: 22, fontWeight: 800, color: "#1A1714" }}>
-              sdfsdfdsfsdfsdf
-            </div>
           </div>
           <div className="page-header-sub" style={{ color: "#9C9690", marginLeft: 44 }}>
             Tendências, lançamentos &amp; insights de beleza
