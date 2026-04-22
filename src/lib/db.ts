@@ -236,6 +236,7 @@ import type {
   Empresa, Funcionario, Documento, Transacao, OrgNode, OrgEdge, OrgTextCanvas, OrgShape, OrgIcon, OrgImage,
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog,
   ConstructionFolder, ConstructionDocument, ConstructionFile,
+  BemMovel, BemMovelFile, BemMovelManutencao, BemMovelTransferencia,
 } from '@/types'
 
 export const db = {
