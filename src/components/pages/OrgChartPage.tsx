@@ -1222,10 +1222,10 @@ function OrgChartEditor() {
       )}
 
       {editingEdge && (
-        <Modal onClose={() => setEditingEdge(null)} title="Editar conexão">
+        <Modal onClose={() => setEditingEdge(null)} title="Personalizar conexão">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label className="form-label">Percentual / rótulo (ex: 51%)</label>
+              <label className="form-label"><i className="fas fa-tag" /> Texto / Percentual (ex: 51%)</label>
               <input
                 className="form-input"
                 value={editingEdge.label}
@@ -1236,19 +1236,19 @@ function OrgChartEditor() {
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <label className="form-label">Tipo de controle</label>
+                <label className="form-label"><i className="fas fa-grip-lines" /> Estilo da linha</label>
                 <select
                   className="form-input"
                   value={editingEdge.estilo}
                   onChange={e => setEditingEdge(s => s ? { ...s, estilo: e.target.value } : s)}
                 >
-                  <option value="solid">Direto (linha sólida)</option>
-                  <option value="dashed">Indireto (tracejada)</option>
+                  <option value="solid">Sólida (controle direto)</option>
+                  <option value="dashed">Tracejada (controle indireto)</option>
                   <option value="dotted">Pontilhada</option>
                 </select>
               </div>
               <div style={{ width: 110 }}>
-                <label className="form-label">Cor</label>
+                <label className="form-label"><i className="fas fa-palette" /> Cor</label>
                 <input
                   type="color"
                   className="form-input"
@@ -1256,6 +1256,32 @@ function OrgChartEditor() {
                   value={editingEdge.cor}
                   onChange={e => setEditingEdge(s => s ? { ...s, cor: e.target.value } : s)}
                 />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label className="form-label"><i className="fas fa-text-width" /> Espessura</label>
+                <select
+                  className="form-input"
+                  value={editingEdge.espessura}
+                  onChange={e => setEditingEdge(s => s ? { ...s, espessura: Number(e.target.value) } : s)}
+                >
+                  <option value={1}>Fina (1px)</option>
+                  <option value={2}>Média (2px)</option>
+                  <option value={4}>Grossa (4px)</option>
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="form-label"><i className="fas fa-arrows-alt-h" /> Tipo de ponta</label>
+                <select
+                  className="form-input"
+                  value={editingEdge.tipoPonta}
+                  onChange={e => setEditingEdge(s => s ? { ...s, tipoPonta: e.target.value as 'one' | 'both' | 'none' } : s)}
+                >
+                  <option value="one">Simples (►)</option>
+                  <option value="both">Dupla (◄►)</option>
+                  <option value="none">Sem ponta (—)</option>
+                </select>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
@@ -1270,7 +1296,7 @@ function OrgChartEditor() {
                     toast('Conexão removida', 'success')
                   } catch (err) { console.error(err); toast('Erro ao remover conexão', 'error') }
                 }}
-              ><i className="fas fa-trash" /> Remover</button>
+              ><i className="fas fa-trash" /> Excluir</button>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn btn-secondary" onClick={() => setEditingEdge(null)}>Cancelar</button>
                 <button
@@ -1279,32 +1305,30 @@ function OrgChartEditor() {
                     if (!editingEdge) return
                     try {
                       await db.orgEdges.update(editingEdge.id, {
-                        label: editingEdge.label,
+                        label: editingEdge.label || undefined,
                         estilo: editingEdge.estilo,
                         cor: editingEdge.cor,
+                        espessura: editingEdge.espessura,
+                        tipoPonta: editingEdge.tipoPonta,
                       })
                       setEdges(curr => curr.map(ed => {
                         if (ed.id !== `edge:${editingEdge.id}`) return ed
-                        const cor = editingEdge.cor
-                        const espessura = (ed.style?.strokeWidth as number) || 2
-                        return {
-                          ...ed,
-                          label: editingEdge.label,
-                          style: {
-                            ...ed.style,
-                            stroke: cor,
-                            strokeDasharray: editingEdge.estilo === 'dashed' ? '6 4' : editingEdge.estilo === 'dotted' ? '2 3' : undefined,
-                          },
-                          markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
-                          labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: cor },
-                          data: { ...ed.data, cor, estilo: editingEdge.estilo, espessura },
-                        }
+                        return buildEdgeFromDb({
+                          id: editingEdge.id,
+                          source: ed.source,
+                          target: ed.target,
+                          label: editingEdge.label || undefined,
+                          cor: editingEdge.cor,
+                          estilo: editingEdge.estilo,
+                          espessura: editingEdge.espessura,
+                          tipoPonta: editingEdge.tipoPonta,
+                        })
                       }))
                       setEditingEdge(null)
                       toast('Conexão atualizada', 'success')
                     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
                   }}
-                >Salvar</button>
+                ><i className="fas fa-save" /> Salvar</button>
               </div>
             </div>
           </div>
