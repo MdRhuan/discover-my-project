@@ -1547,7 +1547,7 @@ function EditIconModal({ node, onClose, onSave, onDelete }: {
   const [cor, setCor] = useState(node.data.cor || '#0f172a')
   const [rotacao, setRotacao] = useState(node.data.rotacao || 0)
   const [nome, setNome] = useState(node.data.nome || '')
-  const previewSvg = (node.data.svgContent || '').replace(/<svg([^>]*)>/i, (_m, a) => `<svg${String(a).replace(/\swidth="[^"]*"/i,'').replace(/\sheight="[^"]*"/i,'')} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`)
+  const previewSvg = sanitizeSvg((node.data.svgContent || '').replace(/<svg([^>]*)>/i, (_m, a) => `<svg${String(a).replace(/\swidth="[^"]*"/i,'').replace(/\sheight="[^"]*"/i,'')} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`))
   return (
     <Modal onClose={onClose} title="Editar ícone SVG">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
