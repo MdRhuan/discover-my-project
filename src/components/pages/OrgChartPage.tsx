@@ -759,6 +759,69 @@ function OrgChartEditor() {
     } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
   }, [setEdges, toast])
 
+  // ============ Connect mode (manual) ============
+  const exitConnectMode = useCallback(() => {
+    setConnectMode(false)
+    setConnectSourceId(null)
+    setNodes(curr => curr.map(n => n.selected ? { ...n, selected: false } : n))
+  }, [setNodes])
+
+  const createEdgeBetween = useCallback(async (sourceNodeId: string, targetNodeId: string) => {
+    const src = parseId(sourceNodeId); const tgt = parseId(targetNodeId)
+    if (src.kind !== 'company' || tgt.kind !== 'company') {
+      toast('Conexões só entre blocos de empresa/livre', 'info'); return
+    }
+    if (src.dbId === tgt.dbId) { toast('Origem e destino iguais', 'info'); return }
+    const pct = window.prompt('Percentual de participação (ex: 51%)', '')
+    if (pct === null) return
+    const label = pct.trim()
+    try {
+      const id = await db.orgEdges.add({
+        sourceId: src.dbId, targetId: tgt.dbId,
+        cor: '#94a3b8', espessura: 2, estilo: 'solid', label: label || undefined,
+      } as OrgEdge)
+      setEdges(curr => [...curr, {
+        id: `edge:${id}`,
+        source: sourceNodeId,
+        target: targetNodeId,
+        type: 'smoothstep',
+        label: label || undefined,
+        style: { stroke: '#94a3b8', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 18, height: 18 },
+        labelBgPadding: [6, 3],
+        labelBgBorderRadius: 6,
+        labelBgStyle: { fill: '#ffffff', stroke: '#94a3b8', strokeWidth: 1, fillOpacity: 0.95 },
+        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
+        data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
+      }])
+      toast('Conexão criada', 'success')
+    } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
+  }, [setEdges, toast])
+
+  const handleNodeClickConnect = useCallback((_: React.MouseEvent, node: Node) => {
+    if (!connectMode) return
+    const { kind } = parseId(node.id)
+    if (kind !== 'company') { toast('Selecione um bloco de empresa/livre', 'info'); return }
+    if (!connectSourceId) {
+      setConnectSourceId(node.id)
+      toast('Origem selecionada · clique no destino', 'info')
+      return
+    }
+    if (connectSourceId === node.id) { toast('Selecione um nó diferente', 'info'); return }
+    const src = connectSourceId
+    setConnectSourceId(null)
+    setConnectMode(false)
+    createEdgeBetween(src, node.id)
+  }, [connectMode, connectSourceId, createEdgeBetween, toast])
+
+  const deleteEdgeById = useCallback(async (edgeId: string) => {
+    try {
+      await db.orgEdges.delete(parseId(edgeId).dbId)
+      setEdges(curr => curr.filter(e => e.id !== edgeId))
+      toast('Conexão removida', 'success')
+    } catch (err) { console.error(err); toast('Erro ao remover', 'error') }
+  }, [setEdges, toast])
+
   // ============ Delete / duplicate / layer ============
   const deleteByNode = async (n: Node) => {
     const { kind, dbId } = parseId(n.id)
