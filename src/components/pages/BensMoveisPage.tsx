@@ -37,7 +37,7 @@ export function BensMoveisPage() {
 
   const load = useCallback(async () => {
     try {
-      const cfg = await db.config.where('chave').equals('bensMoveis').first()
+      const cfg = await db.config.get('bensMoveis')
       const data = (cfg?.value as BemMovel[]) || []
       setItems(Array.isArray(data) ? data : [])
     } catch {
@@ -49,9 +49,7 @@ export function BensMoveisPage() {
 
   async function persist(next: BemMovel[]) {
     setItems(next)
-    const existing = await db.config.where('chave').equals('bensMoveis').first()
-    if (existing?.id) await db.config.update(existing.id, { value: next })
-    else await db.config.add({ chave: 'bensMoveis', value: next })
+    await db.config.put({ chave: 'bensMoveis', value: next })
   }
 
   function openNew() {
