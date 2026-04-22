@@ -368,6 +368,8 @@ export type PageKey =
   | 'investments'
   | 'realEstate'
   | 'bensMoveis'
+  | 'bensImoveis'
+  | 'relatoriosPatr'
   | 'fixedExpenses'
   | 'fairsEvents'
   | 'juridico'
