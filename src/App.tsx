@@ -33,6 +33,24 @@ const BackupPage        = lazy(() => import('@/components/pages/BackupPage').the
 const AuditLogPage      = lazy(() => import('@/components/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 const UsersPage         = lazy(() => import('@/components/pages/UsersPage').then(m => ({ default: m.UsersPage })))
 
+function PlaceholderPage({ title, subtitle, icon }: { title: string; subtitle: string; icon: string }) {
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title"><i className={`fas ${icon}`} /> {title}</h1>
+          <p className="page-subtitle">{subtitle}</p>
+        </div>
+      </div>
+      <div className="card" style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
+        <i className={`fas ${icon}`} style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }} />
+        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Em desenvolvimento</div>
+        <div style={{ fontSize: 13 }}>Esta seção estará disponível em breve.</div>
+      </div>
+    </div>
+  )
+}
+
 function Shell() {
   const { user, page, isAdmin } = useApp()
 
