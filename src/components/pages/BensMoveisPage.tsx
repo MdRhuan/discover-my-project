@@ -101,11 +101,11 @@ export function BensMoveisPage() {
         </div>
         <div className="stat-card">
           <div className="stat-label">Valor de Aquisição</div>
-          <div className="stat-value">{fmt(totalAquisicao, 'BRL')}</div>
+          <div className="stat-value">{fmt.currency(totalAquisicao, "BRL")}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Valor de Mercado</div>
-          <div className="stat-value">{fmt(totalMercado, 'BRL')}</div>
+          <div className="stat-value">{fmt.currency(totalMercado, "BRL")}</div>
         </div>
       </div>
 
@@ -139,8 +139,8 @@ export function BensMoveisPage() {
                     <td><span className="badge">{it.categoria}</span></td>
                     <td>{it.proprietario || '—'}</td>
                     <td>{it.pais || '—'}</td>
-                    <td>{it.valor_aquisicao ? fmt(it.valor_aquisicao, (it.moeda || 'BRL') as 'BRL'|'USD') : '—'}</td>
-                    <td>{it.valor_mercado ? fmt(it.valor_mercado, (it.moeda || 'BRL') as 'BRL'|'USD') : '—'}</td>
+                    <td>{it.valor_aquisicao ? fmt.currency(it.valor_aquisicao, (it.moeda || 'BRL') as 'BRL'|'USD') : '—'}</td>
+                    <td>{it.valor_mercado ? fmt.currency(it.valor_mercado, (it.moeda || 'BRL') as 'BRL'|'USD') : '—'}</td>
                     <td>
                       <button className="icon-btn" title="Editar" onClick={() => openEdit(it)}>
                         <i className="fas fa-pen" />
