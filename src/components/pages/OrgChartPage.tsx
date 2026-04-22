@@ -317,6 +317,8 @@ function OrgChartEditor() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null)
   const [editingEdge, setEditingEdge] = useState<{ id: number; label: string; estilo: string; cor: string } | null>(null)
+  const [connectMode, setConnectMode] = useState(false)
+  const [connectSourceId, setConnectSourceId] = useState<string | null>(null)
   const [addEmpresaModal, setAddEmpresaModal] = useState(false)
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null)
   const [editNodeId, setEditNodeId] = useState<string | null>(null)
@@ -567,6 +569,14 @@ function OrgChartEditor() {
     })
   }, [edges, hoveredEdgeId])
 
+  // Realça nó de origem no modo Conectar
+  const displayedNodes = useMemo<Node[]>(() => {
+    if (!connectMode || !connectSourceId) return nodes
+    return nodes.map(n => n.id === connectSourceId
+      ? { ...n, style: { ...(n.style || {}), outline: '3px solid #2563eb', outlineOffset: 2, borderRadius: 8 } }
+      : n)
+  }, [nodes, connectMode, connectSourceId])
+
   // ============ Add elements ============
   async function handleAddEmpresa() {
     if (!selectedEmpresaId) { toast('Selecione uma empresa', 'error'); return }
@@ -757,6 +767,69 @@ function OrgChartEditor() {
     } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
   }, [setEdges, toast])
 
+  // ============ Connect mode (manual) ============
+  const exitConnectMode = useCallback(() => {
+    setConnectMode(false)
+    setConnectSourceId(null)
+    setNodes(curr => curr.map(n => n.selected ? { ...n, selected: false } : n))
+  }, [setNodes])
+
+  const createEdgeBetween = useCallback(async (sourceNodeId: string, targetNodeId: string) => {
+    const src = parseId(sourceNodeId); const tgt = parseId(targetNodeId)
+    if (src.kind !== 'company' || tgt.kind !== 'company') {
+      toast('Conexões só entre blocos de empresa/livre', 'info'); return
+    }
+    if (src.dbId === tgt.dbId) { toast('Origem e destino iguais', 'info'); return }
+    const pct = window.prompt('Percentual de participação (ex: 51%)', '')
+    if (pct === null) return
+    const label = pct.trim()
+    try {
+      const id = await db.orgEdges.add({
+        sourceId: src.dbId, targetId: tgt.dbId,
+        cor: '#94a3b8', espessura: 2, estilo: 'solid', label: label || undefined,
+      } as OrgEdge)
+      setEdges(curr => [...curr, {
+        id: `edge:${id}`,
+        source: sourceNodeId,
+        target: targetNodeId,
+        type: 'smoothstep',
+        label: label || undefined,
+        style: { stroke: '#94a3b8', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 18, height: 18 },
+        labelBgPadding: [6, 3],
+        labelBgBorderRadius: 6,
+        labelBgStyle: { fill: '#ffffff', stroke: '#94a3b8', strokeWidth: 1, fillOpacity: 0.95 },
+        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
+        data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
+      }])
+      toast('Conexão criada', 'success')
+    } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
+  }, [setEdges, toast])
+
+  const handleNodeClickConnect = useCallback((_: React.MouseEvent, node: Node) => {
+    if (!connectMode) return
+    const { kind } = parseId(node.id)
+    if (kind !== 'company') { toast('Selecione um bloco de empresa/livre', 'info'); return }
+    if (!connectSourceId) {
+      setConnectSourceId(node.id)
+      toast('Origem selecionada · clique no destino', 'info')
+      return
+    }
+    if (connectSourceId === node.id) { toast('Selecione um nó diferente', 'info'); return }
+    const src = connectSourceId
+    setConnectSourceId(null)
+    setConnectMode(false)
+    createEdgeBetween(src, node.id)
+  }, [connectMode, connectSourceId, createEdgeBetween, toast])
+
+  const deleteEdgeById = useCallback(async (edgeId: string) => {
+    try {
+      await db.orgEdges.delete(parseId(edgeId).dbId)
+      setEdges(curr => curr.filter(e => e.id !== edgeId))
+      toast('Conexão removida', 'success')
+    } catch (err) { console.error(err); toast('Erro ao remover', 'error') }
+  }, [setEdges, toast])
+
   // ============ Delete / duplicate / layer ============
   const deleteByNode = async (n: Node) => {
     const { kind, dbId } = parseId(n.id)
@@ -866,6 +939,7 @@ function OrgChartEditor() {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+      if (e.key === 'Escape' && connectMode) { e.preventDefault(); exitConnectMode(); return }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) { e.preventDefault(); deleteSelection() }
       }
@@ -875,7 +949,7 @@ function OrgChartEditor() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nodes, edges, deleteSelection, duplicateSelection])
+  }, [nodes, edges, deleteSelection, duplicateSelection, connectMode, exitConnectMode])
 
   // ============ Edit modal ============
   const editNode = useMemo(() => nodes.find(n => n.id === editNodeId), [nodes, editNodeId])
@@ -941,7 +1015,11 @@ function OrgChartEditor() {
       <div className="page-header">
         <div className="page-header-info">
           <div className="page-header-title">Organograma Societário</div>
-          <div className="page-header-sub">Arraste · Conecte das bordas · Delete remove · Ctrl+D duplica · Duplo clique edita textos/caixas</div>
+          <div className="page-header-sub">
+            {connectMode
+              ? (connectSourceId ? '🔗 Modo Conectar · clique no nó de DESTINO (ESC para cancelar)' : '🔗 Modo Conectar · clique no nó de ORIGEM (ESC para cancelar)')
+              : 'Arraste · Conecte das bordas · Clique numa seta para excluir · Duplo clique edita seta'}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => setAddEmpresaModal(true)} title="Adicionar bloco de empresa cadastrada">
@@ -956,6 +1034,15 @@ function OrgChartEditor() {
           <button className="btn btn-secondary" onClick={handleAddShape} title="Adicionar caixa/borda para agrupar">
             <i className="fas fa-vector-square" /> Caixa
           </button>
+          {connectMode ? (
+            <button className="btn btn-danger" onClick={exitConnectMode} title="Cancelar modo conectar (ESC)">
+              <i className="fas fa-times" /> Cancelar
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={() => { setConnectMode(true); setConnectSourceId(null); toast('Clique no nó de origem', 'info') }} title="Desenhar uma seta entre dois nós">
+              <i className="fas fa-link" /> Conectar
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()} title="Adicionar ícone SVG (upload)">
             <i className="fas fa-icons" /> Ícone SVG
           </button>
@@ -1007,13 +1094,20 @@ function OrgChartEditor() {
             <p>Carregando organograma...</p>
           </div>
         ) : (
+          <div style={{ width: '100%', height: '100%', cursor: connectMode ? 'crosshair' : undefined }}>
           <ReactFlow
-            nodes={nodes} edges={displayedEdges}
+            nodes={displayedNodes} edges={displayedEdges}
             onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
             onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
             multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
+            nodesDraggable={!connectMode} nodesConnectable={!connectMode} elementsSelectable={!connectMode}
+            onNodeClick={handleNodeClickConnect}
             onEdgeMouseEnter={(_, ed) => setHoveredEdgeId(ed.id)}
             onEdgeMouseLeave={() => setHoveredEdgeId(null)}
+            onEdgeClick={(_, ed) => {
+              if (connectMode) return
+              if (window.confirm('Excluir esta conexão?')) deleteEdgeById(ed.id)
+            }}
             onEdgeDoubleClick={(_, ed) => {
               const dbId = parseId(ed.id).dbId
               setEditingEdge({
@@ -1027,6 +1121,7 @@ function OrgChartEditor() {
             <Background gap={20} size={1} color="#e2e8f0" />
             <Controls />
           </ReactFlow>
+          </div>
         )}
       </div>
 
