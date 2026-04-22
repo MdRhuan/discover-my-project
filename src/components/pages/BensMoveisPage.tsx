@@ -216,7 +216,7 @@ export function BensMoveisPage() {
         </Modal>
       )}
 
-      {confirm && <ConfirmDialog message={confirm.msg} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmDialog msg={confirm.msg} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
     </div>
   )
 }
