@@ -26,6 +26,12 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   trademarkId: 'trademark_id', tipoPonta: 'tipo_ponta',
   // Construction
   empresaNome: 'empresa_nome', folderId: 'folder_id', documentId: 'document_id',
+  // Bens Móveis
+  codigoPatrimonial: 'codigo_patrimonial', numeroSerie: 'numero_serie',
+  dataCompra: 'data_compra', valorAquisicao: 'valor_aquisicao', valorAtual: 'valor_atual',
+  setorResponsavel: 'setor_responsavel', colaboradorResponsavel: 'colaborador_responsavel',
+  vidaUtil: 'vida_util', metodoDepreciacao: 'metodo_depreciacao', fotoPath: 'foto_path',
+  bemId: 'bem_id', setorOrigem: 'setor_origem', setorDestino: 'setor_destino',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
