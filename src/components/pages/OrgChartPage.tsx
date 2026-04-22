@@ -696,8 +696,12 @@ function OrgChartEditor() {
     if (!rawText.trim().toLowerCase().includes('<svg')) {
       toast('Arquivo inválido: selecione um SVG', 'error'); return
     }
-    if (text.length > 200000) {
+    if (rawText.length > 200000) {
       toast('SVG muito grande (>200KB)', 'error'); return
+    }
+    const text = sanitizeSvg(rawText)
+    if (!text.trim().toLowerCase().includes('<svg')) {
+      toast('SVG inválido após sanitização', 'error'); return
     }
     const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
     try {
