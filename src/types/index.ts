@@ -97,6 +97,7 @@ export interface OrgEdge {
   espessura?: number
   estilo?: string
   label?: string
+  tipoPonta?: 'one' | 'both' | 'none'
 }
 
 export interface OrgTextCanvas {

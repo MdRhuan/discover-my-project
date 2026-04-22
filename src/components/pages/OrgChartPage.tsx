@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ReactFlow, {
   Background,
   Controls,
-  addEdge,
   useNodesState,
   useEdgesState,
   Handle,
@@ -308,6 +307,36 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
 
 const nodeTypes = { company: CompanyNode, freetext: TextNode, shape: ShapeNode, icon: IconNode, image: ImageNode }
 
+// Build a ReactFlow Edge from a DB OrgEdge (or partial spec)
+function buildEdgeFromDb(ed: {
+  id?: number; sourceId?: number; targetId?: number;
+  cor?: string; espessura?: number; estilo?: string; label?: string; tipoPonta?: string;
+  source?: string; target?: string;
+}): Edge {
+  const cor = ed.cor || '#94a3b8'
+  const espessura = Number(ed.espessura) || 2
+  const estilo = ed.estilo || 'solid'
+  const tipoPonta = (ed.tipoPonta as 'one' | 'both' | 'none') || 'one'
+  const dash = estilo === 'dashed' ? '6 4' : estilo === 'dotted' ? '2 3' : undefined
+  const arrow = { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 }
+  return {
+    id: `edge:${ed.id}`,
+    source: ed.source || `company:${ed.sourceId}`,
+    target: ed.target || `company:${ed.targetId}`,
+    type: 'smoothstep',
+    label: ed.label,
+    labelShowBg: true,
+    labelBgPadding: [6, 3],
+    labelBgBorderRadius: 6,
+    labelBgStyle: { fill: '#ffffff', stroke: cor, strokeWidth: 1, fillOpacity: 0.95 },
+    labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
+    style: { stroke: cor, strokeWidth: espessura, strokeDasharray: dash },
+    markerEnd: tipoPonta === 'none' ? undefined : arrow,
+    markerStart: tipoPonta === 'both' ? arrow : undefined,
+    data: { cor, espessura, estilo, tipoPonta, label: ed.label },
+  }
+}
+
 // ============ Editor ============
 function OrgChartEditor() {
   const { toast, setPage } = useApp() as ReturnType<typeof useApp> & { setPage: (p: PageKey) => void }
@@ -316,7 +345,7 @@ function OrgChartEditor() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null)
-  const [editingEdge, setEditingEdge] = useState<{ id: number; label: string; estilo: string; cor: string } | null>(null)
+  const [editingEdge, setEditingEdge] = useState<{ id: number; label: string; estilo: string; cor: string; espessura: number; tipoPonta: 'one' | 'both' | 'none' } | null>(null)
   const [connectMode, setConnectMode] = useState(false)
   const [connectSourceId, setConnectSourceId] = useState<string | null>(null)
   const [addEmpresaModal, setAddEmpresaModal] = useState(false)
@@ -455,30 +484,7 @@ function OrgChartEditor() {
       } as Node
     }))
 
-    const flowEdges: Edge[] = e.map(ed => {
-      const cor = ed.cor || '#94a3b8'
-      const espessura = ed.espessura || 2
-      const estilo = ed.estilo || 'solid'
-      return {
-        id: `edge:${ed.id}`,
-        source: `company:${ed.sourceId}`,
-        target: `company:${ed.targetId}`,
-        type: 'smoothstep',
-        label: ed.label,
-        labelShowBg: true,
-        labelBgPadding: [6, 3] as [number, number],
-        labelBgBorderRadius: 6,
-        labelBgStyle: { fill: '#ffffff', stroke: cor, strokeWidth: 1, fillOpacity: 0.95 },
-        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
-        style: {
-          stroke: cor,
-          strokeWidth: espessura,
-          strokeDasharray: estilo === 'dashed' ? '6 4' : estilo === 'dotted' ? '2 3' : undefined,
-        },
-        markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
-        data: { cor, espessura, estilo },
-      }
-    })
+    const flowEdges: Edge[] = e.map(ed => buildEdgeFromDb(ed))
 
     setNodes([...shapeNodes, ...companyNodes, ...imageNodes, ...iconNodes, ...textNodes])
     setEdges(flowEdges)
@@ -748,22 +754,20 @@ function OrgChartEditor() {
     if (src.kind !== 'company' || tgt.kind !== 'company') {
       toast('Conexões só entre blocos de empresa/livre', 'info'); return
     }
+    if (src.dbId === tgt.dbId) { toast('Origem e destino iguais', 'info'); return }
     try {
       const id = await db.orgEdges.add({
-        sourceId: src.dbId, targetId: tgt.dbId, cor: '#94a3b8', espessura: 2, estilo: 'solid',
+        sourceId: src.dbId, targetId: tgt.dbId,
+        cor: '#94a3b8', espessura: 2, estilo: 'solid', tipoPonta: 'one',
       } as OrgEdge)
-      setEdges(curr => addEdge({
-        ...conn,
-        id: `edge:${id}`,
-        type: 'smoothstep',
-        style: { stroke: '#94a3b8', strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 18, height: 18 },
-        labelBgPadding: [6, 3],
-        labelBgBorderRadius: 6,
-        labelBgStyle: { fill: '#ffffff', stroke: '#94a3b8', strokeWidth: 1, fillOpacity: 0.95 },
-        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
-        data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
-      }, curr))
+      const newEdge = buildEdgeFromDb({
+        id, source: conn.source, target: conn.target,
+        cor: '#94a3b8', espessura: 2, estilo: 'solid', tipoPonta: 'one',
+      })
+      setEdges(curr => [...curr, newEdge])
+      // Abre o painel de personalização imediatamente
+      setEditingEdge({ id, label: '', estilo: 'solid', cor: '#94a3b8', espessura: 2, tipoPonta: 'one' })
+      toast('Conexão criada · personalize abaixo', 'success')
     } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
   }, [setEdges, toast])
 
@@ -939,7 +943,15 @@ function OrgChartEditor() {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
-      if (e.key === 'Escape' && connectMode) { e.preventDefault(); exitConnectMode(); return }
+      if (e.key === 'Escape') {
+        if (connectMode) { e.preventDefault(); exitConnectMode(); return }
+        if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) {
+          e.preventDefault()
+          setNodes(c => c.map(n => n.selected ? { ...n, selected: false } : n))
+          setEdges(c => c.map(ed => ed.selected ? { ...ed, selected: false } : ed))
+          return
+        }
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) { e.preventDefault(); deleteSelection() }
       }
@@ -1018,7 +1030,7 @@ function OrgChartEditor() {
           <div className="page-header-sub">
             {connectMode
               ? (connectSourceId ? '🔗 Modo Conectar · clique no nó de DESTINO (ESC para cancelar)' : '🔗 Modo Conectar · clique no nó de ORIGEM (ESC para cancelar)')
-              : 'Arraste · Conecte das bordas · Clique numa seta para excluir · Duplo clique edita seta'}
+              : 'Arraste das bordas dos nós para criar setas · Clique para selecionar · Duplo clique para editar · ESC desseleciona'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -1064,7 +1076,23 @@ function OrgChartEditor() {
             }}
           />
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
-          <button className="btn btn-secondary" onClick={() => { const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento', 'info'); return } setEditNodeId(sel.id) }} title="Editar elemento selecionado">
+          <button className="btn btn-secondary" onClick={() => {
+            const selEdge = edges.find(e => e.selected)
+            if (selEdge) {
+              const dbId = parseId(selEdge.id).dbId
+              const d = selEdge.data || {}
+              setEditingEdge({
+                id: dbId,
+                label: (selEdge.label as string) || (d.label as string) || '',
+                estilo: (d.estilo as string) || 'solid',
+                cor: (d.cor as string) || '#94a3b8',
+                espessura: (d.espessura as number) || 2,
+                tipoPonta: (d.tipoPonta as 'one' | 'both' | 'none') || 'one',
+              })
+              return
+            }
+            const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento ou seta', 'info'); return } setEditNodeId(sel.id)
+          }} title="Editar elemento ou seta selecionada">
             <i className="fas fa-pen" /> Editar
           </button>
           <button className="btn btn-secondary" onClick={duplicateSelection} title="Duplicar (Ctrl+D)">
@@ -1106,15 +1134,19 @@ function OrgChartEditor() {
             onEdgeMouseLeave={() => setHoveredEdgeId(null)}
             onEdgeClick={(_, ed) => {
               if (connectMode) return
-              if (window.confirm('Excluir esta conexão?')) deleteEdgeById(ed.id)
+              setEdges(curr => curr.map(x => ({ ...x, selected: x.id === ed.id })))
             }}
+            onPaneClick={() => setEdges(curr => curr.some(x => x.selected) ? curr.map(x => ({ ...x, selected: false })) : curr)}
             onEdgeDoubleClick={(_, ed) => {
               const dbId = parseId(ed.id).dbId
+              const d = ed.data || {}
               setEditingEdge({
                 id: dbId,
-                label: (ed.label as string) || '',
-                estilo: (ed.data?.estilo as string) || 'solid',
-                cor: (ed.data?.cor as string) || '#94a3b8',
+                label: (ed.label as string) || (d.label as string) || '',
+                estilo: (d.estilo as string) || 'solid',
+                cor: (d.cor as string) || '#94a3b8',
+                espessura: (d.espessura as number) || 2,
+                tipoPonta: (d.tipoPonta as 'one' | 'both' | 'none') || 'one',
               })
             }}
           >
@@ -1190,10 +1222,10 @@ function OrgChartEditor() {
       )}
 
       {editingEdge && (
-        <Modal onClose={() => setEditingEdge(null)} title="Editar conexão">
+        <Modal onClose={() => setEditingEdge(null)} title="Personalizar conexão">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label className="form-label">Percentual / rótulo (ex: 51%)</label>
+              <label className="form-label"><i className="fas fa-tag" /> Texto / Percentual (ex: 51%)</label>
               <input
                 className="form-input"
                 value={editingEdge.label}
@@ -1204,19 +1236,19 @@ function OrgChartEditor() {
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <label className="form-label">Tipo de controle</label>
+                <label className="form-label"><i className="fas fa-grip-lines" /> Estilo da linha</label>
                 <select
                   className="form-input"
                   value={editingEdge.estilo}
                   onChange={e => setEditingEdge(s => s ? { ...s, estilo: e.target.value } : s)}
                 >
-                  <option value="solid">Direto (linha sólida)</option>
-                  <option value="dashed">Indireto (tracejada)</option>
+                  <option value="solid">Sólida (controle direto)</option>
+                  <option value="dashed">Tracejada (controle indireto)</option>
                   <option value="dotted">Pontilhada</option>
                 </select>
               </div>
               <div style={{ width: 110 }}>
-                <label className="form-label">Cor</label>
+                <label className="form-label"><i className="fas fa-palette" /> Cor</label>
                 <input
                   type="color"
                   className="form-input"
@@ -1224,6 +1256,32 @@ function OrgChartEditor() {
                   value={editingEdge.cor}
                   onChange={e => setEditingEdge(s => s ? { ...s, cor: e.target.value } : s)}
                 />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label className="form-label"><i className="fas fa-text-width" /> Espessura</label>
+                <select
+                  className="form-input"
+                  value={editingEdge.espessura}
+                  onChange={e => setEditingEdge(s => s ? { ...s, espessura: Number(e.target.value) } : s)}
+                >
+                  <option value={1}>Fina (1px)</option>
+                  <option value={2}>Média (2px)</option>
+                  <option value={4}>Grossa (4px)</option>
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="form-label"><i className="fas fa-arrows-alt-h" /> Tipo de ponta</label>
+                <select
+                  className="form-input"
+                  value={editingEdge.tipoPonta}
+                  onChange={e => setEditingEdge(s => s ? { ...s, tipoPonta: e.target.value as 'one' | 'both' | 'none' } : s)}
+                >
+                  <option value="one">Simples (►)</option>
+                  <option value="both">Dupla (◄►)</option>
+                  <option value="none">Sem ponta (—)</option>
+                </select>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
@@ -1238,7 +1296,7 @@ function OrgChartEditor() {
                     toast('Conexão removida', 'success')
                   } catch (err) { console.error(err); toast('Erro ao remover conexão', 'error') }
                 }}
-              ><i className="fas fa-trash" /> Remover</button>
+              ><i className="fas fa-trash" /> Excluir</button>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn btn-secondary" onClick={() => setEditingEdge(null)}>Cancelar</button>
                 <button
@@ -1247,32 +1305,30 @@ function OrgChartEditor() {
                     if (!editingEdge) return
                     try {
                       await db.orgEdges.update(editingEdge.id, {
-                        label: editingEdge.label,
+                        label: editingEdge.label || undefined,
                         estilo: editingEdge.estilo,
                         cor: editingEdge.cor,
+                        espessura: editingEdge.espessura,
+                        tipoPonta: editingEdge.tipoPonta,
                       })
                       setEdges(curr => curr.map(ed => {
                         if (ed.id !== `edge:${editingEdge.id}`) return ed
-                        const cor = editingEdge.cor
-                        const espessura = (ed.style?.strokeWidth as number) || 2
-                        return {
-                          ...ed,
-                          label: editingEdge.label,
-                          style: {
-                            ...ed.style,
-                            stroke: cor,
-                            strokeDasharray: editingEdge.estilo === 'dashed' ? '6 4' : editingEdge.estilo === 'dotted' ? '2 3' : undefined,
-                          },
-                          markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
-                          labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: cor },
-                          data: { ...ed.data, cor, estilo: editingEdge.estilo, espessura },
-                        }
+                        return buildEdgeFromDb({
+                          id: editingEdge.id,
+                          source: ed.source,
+                          target: ed.target,
+                          label: editingEdge.label || undefined,
+                          cor: editingEdge.cor,
+                          estilo: editingEdge.estilo,
+                          espessura: editingEdge.espessura,
+                          tipoPonta: editingEdge.tipoPonta,
+                        })
                       }))
                       setEditingEdge(null)
                       toast('Conexão atualizada', 'success')
                     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
                   }}
-                >Salvar</button>
+                ><i className="fas fa-save" /> Salvar</button>
               </div>
             </div>
           </div>

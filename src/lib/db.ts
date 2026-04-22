@@ -23,7 +23,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   dataConcessao: 'data_concessao', nextDeadline: 'next_deadline',
   usSerialNumber: 'us_serial_number', usRegistration: 'us_registration',
   filingDate: 'filing_date', dueDate: 'due_date', proposedGoods: 'proposed_goods',
-  trademarkId: 'trademark_id',
+  trademarkId: 'trademark_id', tipoPonta: 'tipo_ponta',
   // Construction
   empresaNome: 'empresa_nome', folderId: 'folder_id', documentId: 'document_id',
 }
