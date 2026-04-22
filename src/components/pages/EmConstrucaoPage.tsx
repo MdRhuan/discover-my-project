@@ -9,10 +9,36 @@ import type { ConstructionFolder, ConstructionDocument, ConstructionFile, Empres
 
 const BUCKET = 'construction-documents'
 
+// Tipos de arquivo permitidos
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'txt', 'zip']
+const ALLOWED_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.webp,.svg,.txt,.zip'
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+
+function validateFile(file: File): string | null {
+  const ext = file.name.split('.').pop()?.toLowerCase() || ''
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return `Formato não suportado: .${ext}. Permitidos: ${ALLOWED_EXTENSIONS.join(', ')}`
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return `Arquivo muito grande (máx. 50MB): ${file.name}`
+  }
+  return null
+}
+
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+}
+
+function formatDate(iso?: string) {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return iso
+  }
 }
 
 function fileIconFor(name: string) {
