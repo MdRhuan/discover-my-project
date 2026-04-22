@@ -231,7 +231,7 @@ function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
         .replace(/\sheight="[^"]*"/i, '')
       return `<svg${cleaned} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`
     })
-    return s
+    return sanitizeSvg(s)
   }, [data.svgContent])
   const tint = data.cor || '#0f172a'
   return (
@@ -692,8 +692,8 @@ function OrgChartEditor() {
   }
 
   async function handleAddIconFromFile(file: File) {
-    const text = await file.text()
-    if (!text.trim().toLowerCase().includes('<svg')) {
+    const rawText = await file.text()
+    if (!rawText.trim().toLowerCase().includes('<svg')) {
       toast('Arquivo inválido: selecione um SVG', 'error'); return
     }
     if (text.length > 200000) {
