@@ -81,6 +81,7 @@ export function EmConstrucaoPage() {
   const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<number | null>(null)
 
   const [viewDocId, setViewDocId] = useState<number | null>(null)
+  const [viewUploading, setViewUploading] = useState(false)
 
   const load = useCallback(async () => {
     const [f, d, fi, e] = await Promise.all([
