@@ -371,7 +371,34 @@ export function FairsEventsPage() {
 
   return (
     <div className="page-content" style={{ background: "#FAFAF8", minHeight: "100vh" }}>
-      
+      {/* ── Header ── */}
+      <div className="page-header" style={{ marginBottom: 24 }}>
+        <div className="page-header-info" style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <span
+              style={{
+                background: "linear-gradient(135deg, #EC4899, #BE4B83)",
+                borderRadius: 10,
+                width: 34,
+                height: 34,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+                color: "#fff",
+                flexShrink: 0,
+              }}
+            >
+              ✧
+            </span>
+            <div className="page-header-title" style={{ fontSize: 22, fontWeight: 800, color: "#1A1714" }}>
+              sdfsdfdsfsdfsdf
+            </div>
+          </div>
+          <div className="page-header-sub" style={{ color: "#9C9690", marginLeft: 44 }}>
+            Tendências, lançamentos &amp; insights de beleza
+          </div>
+        </div>
         <button
           className="btn"
           onClick={openNew}
