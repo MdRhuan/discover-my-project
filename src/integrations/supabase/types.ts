@@ -91,6 +91,222 @@ export type Database = {
         }
         Relationships: []
       }
+      bens_moveis: {
+        Row: {
+          categoria: string | null
+          codigo_patrimonial: string | null
+          colaborador_responsavel: string | null
+          created_at: string
+          data_compra: string | null
+          fornecedor: string | null
+          foto_path: string | null
+          id: number
+          localizacao: string | null
+          marca: string | null
+          metodo_depreciacao: string | null
+          modelo: string | null
+          moeda: string | null
+          nome: string
+          notas: string | null
+          numero_serie: string | null
+          owner_id: string
+          setor_responsavel: string | null
+          status: string
+          updated_at: string
+          valor_aquisicao: number | null
+          valor_atual: number | null
+          vida_util: number | null
+        }
+        Insert: {
+          categoria?: string | null
+          codigo_patrimonial?: string | null
+          colaborador_responsavel?: string | null
+          created_at?: string
+          data_compra?: string | null
+          fornecedor?: string | null
+          foto_path?: string | null
+          id?: number
+          localizacao?: string | null
+          marca?: string | null
+          metodo_depreciacao?: string | null
+          modelo?: string | null
+          moeda?: string | null
+          nome: string
+          notas?: string | null
+          numero_serie?: string | null
+          owner_id?: string
+          setor_responsavel?: string | null
+          status?: string
+          updated_at?: string
+          valor_aquisicao?: number | null
+          valor_atual?: number | null
+          vida_util?: number | null
+        }
+        Update: {
+          categoria?: string | null
+          codigo_patrimonial?: string | null
+          colaborador_responsavel?: string | null
+          created_at?: string
+          data_compra?: string | null
+          fornecedor?: string | null
+          foto_path?: string | null
+          id?: number
+          localizacao?: string | null
+          marca?: string | null
+          metodo_depreciacao?: string | null
+          modelo?: string | null
+          moeda?: string | null
+          nome?: string
+          notas?: string | null
+          numero_serie?: string | null
+          owner_id?: string
+          setor_responsavel?: string | null
+          status?: string
+          updated_at?: string
+          valor_aquisicao?: number | null
+          valor_atual?: number | null
+          vida_util?: number | null
+        }
+        Relationships: []
+      }
+      bens_moveis_files: {
+        Row: {
+          arquivo_path: string
+          bem_id: number
+          categoria: string | null
+          created_at: string
+          data_upload: string | null
+          id: number
+          nome: string
+          owner_id: string
+          tamanho: string | null
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          arquivo_path: string
+          bem_id: number
+          categoria?: string | null
+          created_at?: string
+          data_upload?: string | null
+          id?: number
+          nome: string
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arquivo_path?: string
+          bem_id?: number
+          categoria?: string | null
+          created_at?: string
+          data_upload?: string | null
+          id?: number
+          nome?: string
+          owner_id?: string
+          tamanho?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bens_moveis_files_bem_id_fkey"
+            columns: ["bem_id"]
+            isOneToOne: false
+            referencedRelation: "bens_moveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bens_moveis_manutencoes: {
+        Row: {
+          bem_id: number
+          created_at: string
+          custo: number | null
+          data: string | null
+          descricao: string | null
+          id: number
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          bem_id: number
+          created_at?: string
+          custo?: number | null
+          data?: string | null
+          descricao?: string | null
+          id?: number
+          owner_id?: string
+          updated_at?: string
+        }
+        Update: {
+          bem_id?: number
+          created_at?: string
+          custo?: number | null
+          data?: string | null
+          descricao?: string | null
+          id?: number
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bens_moveis_manutencoes_bem_id_fkey"
+            columns: ["bem_id"]
+            isOneToOne: false
+            referencedRelation: "bens_moveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bens_moveis_transferencias: {
+        Row: {
+          bem_id: number
+          created_at: string
+          data: string | null
+          id: number
+          observacoes: string | null
+          owner_id: string
+          responsavel: string | null
+          setor_destino: string | null
+          setor_origem: string | null
+          updated_at: string
+        }
+        Insert: {
+          bem_id: number
+          created_at?: string
+          data?: string | null
+          id?: number
+          observacoes?: string | null
+          owner_id?: string
+          responsavel?: string | null
+          setor_destino?: string | null
+          setor_origem?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bem_id?: number
+          created_at?: string
+          data?: string | null
+          id?: number
+          observacoes?: string | null
+          owner_id?: string
+          responsavel?: string | null
+          setor_destino?: string | null
+          setor_origem?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bens_moveis_transferencias_bem_id_fkey"
+            columns: ["bem_id"]
+            isOneToOne: false
+            referencedRelation: "bens_moveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       config: {
         Row: {
           chave: string
