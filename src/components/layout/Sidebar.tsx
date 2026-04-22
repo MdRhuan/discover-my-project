@@ -72,8 +72,7 @@ const NAV_STRUCTURE: NavItemDef[] = [
   {
     key: 'sec-financeiro-patrimonio', type: 'section', label: { pt: 'Financeiro e Patrimônio', en: 'Finance & Assets' },
     children: [
-      { key: 'bensMoveis',     icon: 'fa-couch',         label: { pt: 'Bens Móveis',   en: 'Movable Assets' } },
-      { key: 'relatoriosPatr', icon: 'fa-chart-column',  label: { pt: 'Relatórios',    en: 'Reports'        } },
+      { key: 'bensMoveis', icon: 'fa-couch', label: { pt: 'Bens Móveis', en: 'Movable Assets' } },
     ],
   },
   {
