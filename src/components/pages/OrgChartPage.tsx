@@ -317,6 +317,8 @@ function OrgChartEditor() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null)
   const [editingEdge, setEditingEdge] = useState<{ id: number; label: string; estilo: string; cor: string } | null>(null)
+  const [connectMode, setConnectMode] = useState(false)
+  const [connectSourceId, setConnectSourceId] = useState<string | null>(null)
   const [addEmpresaModal, setAddEmpresaModal] = useState(false)
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null)
   const [editNodeId, setEditNodeId] = useState<string | null>(null)
