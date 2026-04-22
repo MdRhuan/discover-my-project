@@ -315,6 +315,7 @@ export type PageKey =
   | 'investments'
   | 'realEstate'
   | 'fixedExpenses'
+  | 'fairsEvents'
   | 'juridico'
   | 'acordoGaveta'
   | 'trademarks'
