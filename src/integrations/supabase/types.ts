@@ -456,6 +456,30 @@ export type Database = {
         }
         Relationships: []
       }
+      fair_notes: {
+        Row: {
+          created_at: string
+          data: Json
+          id: number
+          owner_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: number
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: number
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fiscal_docs: {
         Row: {
           ano: string | null
