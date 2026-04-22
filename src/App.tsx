@@ -86,7 +86,6 @@ function Shell() {
     case 'investments':    content = <InvestmentsPage />; break
     case 'realEstate':     content = <RealEstatePage />; break
     case 'bensMoveis':     content = <BensMoveisPage />; break
-    case 'bensImoveis':    content = <PlaceholderPage title="Bens Imóveis" subtitle="Em breve: gestão de imóveis." icon="fa-building-user" />; break
     case 'relatoriosPatr': content = <PlaceholderPage title="Relatórios" subtitle="Em breve: relatórios consolidados de patrimônio." icon="fa-chart-column" />; break
     case 'fixedExpenses':  content = <FixedExpensesPage />; break
     case 'fairsEvents':    content = <FairsEventsPage />; break
