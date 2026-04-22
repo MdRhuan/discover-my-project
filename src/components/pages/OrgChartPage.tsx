@@ -455,30 +455,7 @@ function OrgChartEditor() {
       } as Node
     }))
 
-    const flowEdges: Edge[] = e.map(ed => {
-      const cor = ed.cor || '#94a3b8'
-      const espessura = ed.espessura || 2
-      const estilo = ed.estilo || 'solid'
-      return {
-        id: `edge:${ed.id}`,
-        source: `company:${ed.sourceId}`,
-        target: `company:${ed.targetId}`,
-        type: 'smoothstep',
-        label: ed.label,
-        labelShowBg: true,
-        labelBgPadding: [6, 3] as [number, number],
-        labelBgBorderRadius: 6,
-        labelBgStyle: { fill: '#ffffff', stroke: cor, strokeWidth: 1, fillOpacity: 0.95 },
-        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
-        style: {
-          stroke: cor,
-          strokeWidth: espessura,
-          strokeDasharray: estilo === 'dashed' ? '6 4' : estilo === 'dotted' ? '2 3' : undefined,
-        },
-        markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
-        data: { cor, espessura, estilo },
-      }
-    })
+    const flowEdges: Edge[] = e.map(ed => buildEdgeFromDb(ed))
 
     setNodes([...shapeNodes, ...companyNodes, ...imageNodes, ...iconNodes, ...textNodes])
     setEdges(flowEdges)
