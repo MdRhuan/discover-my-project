@@ -261,6 +261,10 @@ export const db = {
   constructionFolders: makeTable<ConstructionFolder>('construction_folders'),
   constructionDocuments: makeTable<ConstructionDocument>('construction_documents'),
   constructionFiles: makeTable<ConstructionFile>('construction_files'),
+  bensMoveis: makeTable<BemMovel>('bens_moveis'),
+  bensMoveisFiles: makeTable<BemMovelFile>('bens_moveis_files'),
+  bensMoveisManutencoes: makeTable<BemMovelManutencao>('bens_moveis_manutencoes'),
+  bensMoveisTransferencias: makeTable<BemMovelTransferencia>('bens_moveis_transferencias'),
   config: configTable,
 }
 
