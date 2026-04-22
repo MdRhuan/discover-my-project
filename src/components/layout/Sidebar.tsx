@@ -70,6 +70,12 @@ const NAV_STRUCTURE: NavItemDef[] = [
     ],
   },
   {
+    key: 'sec-financeiro-patrimonio', type: 'section', label: { pt: 'Financeiro e Patrimônio', en: 'Finance & Assets' },
+    children: [
+      { key: 'bensMoveis', icon: 'fa-couch', label: { pt: 'Bens Móveis', en: 'Movable Assets' } },
+    ],
+  },
+  {
     key: 'sec-tools', type: 'section', label: { pt: 'Ferramentas', en: 'Tools' },
     children: [
       { key: 'backup',   icon: 'fa-database',     label: { pt: 'Backup',    en: 'Backup'    } },
