@@ -18,7 +18,18 @@ import ReactFlow, {
   type NodeChange,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
+import DOMPurify from 'dompurify'
 import { useApp } from '@/context/AppContext'
+
+// Sanitize SVG content to prevent XSS via event handlers like onload, onclick, etc.
+function sanitizeSvg(raw: string): string {
+  if (!raw) return ''
+  return DOMPurify.sanitize(raw, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: ['script', 'foreignObject'],
+    FORBID_ATTR: ['onload', 'onclick', 'onerror', 'onmouseover', 'onmouseout', 'onfocus', 'onblur'],
+  })
+}
 import { db } from '@/lib/db'
 import { supabase } from '@/integrations/supabase/client'
 import { Modal, ConfirmDialog } from '@/components/ui/Modal'
@@ -220,7 +231,7 @@ function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
         .replace(/\sheight="[^"]*"/i, '')
       return `<svg${cleaned} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`
     })
-    return s
+    return sanitizeSvg(s)
   }, [data.svgContent])
   const tint = data.cor || '#0f172a'
   return (
@@ -681,12 +692,16 @@ function OrgChartEditor() {
   }
 
   async function handleAddIconFromFile(file: File) {
-    const text = await file.text()
-    if (!text.trim().toLowerCase().includes('<svg')) {
+    const rawText = await file.text()
+    if (!rawText.trim().toLowerCase().includes('<svg')) {
       toast('Arquivo inválido: selecione um SVG', 'error'); return
     }
-    if (text.length > 200000) {
+    if (rawText.length > 200000) {
       toast('SVG muito grande (>200KB)', 'error'); return
+    }
+    const text = sanitizeSvg(rawText)
+    if (!text.trim().toLowerCase().includes('<svg')) {
+      toast('SVG inválido após sanitização', 'error'); return
     }
     const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
     try {
@@ -1532,7 +1547,7 @@ function EditIconModal({ node, onClose, onSave, onDelete }: {
   const [cor, setCor] = useState(node.data.cor || '#0f172a')
   const [rotacao, setRotacao] = useState(node.data.rotacao || 0)
   const [nome, setNome] = useState(node.data.nome || '')
-  const previewSvg = (node.data.svgContent || '').replace(/<svg([^>]*)>/i, (_m, a) => `<svg${String(a).replace(/\swidth="[^"]*"/i,'').replace(/\sheight="[^"]*"/i,'')} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`)
+  const previewSvg = sanitizeSvg((node.data.svgContent || '').replace(/<svg([^>]*)>/i, (_m, a) => `<svg${String(a).replace(/\swidth="[^"]*"/i,'').replace(/\sheight="[^"]*"/i,'')} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`))
   return (
     <Modal onClose={onClose} title="Editar ícone SVG">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
