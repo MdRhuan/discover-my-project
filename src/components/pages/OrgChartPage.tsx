@@ -1111,15 +1111,19 @@ function OrgChartEditor() {
             onEdgeMouseLeave={() => setHoveredEdgeId(null)}
             onEdgeClick={(_, ed) => {
               if (connectMode) return
-              if (window.confirm('Excluir esta conexão?')) deleteEdgeById(ed.id)
+              setEdges(curr => curr.map(x => ({ ...x, selected: x.id === ed.id })))
             }}
+            onPaneClick={() => setEdges(curr => curr.some(x => x.selected) ? curr.map(x => ({ ...x, selected: false })) : curr)}
             onEdgeDoubleClick={(_, ed) => {
               const dbId = parseId(ed.id).dbId
+              const d = ed.data || {}
               setEditingEdge({
                 id: dbId,
-                label: (ed.label as string) || '',
-                estilo: (ed.data?.estilo as string) || 'solid',
-                cor: (ed.data?.cor as string) || '#94a3b8',
+                label: (ed.label as string) || (d.label as string) || '',
+                estilo: (d.estilo as string) || 'solid',
+                cor: (d.cor as string) || '#94a3b8',
+                espessura: (d.espessura as number) || 2,
+                tipoPonta: (d.tipoPonta as 'one' | 'both' | 'none') || 'one',
               })
             }}
           >
