@@ -1096,7 +1096,7 @@ function OrgChartEditor() {
         ) : (
           <div style={{ width: '100%', height: '100%', cursor: connectMode ? 'crosshair' : undefined }}>
           <ReactFlow
-            nodes={nodes} edges={displayedEdges}
+            nodes={displayedNodes} edges={displayedEdges}
             onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
             onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
             multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
