@@ -1076,7 +1076,23 @@ function OrgChartEditor() {
             }}
           />
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
-          <button className="btn btn-secondary" onClick={() => { const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento', 'info'); return } setEditNodeId(sel.id) }} title="Editar elemento selecionado">
+          <button className="btn btn-secondary" onClick={() => {
+            const selEdge = edges.find(e => e.selected)
+            if (selEdge) {
+              const dbId = parseId(selEdge.id).dbId
+              const d = selEdge.data || {}
+              setEditingEdge({
+                id: dbId,
+                label: (selEdge.label as string) || (d.label as string) || '',
+                estilo: (d.estilo as string) || 'solid',
+                cor: (d.cor as string) || '#94a3b8',
+                espessura: (d.espessura as number) || 2,
+                tipoPonta: (d.tipoPonta as 'one' | 'both' | 'none') || 'one',
+              })
+              return
+            }
+            const sel = nodes.find(n => n.selected); if (!sel) { toast('Selecione um elemento ou seta', 'info'); return } setEditNodeId(sel.id)
+          }} title="Editar elemento ou seta selecionada">
             <i className="fas fa-pen" /> Editar
           </button>
           <button className="btn btn-secondary" onClick={duplicateSelection} title="Duplicar (Ctrl+D)">
