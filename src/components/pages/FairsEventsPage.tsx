@@ -392,9 +392,6 @@ export function FairsEventsPage() {
               ✧
             </span>
           </div>
-          <div className="page-header-sub" style={{ color: "#9C9690", marginLeft: 44 }}>
-            Tendências, lançamentos &amp; insights de beleza
-          </div>
         </div>
         <button
           className="btn"
