@@ -802,14 +802,14 @@ function DetailsView(p: DetailsProps) {
       {/* TRANSFERÊNCIAS */}
       {tab === 'transf' && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr auto', gap: 8, marginBottom: 8 }}>
-            <input type="date" value={p.transfForm.data} onChange={e => p.setTransfForm({ ...p.transfForm, data: e.target.value })} />
-            <input placeholder="Setor origem" value={p.transfForm.setorOrigem} onChange={e => p.setTransfForm({ ...p.transfForm, setorOrigem: e.target.value })} />
-            <input placeholder="Setor destino *" value={p.transfForm.setorDestino} onChange={e => p.setTransfForm({ ...p.transfForm, setorDestino: e.target.value })} />
-            <input placeholder="Responsável" value={p.transfForm.responsavel} onChange={e => p.setTransfForm({ ...p.transfForm, responsavel: e.target.value })} />
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr 1fr auto', gap: 8, marginBottom: 8 }}>
+            <input className="form-input" type="date" value={p.transfForm.data} onChange={e => p.setTransfForm({ ...p.transfForm, data: e.target.value })} />
+            <input className="form-input" placeholder="Setor origem" value={p.transfForm.setorOrigem} onChange={e => p.setTransfForm({ ...p.transfForm, setorOrigem: e.target.value })} />
+            <input className="form-input" placeholder="Setor destino *" value={p.transfForm.setorDestino} onChange={e => p.setTransfForm({ ...p.transfForm, setorDestino: e.target.value })} />
+            <input className="form-input" placeholder="Responsável" value={p.transfForm.responsavel} onChange={e => p.setTransfForm({ ...p.transfForm, responsavel: e.target.value })} />
             <button className="btn btn-primary" onClick={p.addTransferencia}><i className="fas fa-plus" /> Registrar</button>
           </div>
-          <input style={{ width: '100%', marginBottom: 12 }} placeholder="Observações" value={p.transfForm.observacoes} onChange={e => p.setTransfForm({ ...p.transfForm, observacoes: e.target.value })} />
+          <input className="form-input" style={{ marginBottom: 12 }} placeholder="Observações" value={p.transfForm.observacoes} onChange={e => p.setTransfForm({ ...p.transfForm, observacoes: e.target.value })} />
           {p.transfs.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Nenhuma transferência registrada</div>
           ) : (
