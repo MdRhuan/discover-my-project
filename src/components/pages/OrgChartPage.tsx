@@ -755,22 +755,20 @@ function OrgChartEditor() {
     if (src.kind !== 'company' || tgt.kind !== 'company') {
       toast('Conexões só entre blocos de empresa/livre', 'info'); return
     }
+    if (src.dbId === tgt.dbId) { toast('Origem e destino iguais', 'info'); return }
     try {
       const id = await db.orgEdges.add({
-        sourceId: src.dbId, targetId: tgt.dbId, cor: '#94a3b8', espessura: 2, estilo: 'solid',
+        sourceId: src.dbId, targetId: tgt.dbId,
+        cor: '#94a3b8', espessura: 2, estilo: 'solid', tipoPonta: 'one',
       } as OrgEdge)
-      setEdges(curr => addEdge({
-        ...conn,
-        id: `edge:${id}`,
-        type: 'smoothstep',
-        style: { stroke: '#94a3b8', strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 18, height: 18 },
-        labelBgPadding: [6, 3],
-        labelBgBorderRadius: 6,
-        labelBgStyle: { fill: '#ffffff', stroke: '#94a3b8', strokeWidth: 1, fillOpacity: 0.95 },
-        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
-        data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
-      }, curr))
+      const newEdge = buildEdgeFromDb({
+        id, source: conn.source, target: conn.target,
+        cor: '#94a3b8', espessura: 2, estilo: 'solid', tipoPonta: 'one',
+      })
+      setEdges(curr => [...curr, newEdge])
+      // Abre o painel de personalização imediatamente
+      setEditingEdge({ id, label: '', estilo: 'solid', cor: '#94a3b8', espessura: 2, tipoPonta: 'one' })
+      toast('Conexão criada · personalize abaixo', 'success')
     } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
   }, [setEdges, toast])
 
