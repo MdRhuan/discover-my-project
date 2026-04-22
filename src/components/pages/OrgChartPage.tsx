@@ -1007,10 +1007,12 @@ function OrgChartEditor() {
           </div>
         ) : (
           <ReactFlow
-            nodes={nodes} edges={edges}
+            nodes={nodes} edges={displayedEdges}
             onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
             onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
             multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
+            onEdgeMouseEnter={(_, ed) => setHoveredEdgeId(ed.id)}
+            onEdgeMouseLeave={() => setHoveredEdgeId(null)}
           >
             <Background gap={20} size={1} color="#e2e8f0" />
             <Controls />
