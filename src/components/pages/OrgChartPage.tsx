@@ -943,7 +943,15 @@ function OrgChartEditor() {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
-      if (e.key === 'Escape' && connectMode) { e.preventDefault(); exitConnectMode(); return }
+      if (e.key === 'Escape') {
+        if (connectMode) { e.preventDefault(); exitConnectMode(); return }
+        if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) {
+          e.preventDefault()
+          setNodes(c => c.map(n => n.selected ? { ...n, selected: false } : n))
+          setEdges(c => c.map(ed => ed.selected ? { ...ed, selected: false } : ed))
+          return
+        }
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) { e.preventDefault(); deleteSelection() }
       }
