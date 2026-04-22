@@ -1030,7 +1030,7 @@ function OrgChartEditor() {
           <div className="page-header-sub">
             {connectMode
               ? (connectSourceId ? '🔗 Modo Conectar · clique no nó de DESTINO (ESC para cancelar)' : '🔗 Modo Conectar · clique no nó de ORIGEM (ESC para cancelar)')
-              : 'Arraste · Conecte das bordas · Clique numa seta para excluir · Duplo clique edita seta'}
+              : 'Arraste das bordas dos nós para criar setas · Clique para selecionar · Duplo clique para editar · ESC desseleciona'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
