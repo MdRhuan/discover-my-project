@@ -10,6 +10,7 @@ import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
   NodeResizer,
+  MarkerType,
   type Node,
   type Edge,
   type Connection,
@@ -314,6 +315,8 @@ function OrgChartEditor() {
   const [loading, setLoading] = useState(true)
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null)
+  const [editingEdge, setEditingEdge] = useState<{ id: number; label: string; estilo: string; cor: string } | null>(null)
   const [addEmpresaModal, setAddEmpresaModal] = useState(false)
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null)
   const [editNodeId, setEditNodeId] = useState<string | null>(null)
@@ -450,18 +453,30 @@ function OrgChartEditor() {
       } as Node
     }))
 
-    const flowEdges: Edge[] = e.map(ed => ({
-      id: `edge:${ed.id}`,
-      source: `company:${ed.sourceId}`,
-      target: `company:${ed.targetId}`,
-      label: ed.label,
-      style: {
-        stroke: ed.cor || '#94a3b8',
-        strokeWidth: ed.espessura || 2,
-        strokeDasharray: ed.estilo === 'dashed' ? '6 4' : ed.estilo === 'dotted' ? '2 3' : undefined,
-      },
-      data: { cor: ed.cor || '#94a3b8', espessura: ed.espessura || 2, estilo: ed.estilo || 'solid' },
-    }))
+    const flowEdges: Edge[] = e.map(ed => {
+      const cor = ed.cor || '#94a3b8'
+      const espessura = ed.espessura || 2
+      const estilo = ed.estilo || 'solid'
+      return {
+        id: `edge:${ed.id}`,
+        source: `company:${ed.sourceId}`,
+        target: `company:${ed.targetId}`,
+        type: 'smoothstep',
+        label: ed.label,
+        labelShowBg: true,
+        labelBgPadding: [6, 3] as [number, number],
+        labelBgBorderRadius: 6,
+        labelBgStyle: { fill: '#ffffff', stroke: cor, strokeWidth: 1, fillOpacity: 0.95 },
+        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
+        style: {
+          stroke: cor,
+          strokeWidth: espessura,
+          strokeDasharray: estilo === 'dashed' ? '6 4' : estilo === 'dotted' ? '2 3' : undefined,
+        },
+        markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
+        data: { cor, espessura, estilo },
+      }
+    })
 
     setNodes([...shapeNodes, ...companyNodes, ...imageNodes, ...iconNodes, ...textNodes])
     setEdges(flowEdges)
@@ -534,6 +549,23 @@ function OrgChartEditor() {
   }, [onNodesChange, scheduleSave])
 
   const wrappedEdgesChange = useCallback((changes: EdgeChange[]) => { onEdgesChange(changes) }, [onEdgesChange])
+
+  // Edges com destaque ao passar o mouse
+  const displayedEdges = useMemo<Edge[]>(() => {
+    const HOVER_COLOR = '#2563eb'
+    return edges.map(ed => {
+      if (ed.id !== hoveredEdgeId) return ed
+      const baseStroke = (ed.style?.strokeWidth as number) || 2
+      return {
+        ...ed,
+        zIndex: 10,
+        style: { ...ed.style, stroke: HOVER_COLOR, strokeWidth: baseStroke + 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: HOVER_COLOR, width: 20, height: 20 },
+        labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: HOVER_COLOR },
+        labelStyle: { ...(ed.labelStyle || {}), fill: HOVER_COLOR },
+      }
+    })
+  }, [edges, hoveredEdgeId])
 
   // ============ Add elements ============
   async function handleAddEmpresa() {
@@ -711,8 +743,15 @@ function OrgChartEditor() {
         sourceId: src.dbId, targetId: tgt.dbId, cor: '#94a3b8', espessura: 2, estilo: 'solid',
       } as OrgEdge)
       setEdges(curr => addEdge({
-        ...conn, id: `edge:${id}`,
+        ...conn,
+        id: `edge:${id}`,
+        type: 'smoothstep',
         style: { stroke: '#94a3b8', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', width: 18, height: 18 },
+        labelBgPadding: [6, 3],
+        labelBgBorderRadius: 6,
+        labelBgStyle: { fill: '#ffffff', stroke: '#94a3b8', strokeWidth: 1, fillOpacity: 0.95 },
+        labelStyle: { fill: '#0f172a', fontWeight: 600, fontSize: 12 },
         data: { cor: '#94a3b8', espessura: 2, estilo: 'solid' },
       }, curr))
     } catch (err) { console.error(err); toast('Erro ao conectar', 'error') }
@@ -969,10 +1008,21 @@ function OrgChartEditor() {
           </div>
         ) : (
           <ReactFlow
-            nodes={nodes} edges={edges}
+            nodes={nodes} edges={displayedEdges}
             onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
             onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
             multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
+            onEdgeMouseEnter={(_, ed) => setHoveredEdgeId(ed.id)}
+            onEdgeMouseLeave={() => setHoveredEdgeId(null)}
+            onEdgeDoubleClick={(_, ed) => {
+              const dbId = parseId(ed.id).dbId
+              setEditingEdge({
+                id: dbId,
+                label: (ed.label as string) || '',
+                estilo: (ed.data?.estilo as string) || 'solid',
+                cor: (ed.data?.cor as string) || '#94a3b8',
+              })
+            }}
           >
             <Background gap={20} size={1} color="#e2e8f0" />
             <Controls />
@@ -1042,6 +1092,96 @@ function OrgChartEditor() {
           }}
           onCancel={() => setConfirmDelete(null)}
         />
+      )}
+
+      {editingEdge && (
+        <Modal onClose={() => setEditingEdge(null)} title="Editar conexão">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label className="form-label">Percentual / rótulo (ex: 51%)</label>
+              <input
+                className="form-input"
+                value={editingEdge.label}
+                onChange={e => setEditingEdge(s => s ? { ...s, label: e.target.value } : s)}
+                placeholder="51%"
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label className="form-label">Tipo de controle</label>
+                <select
+                  className="form-input"
+                  value={editingEdge.estilo}
+                  onChange={e => setEditingEdge(s => s ? { ...s, estilo: e.target.value } : s)}
+                >
+                  <option value="solid">Direto (linha sólida)</option>
+                  <option value="dashed">Indireto (tracejada)</option>
+                  <option value="dotted">Pontilhada</option>
+                </select>
+              </div>
+              <div style={{ width: 110 }}>
+                <label className="form-label">Cor</label>
+                <input
+                  type="color"
+                  className="form-input"
+                  style={{ height: 38, padding: 2 }}
+                  value={editingEdge.cor}
+                  onChange={e => setEditingEdge(s => s ? { ...s, cor: e.target.value } : s)}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 8 }}>
+              <button
+                className="btn btn-danger"
+                onClick={async () => {
+                  if (!editingEdge) return
+                  try {
+                    await db.orgEdges.delete(editingEdge.id)
+                    setEdges(c => c.filter(ed => ed.id !== `edge:${editingEdge.id}`))
+                    setEditingEdge(null)
+                    toast('Conexão removida', 'success')
+                  } catch (err) { console.error(err); toast('Erro ao remover conexão', 'error') }
+                }}
+              ><i className="fas fa-trash" /> Remover</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-secondary" onClick={() => setEditingEdge(null)}>Cancelar</button>
+                <button
+                  className="btn btn-primary"
+                  onClick={async () => {
+                    if (!editingEdge) return
+                    try {
+                      await db.orgEdges.update(editingEdge.id, {
+                        label: editingEdge.label,
+                        estilo: editingEdge.estilo,
+                        cor: editingEdge.cor,
+                      })
+                      setEdges(curr => curr.map(ed => {
+                        if (ed.id !== `edge:${editingEdge.id}`) return ed
+                        const cor = editingEdge.cor
+                        const espessura = (ed.style?.strokeWidth as number) || 2
+                        return {
+                          ...ed,
+                          label: editingEdge.label,
+                          style: {
+                            ...ed.style,
+                            stroke: cor,
+                            strokeDasharray: editingEdge.estilo === 'dashed' ? '6 4' : editingEdge.estilo === 'dotted' ? '2 3' : undefined,
+                          },
+                          markerEnd: { type: MarkerType.ArrowClosed, color: cor, width: 18, height: 18 },
+                          labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: cor },
+                          data: { ...ed.data, cor, estilo: editingEdge.estilo, espessura },
+                        }
+                      }))
+                      setEditingEdge(null)
+                      toast('Conexão atualizada', 'success')
+                    } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
+                  }}
+                >Salvar</button>
+              </div>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )
