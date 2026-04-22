@@ -456,6 +456,30 @@ export type Database = {
         }
         Relationships: []
       }
+      fair_notes: {
+        Row: {
+          created_at: string
+          data: Json
+          id: number
+          owner_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: number
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: number
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fiscal_docs: {
         Row: {
           ano: string | null
@@ -715,6 +739,7 @@ export type Database = {
           owner_id: string
           source_id: number
           target_id: number
+          tipo_ponta: string | null
           updated_at: string
         }
         Insert: {
@@ -728,6 +753,7 @@ export type Database = {
           owner_id?: string
           source_id: number
           target_id: number
+          tipo_ponta?: string | null
           updated_at?: string
         }
         Update: {
@@ -741,6 +767,7 @@ export type Database = {
           owner_id?: string
           source_id?: number
           target_id?: number
+          tipo_ponta?: string | null
           updated_at?: string
         }
         Relationships: [

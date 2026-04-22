@@ -69,7 +69,16 @@ function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
         boxShadow: selected ? '0 0 0 2px hsl(var(--ring))' : '0 2px 8px rgba(0,0,0,0.08)',
       }}
     >
-      <Handle type="target" position={Position.Top} style={{ background: borda }} />
+      {/* Handles em todos os lados — cada um funciona como source E target */}
+      {(['top','bottom','left','right'] as const).map(side => {
+        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
+        return (
+          <div key={side}>
+            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: borda, width: 10, height: 10 }} />
+            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: borda, width: 10, height: 10, opacity: 0 }} />
+          </div>
+        )
+      })}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         <i className={`fas ${ICON_MAP[data.icon || 'empresa'] || 'fa-building'}`} style={{ color: borda, fontSize: 18 }} />
         {data.empresaId ? (
@@ -99,7 +108,6 @@ function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
         {data.cnpj && <span>CNPJ: {data.cnpj}</span>}
         {data.ein && <span>EIN: {data.ein}</span>}
       </div>
-      <Handle type="source" position={Position.Bottom} style={{ background: borda }} />
     </div>
   )
 }
