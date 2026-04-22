@@ -931,6 +931,7 @@ function OrgChartEditor() {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+      if (e.key === 'Escape' && connectMode) { e.preventDefault(); exitConnectMode(); return }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (nodes.some(n => n.selected) || edges.some(ed => ed.selected)) { e.preventDefault(); deleteSelection() }
       }
@@ -940,7 +941,7 @@ function OrgChartEditor() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nodes, edges, deleteSelection, duplicateSelection])
+  }, [nodes, edges, deleteSelection, duplicateSelection, connectMode, exitConnectMode])
 
   // ============ Edit modal ============
   const editNode = useMemo(() => nodes.find(n => n.id === editNodeId), [nodes, editNodeId])
