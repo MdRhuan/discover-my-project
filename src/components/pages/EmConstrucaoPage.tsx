@@ -9,10 +9,36 @@ import type { ConstructionFolder, ConstructionDocument, ConstructionFile, Empres
 
 const BUCKET = 'construction-documents'
 
+// Tipos de arquivo permitidos
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'txt', 'zip']
+const ALLOWED_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.webp,.svg,.txt,.zip'
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+
+function validateFile(file: File): string | null {
+  const ext = file.name.split('.').pop()?.toLowerCase() || ''
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return `Formato não suportado: .${ext}. Permitidos: ${ALLOWED_EXTENSIONS.join(', ')}`
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return `Arquivo muito grande (máx. 50MB): ${file.name}`
+  }
+  return null
+}
+
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+}
+
+function formatDate(iso?: string) {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return iso
+  }
 }
 
 function fileIconFor(name: string) {
@@ -55,6 +81,7 @@ export function EmConstrucaoPage() {
   const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<number | null>(null)
 
   const [viewDocId, setViewDocId] = useState<number | null>(null)
+  const [viewUploading, setViewUploading] = useState(false)
 
   const load = useCallback(async () => {
     const [f, d, fi, e] = await Promise.all([
@@ -195,7 +222,13 @@ export function EmConstrucaoPage() {
   }
 
   async function uploadFilesForDoc(documentId: number, list: File[]) {
+    const errors: string[] = []
     for (const file of list) {
+      const validationError = validateFile(file)
+      if (validationError) {
+        errors.push(validationError)
+        continue
+      }
       // Sanitiza o nome do arquivo: remove acentos e troca caracteres inválidos
       const safeName = file.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -211,16 +244,45 @@ export function EmConstrucaoPage() {
         })
       if (upErr) {
         console.error('[EmConstrucao] Erro storage.upload:', upErr)
-        throw upErr
+        errors.push(`${file.name}: ${upErr.message}`)
+        continue
       }
-      await db.constructionFiles.add({
-        documentId,
-        nome: file.name,
-        arquivoPath: path,
-        tipo: file.type || 'application/octet-stream',
-        tamanho: formatSize(file.size),
-        dataUpload: new Date().toISOString(),
-      })
+      try {
+        await db.constructionFiles.add({
+          documentId,
+          nome: file.name,
+          arquivoPath: path,
+          tipo: file.type || 'application/octet-stream',
+          tamanho: formatSize(file.size),
+          dataUpload: new Date().toISOString(),
+        })
+      } catch (dbErr) {
+        console.error('[EmConstrucao] Erro DB add:', dbErr)
+        // Tenta rollback do arquivo no storage
+        await supabase.storage.from(BUCKET).remove([path]).catch(() => {})
+        errors.push(`${file.name}: erro ao registrar no banco`)
+      }
+    }
+    if (errors.length > 0) {
+      throw new Error(errors.join(' | '))
+    }
+  }
+
+  async function uploadDirectToDoc(documentId: number, fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return
+    setViewUploading(true)
+    try {
+      await uploadFilesForDoc(documentId, Array.from(fileList))
+      await load()
+      toast(`${fileList.length} arquivo(s) enviado(s)!`, 'success')
+    } catch (err) {
+      console.error('[EmConstrucao] Falha upload direto:', err)
+      const msg = err instanceof Error ? err.message : 'Erro no upload'
+      toast(msg, 'error')
+      // Recarrega mesmo em caso de erro parcial — alguns arquivos podem ter funcionado
+      await load()
+    } finally {
+      setViewUploading(false)
     }
   }
 
@@ -679,7 +741,12 @@ export function EmConstrucaoPage() {
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
-              <label className="form-label">Arquivos {editingDocId ? '(adicionar mais)' : ''}</label>
+              <label className="form-label">
+                Arquivos {editingDocId ? '(adicionar mais)' : ''}
+                <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: 6, fontSize: 11 }}>
+                  PDF, DOCX, XLSX, PNG, JPG, ZIP — máx. 50MB cada
+                </span>
+              </label>
               <label
                 htmlFor="construction-file-input"
                 style={{
@@ -696,9 +763,21 @@ export function EmConstrucaoPage() {
                 id="construction-file-input"
                 type="file"
                 multiple
+                accept={ALLOWED_ACCEPT}
                 style={{ display: 'none' }}
                 onChange={e => {
-                  if (e.target.files) setPendingFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                  if (e.target.files) {
+                    const incoming = Array.from(e.target.files)
+                    const valid: File[] = []
+                    const errors: string[] = []
+                    for (const f of incoming) {
+                      const err = validateFile(f)
+                      if (err) errors.push(err)
+                      else valid.push(f)
+                    }
+                    if (errors.length > 0) toast(errors[0], 'error')
+                    if (valid.length > 0) setPendingFiles(prev => [...prev, ...valid])
+                  }
                   e.target.value = ''
                 }}
               />
@@ -757,8 +836,37 @@ export function EmConstrucaoPage() {
             </div>
 
             <div>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8 }}>
-                Arquivos ({viewingDocFiles.length})
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  Arquivos ({viewingDocFiles.length})
+                </div>
+                <label
+                  htmlFor="construction-view-file-input"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 8, cursor: viewUploading ? 'wait' : 'pointer',
+                    background: 'var(--brand)', color: '#fff',
+                    fontSize: 12, fontWeight: 600, opacity: viewUploading ? 0.6 : 1,
+                  }}
+                >
+                  <i className={`fas ${viewUploading ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'}`} />
+                  {viewUploading ? 'Enviando…' : 'Adicionar arquivo'}
+                </label>
+                <input
+                  id="construction-view-file-input"
+                  type="file"
+                  multiple
+                  accept={ALLOWED_ACCEPT}
+                  disabled={viewUploading}
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    void uploadDirectToDoc(viewingDoc.id!, e.target.files)
+                    e.target.value = ''
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Permitidos: PDF, DOCX, XLSX, PNG, JPG, ZIP — máx. 50MB cada
               </div>
               {viewingDocFiles.length === 0 ? (
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Nenhum arquivo anexado.</div>
@@ -775,7 +883,9 @@ export function EmConstrucaoPage() {
                         <i className={`fas ${ic.icon}`} style={{ color: ic.color, fontSize: 16 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.nome}</div>
-                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{f.tamanho}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                            {f.tamanho} · enviado em {formatDate(f.dataUpload)}
+                          </div>
                         </div>
                         <button className="btn-icon" onClick={() => downloadFile(f)} title="Baixar"><i className="fas fa-download" /></button>
                         <button className="btn-icon danger" onClick={() => deleteFile(f)} title="Excluir"><i className="fas fa-trash" /></button>
