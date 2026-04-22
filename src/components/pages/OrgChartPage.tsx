@@ -1026,6 +1026,15 @@ function OrgChartEditor() {
           <button className="btn btn-secondary" onClick={handleAddShape} title="Adicionar caixa/borda para agrupar">
             <i className="fas fa-vector-square" /> Caixa
           </button>
+          {connectMode ? (
+            <button className="btn btn-danger" onClick={exitConnectMode} title="Cancelar modo conectar (ESC)">
+              <i className="fas fa-times" /> Cancelar
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={() => { setConnectMode(true); setConnectSourceId(null); toast('Clique no nó de origem', 'info') }} title="Desenhar uma seta entre dois nós">
+              <i className="fas fa-link" /> Conectar
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()} title="Adicionar ícone SVG (upload)">
             <i className="fas fa-icons" /> Ícone SVG
           </button>
