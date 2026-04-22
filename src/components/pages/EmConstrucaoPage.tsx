@@ -222,7 +222,13 @@ export function EmConstrucaoPage() {
   }
 
   async function uploadFilesForDoc(documentId: number, list: File[]) {
+    const errors: string[] = []
     for (const file of list) {
+      const validationError = validateFile(file)
+      if (validationError) {
+        errors.push(validationError)
+        continue
+      }
       // Sanitiza o nome do arquivo: remove acentos e troca caracteres inválidos
       const safeName = file.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -238,16 +244,45 @@ export function EmConstrucaoPage() {
         })
       if (upErr) {
         console.error('[EmConstrucao] Erro storage.upload:', upErr)
-        throw upErr
+        errors.push(`${file.name}: ${upErr.message}`)
+        continue
       }
-      await db.constructionFiles.add({
-        documentId,
-        nome: file.name,
-        arquivoPath: path,
-        tipo: file.type || 'application/octet-stream',
-        tamanho: formatSize(file.size),
-        dataUpload: new Date().toISOString(),
-      })
+      try {
+        await db.constructionFiles.add({
+          documentId,
+          nome: file.name,
+          arquivoPath: path,
+          tipo: file.type || 'application/octet-stream',
+          tamanho: formatSize(file.size),
+          dataUpload: new Date().toISOString(),
+        })
+      } catch (dbErr) {
+        console.error('[EmConstrucao] Erro DB add:', dbErr)
+        // Tenta rollback do arquivo no storage
+        await supabase.storage.from(BUCKET).remove([path]).catch(() => {})
+        errors.push(`${file.name}: erro ao registrar no banco`)
+      }
+    }
+    if (errors.length > 0) {
+      throw new Error(errors.join(' | '))
+    }
+  }
+
+  async function uploadDirectToDoc(documentId: number, fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return
+    setViewUploading(true)
+    try {
+      await uploadFilesForDoc(documentId, Array.from(fileList))
+      await load()
+      toast(`${fileList.length} arquivo(s) enviado(s)!`, 'success')
+    } catch (err) {
+      console.error('[EmConstrucao] Falha upload direto:', err)
+      const msg = err instanceof Error ? err.message : 'Erro no upload'
+      toast(msg, 'error')
+      // Recarrega mesmo em caso de erro parcial — alguns arquivos podem ter funcionado
+      await load()
+    } finally {
+      setViewUploading(false)
     }
   }
 
