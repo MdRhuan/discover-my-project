@@ -514,7 +514,8 @@ export function BensMoveisPage() {
                           : '—'}
                       </td>
                       <td>
-                        <span style={{ padding: '3px 8px', borderRadius: 999, background: sm.bg, color: sm.color, fontSize: 11, fontWeight: 600 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 9px', borderRadius: 999, background: sm.bg, color: sm.color, fontSize: 11, fontWeight: 600, border: `1px solid ${sm.color}33` }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: sm.color }} />
                           {sm.label}
                         </span>
                       </td>
