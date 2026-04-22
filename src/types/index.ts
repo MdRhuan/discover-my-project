@@ -299,6 +299,58 @@ export interface ConstructionFile {
   dataUpload?: string
 }
 
+export interface BemMovel {
+  id?: number
+  nome: string
+  codigoPatrimonial?: string
+  numeroSerie?: string
+  marca?: string
+  modelo?: string
+  categoria?: string
+  fornecedor?: string
+  dataCompra?: string
+  valorAquisicao?: number
+  valorAtual?: number
+  moeda?: 'BRL' | 'USD'
+  setorResponsavel?: string
+  colaboradorResponsavel?: string
+  localizacao?: string
+  vidaUtil?: number
+  metodoDepreciacao?: string
+  status?: 'ativo' | 'manutencao' | 'inativo' | 'descartado'
+  fotoPath?: string
+  notas?: string
+}
+
+export interface BemMovelFile {
+  id?: number
+  bemId: number
+  nome: string
+  arquivoPath: string
+  tipo?: string
+  tamanho?: string
+  categoria?: string
+  dataUpload?: string
+}
+
+export interface BemMovelManutencao {
+  id?: number
+  bemId: number
+  data?: string
+  descricao?: string
+  custo?: number
+}
+
+export interface BemMovelTransferencia {
+  id?: number
+  bemId: number
+  data?: string
+  setorOrigem?: string
+  setorDestino?: string
+  responsavel?: string
+  observacoes?: string
+}
+
 export type PageKey =
   | 'dashboard'
   | 'tasks'
