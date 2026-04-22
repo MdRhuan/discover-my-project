@@ -773,10 +773,10 @@ function DetailsView(p: DetailsProps) {
       {/* MANUTENÇÕES */}
       {tab === 'manut' && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 140px auto', gap: 8, marginBottom: 12 }}>
-            <input type="date" value={p.manutForm.data} onChange={e => p.setManutForm({ ...p.manutForm, data: e.target.value })} />
-            <input placeholder="Descrição da manutenção" value={p.manutForm.descricao} onChange={e => p.setManutForm({ ...p.manutForm, descricao: e.target.value })} />
-            <input type="number" placeholder="Custo" value={p.manutForm.custo || ''} onChange={e => p.setManutForm({ ...p.manutForm, custo: Number(e.target.value) })} />
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 160px auto', gap: 8, marginBottom: 12 }}>
+            <input className="form-input" type="date" value={p.manutForm.data} onChange={e => p.setManutForm({ ...p.manutForm, data: e.target.value })} />
+            <input className="form-input" placeholder="Descrição da manutenção" value={p.manutForm.descricao} onChange={e => p.setManutForm({ ...p.manutForm, descricao: e.target.value })} />
+            <input className="form-input" type="number" placeholder="Custo" value={p.manutForm.custo || ''} onChange={e => p.setManutForm({ ...p.manutForm, custo: Number(e.target.value) })} />
             <button className="btn btn-primary" onClick={p.addManutencao}><i className="fas fa-plus" /> Adicionar</button>
           </div>
           {p.manuts.length === 0 ? (
