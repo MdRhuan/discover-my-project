@@ -94,13 +94,13 @@ function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
         lineStyle={{ borderColor: borda }}
         handleStyle={{ background: borda, width: 8, height: 8 }}
       />
-      {/* Handles em todos os lados — cada um funciona como source E target */}
+      {/* Handles invisíveis em todos os lados — aparecem só no hover via CSS global */}
       {(['top','bottom','left','right'] as const).map(side => {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
         return (
           <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: borda, width: 10, height: 10 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: borda, width: 10, height: 10, opacity: 0 }} />
+            <Handle id={`${side}-s`} type="source" position={pos} className="org-handle" style={{ ['--handle-color' as string]: borda }} />
+            <Handle id={`${side}-t`} type="target" position={pos} className="org-handle org-handle-target" style={{ ['--handle-color' as string]: borda }} />
           </div>
         )
       })}
@@ -175,15 +175,7 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
       >
         {data.conteudo || 'Texto'}
       </div>
-      {(['top','bottom','left','right'] as const).map(side => {
-        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
-        return (
-          <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: '#3b82f6', width: 8, height: 8 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: '#3b82f6', width: 8, height: 8, opacity: 0 }} />
-          </div>
-        )
-      })}
+      {/* Texto: sem handles (não conectável) */}
     </>
   )
 }
@@ -230,14 +222,14 @@ function ShapeNode({ id, data, selected }: NodeProps<ShapeNodeData>) {
       >
         {data.rotulo}
       </div>
-      {/* Handles em todos os lados — permite conectar linhas à caixa */}
+      {/* Handles invisíveis em todos os lados */}
       {(['top','bottom','left','right'] as const).map(side => {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
         const borda = data.corBorda || '#94a3b8'
         return (
           <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: borda, width: 10, height: 10 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: borda, width: 10, height: 10, opacity: 0 }} />
+            <Handle id={`${side}-s`} type="source" position={pos} className="org-handle" style={{ ['--handle-color' as string]: borda }} />
+            <Handle id={`${side}-t`} type="target" position={pos} className="org-handle org-handle-target" style={{ ['--handle-color' as string]: borda }} />
           </div>
         )
       })}
@@ -305,8 +297,8 @@ function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
         return (
           <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: tint, width: 8, height: 8 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: tint, width: 8, height: 8, opacity: 0 }} />
+            <Handle id={`${side}-s`} type="source" position={pos} className="org-handle" style={{ ['--handle-color' as string]: tint }} />
+            <Handle id={`${side}-t`} type="target" position={pos} className="org-handle org-handle-target" style={{ ['--handle-color' as string]: tint }} />
           </div>
         )
       })}
@@ -369,8 +361,8 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
         return (
           <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: '#3b82f6', width: 8, height: 8 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: '#3b82f6', width: 8, height: 8, opacity: 0 }} />
+            <Handle id={`${side}-s`} type="source" position={pos} className="org-handle" style={{ ['--handle-color' as string]: '#3b82f6' }} />
+            <Handle id={`${side}-t`} type="target" position={pos} className="org-handle org-handle-target" style={{ ['--handle-color' as string]: '#3b82f6' }} />
           </div>
         )
       })}

@@ -581,3 +581,30 @@ button, a, [role="button"] { -webkit-tap-highlight-color: transparent; touch-act
 }
 
 canvas { max-width: 100%; }
+
+/* ============ Organograma — Handles invisíveis com hover ============ */
+.react-flow__handle.org-handle {
+  width: 12px;
+  height: 12px;
+  background: transparent;
+  border: none;
+  opacity: 0;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 10;
+}
+.react-flow__handle.org-handle.org-handle-target {
+  /* Target sobre o source na mesma posição — invisível mas clicável */
+  opacity: 0 !important;
+  background: transparent !important;
+}
+/* Mostra os handles SOURCE ao passar o mouse no nó ou quando o nó está selecionado */
+.react-flow__node:hover .react-flow__handle.org-handle:not(.org-handle-target),
+.react-flow__node.selected .react-flow__handle.org-handle:not(.org-handle-target) {
+  opacity: 1;
+  background: var(--handle-color, hsl(var(--primary)));
+  border: 2px solid hsl(var(--background));
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.react-flow__node .react-flow__handle.org-handle:hover {
+  transform: scale(1.4) translate(-50%, -50%) !important;
+}
