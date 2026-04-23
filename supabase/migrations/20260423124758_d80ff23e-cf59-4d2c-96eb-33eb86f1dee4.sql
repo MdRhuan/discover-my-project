@@ -1,0 +1,1 @@
+ALTER TABLE public.org_nodes ADD COLUMN IF NOT EXISTS largura numeric, ADD COLUMN IF NOT EXISTS altura numeric;

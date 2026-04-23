@@ -86,6 +86,8 @@ export interface OrgNode {
   estiloBorda?: string
   zIndex?: number
   livre?: boolean
+  largura?: number
+  altura?: number
 }
 
 export interface OrgEdge {

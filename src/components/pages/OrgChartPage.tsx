@@ -64,6 +64,7 @@ interface CompanyNodeData {
   estiloBorda?: string
   onOpenEmpresa?: (id: number) => void
   onEdit?: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
 }
 
 function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
@@ -79,9 +80,20 @@ function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
         borderRadius: 12,
         padding: '12px 16px',
         minWidth: 200,
+        width: '100%',
+        height: '100%',
+        boxSizing: 'border-box',
         boxShadow: selected ? '0 0 0 2px hsl(var(--ring))' : '0 2px 8px rgba(0,0,0,0.08)',
       }}
     >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={160}
+        minHeight={70}
+        onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
+        lineStyle={{ borderColor: borda }}
+        handleStyle={{ background: borda, width: 8, height: 8 }}
+      />
       {/* Handles em todos os lados — cada um funciona como source E target */}
       {(['top','bottom','left','right'] as const).map(side => {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
@@ -484,11 +496,14 @@ function OrgChartEditor() {
 
     const companyNodes: Node[] = n.map(node => {
       const emp = node.empresaId ? empMap.get(node.empresaId) : undefined
+      const w = Number(node.largura) || undefined
+      const h = Number(node.altura) || undefined
       return {
         id: `company:${node.id}`,
         type: 'company',
         position: { x: Number(node.posX) || 0, y: Number(node.posY) || 0 },
         zIndex: node.zIndex || 0,
+        ...(w && h ? { style: { width: w, height: h } } : {}),
         data: {
           label: emp?.nome || node.nome || 'Bloco livre',
           cargo: node.cargo,
@@ -603,10 +618,16 @@ function OrgChartEditor() {
     db.orgImages.update(dbId, { largura: w, altura: h }).catch(console.error)
   }, [])
 
+  const handleCompanyResize = useCallback((id: string, w: number, h: number) => {
+    const { dbId } = parseId(id)
+    db.orgNodes.update(dbId, { largura: w, altura: h } as Partial<OrgNode>).catch(console.error)
+    setNodes(curr => curr.map(n => n.id === id ? { ...n, style: { ...(n.style || {}), width: w, height: h } } : n))
+  }, [setNodes])
+
   useEffect(() => {
     setNodes(curr => curr.map(n => {
       if (n.type === 'company') {
-        return { ...n, data: { ...n.data, onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid) } }
+        return { ...n, data: { ...n.data, onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleCompanyResize } }
       }
       if (n.type === 'freetext') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid) } }
       if (n.type === 'shape') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize } }
@@ -615,7 +636,7 @@ function OrgChartEditor() {
       return n
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleOpenEmpresa, handleShapeResize, handleIconResize, handleImageResize])
+  }, [handleOpenEmpresa, handleShapeResize, handleIconResize, handleImageResize, handleCompanyResize])
 
   // ============ Auto-save positions ============
   const scheduleSave = useCallback(() => {
@@ -1262,12 +1283,19 @@ function OrgChartEditor() {
     if (!editNodeId) return
     const { dbId } = parseId(editNodeId)
     try {
-      await db.orgNodes.update(dbId, {
-        nome: patch.label, cargo: patch.cargo, icon: patch.icon,
+      const dbPatch: Partial<OrgNode> = {
+        cargo: patch.cargo, icon: patch.icon,
         corBorda: patch.corBorda, corFundo: patch.corFundo,
         espessuraBorda: patch.espessuraBorda, estiloBorda: patch.estiloBorda,
-      } as Partial<OrgNode>)
-      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      }
+      if (typeof patch.label === 'string') dbPatch.nome = patch.label
+      await db.orgNodes.update(dbId, dbPatch)
+      // Build a clean data patch without undefined values (avoid wiping label)
+      const dataPatch: Partial<CompanyNodeData> = {}
+      ;(Object.keys(patch) as (keyof typeof patch)[]).forEach(k => {
+        if (patch[k] !== undefined) (dataPatch as Record<string, unknown>)[k as string] = patch[k]
+      })
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...dataPatch } } : n))
       setEditNodeId(null); toast('Bloco atualizado', 'success')
     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }

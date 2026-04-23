@@ -1110,6 +1110,7 @@ export type Database = {
       }
       org_nodes: {
         Row: {
+          altura: number | null
           cargo: string | null
           cor_borda: string | null
           cor_fundo: string | null
@@ -1119,6 +1120,7 @@ export type Database = {
           estilo_borda: string | null
           icon: string | null
           id: number
+          largura: number | null
           livre: boolean | null
           nome: string
           owner_id: string
@@ -1129,6 +1131,7 @@ export type Database = {
           z_index: number | null
         }
         Insert: {
+          altura?: number | null
           cargo?: string | null
           cor_borda?: string | null
           cor_fundo?: string | null
@@ -1138,6 +1141,7 @@ export type Database = {
           estilo_borda?: string | null
           icon?: string | null
           id?: number
+          largura?: number | null
           livre?: boolean | null
           nome: string
           owner_id?: string
@@ -1148,6 +1152,7 @@ export type Database = {
           z_index?: number | null
         }
         Update: {
+          altura?: number | null
           cargo?: string | null
           cor_borda?: string | null
           cor_fundo?: string | null
@@ -1157,6 +1162,7 @@ export type Database = {
           estilo_borda?: string | null
           icon?: string | null
           id?: number
+          largura?: number | null
           livre?: boolean | null
           nome?: string
           owner_id?: string
