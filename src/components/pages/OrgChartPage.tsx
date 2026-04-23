@@ -398,6 +398,29 @@ function buildEdgeFromDb(ed: {
   }
 }
 
+// ============ Alignment guides overlay (rendered inside ReactFlow) ============
+function AlignmentGuides({ guides }: { guides: { v: number[]; h: number[] } }) {
+  const { x, y, zoom } = useViewport()
+  if (!guides.v.length && !guides.h.length) return null
+  return (
+    <svg
+      style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%',
+        pointerEvents: 'none', zIndex: 4,
+      }}
+    >
+      {guides.v.map((vx, i) => {
+        const sx = vx * zoom + x
+        return <line key={`v-${i}`} x1={sx} y1={0} x2={sx} y2="100%" stroke="#ec4899" strokeWidth={1} strokeDasharray="4 3" />
+      })}
+      {guides.h.map((hy, i) => {
+        const sy = hy * zoom + y
+        return <line key={`h-${i}`} x1={0} y1={sy} x2="100%" y2={sy} stroke="#ec4899" strokeWidth={1} strokeDasharray="4 3" />
+      })}
+    </svg>
+  )
+}
+
 // ============ Editor ============
 function OrgChartEditor() {
   const { toast, setPage } = useApp() as ReturnType<typeof useApp> & { setPage: (p: PageKey) => void }
