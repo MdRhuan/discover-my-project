@@ -496,11 +496,14 @@ function OrgChartEditor() {
 
     const companyNodes: Node[] = n.map(node => {
       const emp = node.empresaId ? empMap.get(node.empresaId) : undefined
+      const w = Number(node.largura) || undefined
+      const h = Number(node.altura) || undefined
       return {
         id: `company:${node.id}`,
         type: 'company',
         position: { x: Number(node.posX) || 0, y: Number(node.posY) || 0 },
         zIndex: node.zIndex || 0,
+        ...(w && h ? { style: { width: w, height: h } } : {}),
         data: {
           label: emp?.nome || node.nome || 'Bloco livre',
           cargo: node.cargo,
