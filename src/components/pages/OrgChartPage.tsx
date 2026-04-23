@@ -137,29 +137,40 @@ interface TextNodeData {
 }
 function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
   return (
-    <div
-      onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
-      style={{
-        padding: '6px 8px',
-        minWidth: 60,
-        width: data.largura || undefined,
-        fontFamily: data.fonte || 'inherit',
-        fontSize: data.tamanho || 14,
-        color: data.cor || '#0f172a',
-        textAlign: data.alinhamento || 'left',
-        fontWeight: data.negrito ? 700 : 400,
-        fontStyle: data.italico ? 'italic' : 'normal',
-        background: selected ? 'rgba(59,130,246,0.06)' : 'transparent',
-        outline: selected ? '1px dashed #3b82f6' : 'none',
-        borderRadius: 4,
-        cursor: 'move',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-      }}
-      title="Duplo clique para editar"
-    >
-      {data.conteudo || 'Texto'}
-    </div>
+    <>
+      <div
+        onDoubleClick={(e) => { e.stopPropagation(); data.onEdit?.(id) }}
+        style={{
+          padding: '6px 8px',
+          minWidth: 60,
+          width: data.largura || undefined,
+          fontFamily: data.fonte || 'inherit',
+          fontSize: data.tamanho || 14,
+          color: data.cor || '#0f172a',
+          textAlign: data.alinhamento || 'left',
+          fontWeight: data.negrito ? 700 : 400,
+          fontStyle: data.italico ? 'italic' : 'normal',
+          background: selected ? 'rgba(59,130,246,0.06)' : 'transparent',
+          outline: selected ? '1px dashed #3b82f6' : 'none',
+          borderRadius: 4,
+          cursor: 'move',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+        }}
+        title="Duplo clique para editar"
+      >
+        {data.conteudo || 'Texto'}
+      </div>
+      {(['top','bottom','left','right'] as const).map(side => {
+        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
+        return (
+          <div key={side}>
+            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: '#3b82f6', width: 8, height: 8 }} />
+            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: '#3b82f6', width: 8, height: 8, opacity: 0 }} />
+          </div>
+        )
+      })}
+    </>
   )
 }
 
