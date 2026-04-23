@@ -94,13 +94,13 @@ function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
         lineStyle={{ borderColor: borda }}
         handleStyle={{ background: borda, width: 8, height: 8 }}
       />
-      {/* Handles em todos os lados — cada um funciona como source E target */}
+      {/* Handles invisíveis em todos os lados — aparecem só no hover via CSS global */}
       {(['top','bottom','left','right'] as const).map(side => {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
         return (
           <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: borda, width: 10, height: 10 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: borda, width: 10, height: 10, opacity: 0 }} />
+            <Handle id={`${side}-s`} type="source" position={pos} className="org-handle" style={{ ['--handle-color' as string]: borda }} />
+            <Handle id={`${side}-t`} type="target" position={pos} className="org-handle org-handle-target" style={{ ['--handle-color' as string]: borda }} />
           </div>
         )
       })}
