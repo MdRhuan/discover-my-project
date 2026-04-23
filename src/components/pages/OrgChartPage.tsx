@@ -1377,25 +1377,50 @@ function OrgChartEditor() {
             <i className="fas fa-arrow-down" />
           </button>
           <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          {/* Alinhamento (visíveis quando 2+ selecionados) */}
+          <button className="btn btn-secondary" onClick={() => alignSelection('left')} title="Alinhar à esquerda"><i className="fas fa-align-left" /></button>
+          <button className="btn btn-secondary" onClick={() => alignSelection('centerX')} title="Centralizar horizontalmente"><i className="fas fa-align-center" /></button>
+          <button className="btn btn-secondary" onClick={() => alignSelection('right')} title="Alinhar à direita"><i className="fas fa-align-right" /></button>
+          <button className="btn btn-secondary" onClick={() => alignSelection('top')} title="Alinhar ao topo"><i className="fas fa-arrows-up-to-line" /></button>
+          <button className="btn btn-secondary" onClick={() => alignSelection('centerY')} title="Centralizar verticalmente"><i className="fas fa-grip-lines" /></button>
+          <button className="btn btn-secondary" onClick={() => alignSelection('bottom')} title="Alinhar à base"><i className="fas fa-arrows-down-to-line" /></button>
+          <button className="btn btn-secondary" onClick={() => distributeSelection('h')} title="Distribuir horizontalmente"><i className="fas fa-arrows-left-right" /></button>
+          <button className="btn btn-secondary" onClick={() => distributeSelection('v')} title="Distribuir verticalmente"><i className="fas fa-arrows-up-down" /></button>
+          <div style={{ width: 1, background: 'hsl(var(--border))', margin: '0 4px' }} />
+          <button
+            className={snapEnabled ? 'btn btn-primary' : 'btn btn-secondary'}
+            onClick={() => setSnapEnabled(s => !s)}
+            title={snapEnabled ? 'Snap à grade ativado (clique para desativar)' : 'Snap à grade desativado'}
+          ><i className="fas fa-table-cells" /> Snap</button>
+          <button
+            className={showMiniMap ? 'btn btn-primary' : 'btn btn-secondary'}
+            onClick={() => setShowMiniMap(s => !s)}
+            title="Mostrar/ocultar minimapa"
+          ><i className="fas fa-map" /></button>
           <button className="btn btn-secondary" onClick={() => zoomIn({ duration: 200 })} title="Zoom in"><i className="fas fa-magnifying-glass-plus" /></button>
           <button className="btn btn-secondary" onClick={() => zoomOut({ duration: 200 })} title="Zoom out"><i className="fas fa-magnifying-glass-minus" /></button>
-          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })} title="Ajustar"><i className="fas fa-expand" /></button>
+          <button className="btn btn-secondary" onClick={() => fitView({ padding: 0.2, duration: 300 })} title="Ajustar (Ctrl+0)"><i className="fas fa-expand" /></button>
         </div>
       </div>
 
-      <div className="card" style={{ flex: 1, padding: 0, overflow: 'hidden', minHeight: 500 }}>
+      <div className="card" style={{ flex: 1, padding: 0, overflow: 'hidden', minHeight: 500, position: 'relative' }}>
         {loading ? (
           <div className="empty-state" style={{ padding: 60 }}>
             <i className="fas fa-spinner fa-spin" />
             <p>Carregando organograma...</p>
           </div>
         ) : (
-          <div style={{ width: '100%', height: '100%', cursor: connectMode ? 'crosshair' : undefined }}>
+          <div style={{ width: '100%', height: '100%', cursor: connectMode ? 'crosshair' : undefined, position: 'relative' }}>
           <ReactFlow
             nodes={displayedNodes} edges={displayedEdges}
             onNodesChange={wrappedNodesChange} onEdgesChange={wrappedEdgesChange}
-            onConnect={onConnect} nodeTypes={nodeTypes} fitView snapToGrid snapGrid={[10, 10]}
-            multiSelectionKeyCode={['Meta', 'Shift']} deleteKeyCode={null}
+            onConnect={onConnect} nodeTypes={nodeTypes} fitView
+            snapToGrid={snapEnabled} snapGrid={[10, 10]}
+            minZoom={0.1} maxZoom={3}
+            multiSelectionKeyCode={['Meta', 'Shift', 'Control']} deleteKeyCode={null}
+            selectionOnDrag={!connectMode}
+            panOnDrag={connectMode ? true : [1, 2]}
+            panOnScroll={false} zoomOnScroll selectionKeyCode="Shift"
             nodesDraggable={!connectMode} nodesConnectable={!connectMode} elementsSelectable={!connectMode}
             onNodeClick={handleNodeClickConnect}
             onEdgeMouseEnter={(_, ed) => setHoveredEdgeId(ed.id)}
@@ -1419,7 +1444,18 @@ function OrgChartEditor() {
             }}
           >
             <Background gap={20} size={1} color="#e2e8f0" />
-            <Controls />
+            <Controls showInteractive={false} />
+            {showMiniMap && (
+              <MiniMap
+                pannable zoomable
+                style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
+                nodeColor={(n) => (n.data?.corBorda as string) || '#3b82f6'}
+                nodeStrokeWidth={2}
+                maskColor="rgba(15,23,42,0.05)"
+              />
+            )}
+            {/* Alignment guides overlay */}
+            <AlignmentGuides guides={guides} />
           </ReactFlow>
           </div>
         )}
