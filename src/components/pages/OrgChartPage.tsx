@@ -618,10 +618,16 @@ function OrgChartEditor() {
     db.orgImages.update(dbId, { largura: w, altura: h }).catch(console.error)
   }, [])
 
+  const handleCompanyResize = useCallback((id: string, w: number, h: number) => {
+    const { dbId } = parseId(id)
+    db.orgNodes.update(dbId, { largura: w, altura: h } as Partial<OrgNode>).catch(console.error)
+    setNodes(curr => curr.map(n => n.id === id ? { ...n, style: { ...(n.style || {}), width: w, height: h } } : n))
+  }, [setNodes])
+
   useEffect(() => {
     setNodes(curr => curr.map(n => {
       if (n.type === 'company') {
-        return { ...n, data: { ...n.data, onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid) } }
+        return { ...n, data: { ...n.data, onOpenEmpresa: handleOpenEmpresa, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleCompanyResize } }
       }
       if (n.type === 'freetext') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid) } }
       if (n.type === 'shape') return { ...n, data: { ...n.data, onEdit: (nid: string) => setEditNodeId(nid), onResize: handleShapeResize } }
@@ -630,7 +636,7 @@ function OrgChartEditor() {
       return n
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleOpenEmpresa, handleShapeResize, handleIconResize, handleImageResize])
+  }, [handleOpenEmpresa, handleShapeResize, handleIconResize, handleImageResize, handleCompanyResize])
 
   // ============ Auto-save positions ============
   const scheduleSave = useCallback(() => {
