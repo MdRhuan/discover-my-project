@@ -615,11 +615,57 @@ function OrgChartEditor() {
   }, [nodes])
 
   const wrappedNodesChange = useCallback((changes: NodeChange[]) => {
-    onNodesChange(changes)
+    // Smart alignment: while dragging, snap to nearby nodes' edges/centers
+    const SNAP_THRESHOLD = 6
+    const dragChanges = changes.filter(c => c.type === 'position' && c.dragging) as Array<NodeChange & { id: string; position?: { x: number; y: number } }>
+    if (dragChanges.length > 0) {
+      const draggingIds = new Set(dragChanges.map(c => c.id))
+      const others = nodes.filter(n => !draggingIds.has(n.id))
+      const vGuides: number[] = []
+      const hGuides: number[] = []
+      const adjusted = dragChanges.map(c => {
+        if (!c.position) return c
+        const cur = nodes.find(n => n.id === c.id); if (!cur) return c
+        const w = (cur.width ?? (cur.style?.width as number) ?? 200)
+        const h = (cur.height ?? (cur.style?.height as number) ?? 80)
+        let x = c.position.x; let y = c.position.y
+        const myEdgesX = [x, x + w / 2, x + w]
+        const myEdgesY = [y, y + h / 2, y + h]
+        let bestDx = Infinity; let bestX = x; let bestGuideX: number | null = null
+        let bestDy = Infinity; let bestY = y; let bestGuideY: number | null = null
+        for (const o of others) {
+          const ow = (o.width ?? (o.style?.width as number) ?? 200)
+          const oh = (o.height ?? (o.style?.height as number) ?? 80)
+          const oxs = [o.position.x, o.position.x + ow / 2, o.position.x + ow]
+          const oys = [o.position.y, o.position.y + oh / 2, o.position.y + oh]
+          for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+              const dx = oxs[j] - myEdgesX[i]
+              if (Math.abs(dx) < bestDx && Math.abs(dx) < SNAP_THRESHOLD) {
+                bestDx = Math.abs(dx); bestX = x + dx; bestGuideX = oxs[j]
+              }
+              const dy = oys[j] - myEdgesY[i]
+              if (Math.abs(dy) < bestDy && Math.abs(dy) < SNAP_THRESHOLD) {
+                bestDy = Math.abs(dy); bestY = y + dy; bestGuideY = oys[j]
+              }
+            }
+          }
+        }
+        if (bestGuideX !== null) vGuides.push(bestGuideX)
+        if (bestGuideY !== null) hGuides.push(bestGuideY)
+        return { ...c, position: { x: bestX, y: bestY } }
+      })
+      const otherChanges = changes.filter(c => !(c.type === 'position' && c.dragging))
+      onNodesChange([...adjusted, ...otherChanges])
+      setGuides({ v: vGuides, h: hGuides })
+    } else {
+      if (guides.v.length || guides.h.length) setGuides({ v: [], h: [] })
+      onNodesChange(changes)
+    }
     if (changes.some(c => (c.type === 'position' && !c.dragging) || c.type === 'dimensions')) {
       scheduleSave()
     }
-  }, [onNodesChange, scheduleSave])
+  }, [onNodesChange, scheduleSave, nodes, guides.v.length, guides.h.length])
 
   const wrappedEdgesChange = useCallback((changes: EdgeChange[]) => { onEdgesChange(changes) }, [onEdgesChange])
 
