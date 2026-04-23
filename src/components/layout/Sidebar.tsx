@@ -47,6 +47,7 @@ const NAV_STRUCTURE: NavItemDef[] = [
         children: [
           { key: 'investments',   icon: 'fa-chart-pie',    label: { pt: 'Investimentos',      en: 'Investments'    } },
           { key: 'realEstate',    icon: 'fa-house',        label: { pt: 'Imóveis & Mortgage', en: 'Real Estate'    } },
+          { key: 'bensMoveis',    icon: 'fa-couch',        label: { pt: 'Bens Móveis',        en: 'Movable Assets' } },
         ],
       },
       {
