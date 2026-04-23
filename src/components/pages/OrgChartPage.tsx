@@ -1078,6 +1078,114 @@ function OrgChartEditor() {
     })
   }, [nodes, setNodes, toast])
 
+  // ============ Align / Distribute ============
+  const persistPositions = useCallback((updated: Node[]) => {
+    updated.forEach(n => {
+      const { kind, dbId } = parseId(n.id)
+      const tbl = kind === 'company' ? db.orgNodes
+        : kind === 'text' ? db.orgTextsCanvas
+        : kind === 'icon' ? db.orgIcons
+        : kind === 'image' ? db.orgImages
+        : db.orgShapes
+      tbl.update(dbId, { posX: n.position.x, posY: n.position.y } as never).catch(console.error)
+    })
+  }, [])
+
+  const alignSelection = useCallback((mode: 'left' | 'centerX' | 'right' | 'top' | 'centerY' | 'bottom') => {
+    const sel = nodes.filter(n => n.selected)
+    if (sel.length < 2) { toast('Selecione 2+ elementos', 'info'); return }
+    const dims = sel.map(n => ({
+      n,
+      w: (n.width ?? (n.style?.width as number) ?? 200),
+      h: (n.height ?? (n.style?.height as number) ?? 80),
+    }))
+    let target = 0
+    if (mode === 'left') target = Math.min(...dims.map(d => d.n.position.x))
+    if (mode === 'right') target = Math.max(...dims.map(d => d.n.position.x + d.w))
+    if (mode === 'centerX') {
+      const xs = dims.map(d => d.n.position.x + d.w / 2)
+      target = (Math.min(...xs) + Math.max(...xs)) / 2
+    }
+    if (mode === 'top') target = Math.min(...dims.map(d => d.n.position.y))
+    if (mode === 'bottom') target = Math.max(...dims.map(d => d.n.position.y + d.h))
+    if (mode === 'centerY') {
+      const ys = dims.map(d => d.n.position.y + d.h / 2)
+      target = (Math.min(...ys) + Math.max(...ys)) / 2
+    }
+    const updated: Node[] = []
+    setNodes(curr => curr.map(n => {
+      if (!n.selected) return n
+      const dim = dims.find(d => d.n.id === n.id)!
+      let x = n.position.x, y = n.position.y
+      if (mode === 'left') x = target
+      if (mode === 'right') x = target - dim.w
+      if (mode === 'centerX') x = target - dim.w / 2
+      if (mode === 'top') y = target
+      if (mode === 'bottom') y = target - dim.h
+      if (mode === 'centerY') y = target - dim.h / 2
+      const nn = { ...n, position: { x, y } }
+      updated.push(nn)
+      return nn
+    }))
+    persistPositions(updated)
+    toast('Alinhado', 'success')
+  }, [nodes, setNodes, toast, persistPositions])
+
+  const distributeSelection = useCallback((axis: 'h' | 'v') => {
+    const sel = nodes.filter(n => n.selected)
+    if (sel.length < 3) { toast('Selecione 3+ elementos', 'info'); return }
+    const dims = sel.map(n => ({
+      n,
+      w: (n.width ?? (n.style?.width as number) ?? 200),
+      h: (n.height ?? (n.style?.height as number) ?? 80),
+    }))
+    const sorted = axis === 'h'
+      ? [...dims].sort((a, b) => a.n.position.x - b.n.position.x)
+      : [...dims].sort((a, b) => a.n.position.y - b.n.position.y)
+    const first = sorted[0]; const last = sorted[sorted.length - 1]
+    const startCenter = axis === 'h' ? first.n.position.x + first.w / 2 : first.n.position.y + first.h / 2
+    const endCenter = axis === 'h' ? last.n.position.x + last.w / 2 : last.n.position.y + last.h / 2
+    const step = (endCenter - startCenter) / (sorted.length - 1)
+    const newPos = new Map<string, { x: number; y: number }>()
+    sorted.forEach((d, i) => {
+      const center = startCenter + step * i
+      if (axis === 'h') newPos.set(d.n.id, { x: center - d.w / 2, y: d.n.position.y })
+      else newPos.set(d.n.id, { x: d.n.position.x, y: center - d.h / 2 })
+    })
+    const updated: Node[] = []
+    setNodes(curr => curr.map(n => {
+      const p = newPos.get(n.id); if (!p) return n
+      const nn = { ...n, position: p }; updated.push(nn); return nn
+    }))
+    persistPositions(updated)
+    toast('Distribuído', 'success')
+  }, [nodes, setNodes, toast, persistPositions])
+
+  // ============ Copy / Paste / Nudge ============
+  const copySelection = useCallback(() => {
+    const sel = nodes.filter(n => n.selected)
+    if (sel.length === 0) return
+    clipboardRef.current = sel.map(n => ({ ...n }))
+    toast(`${sel.length} copiado(s)`, 'info')
+  }, [nodes, toast])
+
+  const pasteClipboard = useCallback(() => {
+    if (!clipboardRef.current.length) return
+    const ids = new Set(clipboardRef.current.map(i => i.id))
+    setNodes(curr => curr.map(n => ({ ...n, selected: ids.has(n.id) })))
+    setTimeout(() => duplicateSelection(), 0)
+  }, [setNodes, duplicateSelection])
+
+  const nudgeSelection = useCallback((dx: number, dy: number) => {
+    const updated: Node[] = []
+    setNodes(curr => curr.map(n => {
+      if (!n.selected) return n
+      const nn = { ...n, position: { x: n.position.x + dx, y: n.position.y + dy } }
+      updated.push(nn); return nn
+    }))
+    if (updated.length) persistPositions(updated)
+  }, [setNodes, persistPositions])
+
   // ============ Keyboard shortcuts ============
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -1098,10 +1206,30 @@ function OrgChartEditor() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         if (nodes.some(n => n.selected)) { e.preventDefault(); duplicateSelection() }
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault(); setNodes(c => c.map(n => ({ ...n, selected: true })))
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+        if (nodes.some(n => n.selected)) { e.preventDefault(); copySelection() }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+        if (clipboardRef.current.length) { e.preventDefault(); pasteClipboard() }
+      }
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        if (!nodes.some(n => n.selected)) return
+        e.preventDefault()
+        const step = e.shiftKey ? 20 : 2
+        const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+        const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+        nudgeSelection(dx, dy)
+      }
+      if (e.key === '0' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault(); fitView({ padding: 0.2, duration: 300 })
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nodes, edges, deleteSelection, duplicateSelection, connectMode, exitConnectMode])
+  }, [nodes, edges, deleteSelection, duplicateSelection, connectMode, exitConnectMode, setNodes, setEdges, copySelection, pasteClipboard, nudgeSelection, fitView])
 
   // ============ Edit modal ============
   const editNode = useMemo(() => nodes.find(n => n.id === editNodeId), [nodes, editNodeId])
