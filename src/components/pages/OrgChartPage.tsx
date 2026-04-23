@@ -205,6 +205,17 @@ function ShapeNode({ id, data, selected }: NodeProps<ShapeNodeData>) {
       >
         {data.rotulo}
       </div>
+      {/* Handles em todos os lados — permite conectar linhas à caixa */}
+      {(['top','bottom','left','right'] as const).map(side => {
+        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
+        const borda = data.corBorda || '#94a3b8'
+        return (
+          <div key={side}>
+            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: borda, width: 10, height: 10 }} />
+            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: borda, width: 10, height: 10, opacity: 0 }} />
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -265,6 +276,15 @@ function IconNode({ id, data, selected }: NodeProps<IconNodeData>) {
         <style>{`.org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg path, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg g, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg circle, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg rect, .org-icon-tint-${id.replace(/[^\w-]/g, '_')} svg polygon { fill: ${tint}; stroke: ${tint}; }`}</style>
         <div className={`org-icon-tint-${id.replace(/[^\w-]/g, '_')}`} style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: svg }} />
       </div>
+      {(['top','bottom','left','right'] as const).map(side => {
+        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
+        return (
+          <div key={side}>
+            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: tint, width: 8, height: 8 }} />
+            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: tint, width: 8, height: 8, opacity: 0 }} />
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -320,6 +340,15 @@ function ImageNode({ id, data, selected }: NodeProps<ImageNodeData>) {
           </div>
         )}
       </div>
+      {(['top','bottom','left','right'] as const).map(side => {
+        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
+        return (
+          <div key={side}>
+            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: '#3b82f6', width: 8, height: 8 }} />
+            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: '#3b82f6', width: 8, height: 8, opacity: 0 }} />
+          </div>
+        )
+      })}
     </>
   )
 }
