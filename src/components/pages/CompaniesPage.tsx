@@ -279,7 +279,7 @@ export function CompaniesPage() {
                 <label className="form-label">Tipo de Entidade</label>
                 <select className="form-select" value={form.legalType || ''} onChange={e => setForm(p => ({ ...p, legalType: e.target.value }))}>
                   <option value="">Selecione...</option>
-                  {['LLC CA','DE','C-Corp','SD','LLC FL','CFC'].map(s => <option key={s} value={s}>{s}</option>)}
+                  {['LLC CA','LLC DE','DE','C-Corp','SD','LLC FL','CFC'].map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className="form-group">
