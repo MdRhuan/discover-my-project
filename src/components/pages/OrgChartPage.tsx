@@ -418,6 +418,11 @@ function OrgChartEditor() {
   const imageInputRef = useRef<HTMLInputElement | null>(null)
   const signedUrlCache = useRef<Map<string, { url: string; exp: number }>>(new Map())
   const { fitView, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
+  // UX state
+  const [snapEnabled, setSnapEnabled] = useState(true)
+  const [showMiniMap, setShowMiniMap] = useState(true)
+  const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] })
+  const clipboardRef = useRef<Node[]>([])
 
   // Identifies node kinds via prefix in id
   // company:<dbId>  text:<dbId>  shape:<dbId>
