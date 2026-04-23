@@ -175,15 +175,7 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
       >
         {data.conteudo || 'Texto'}
       </div>
-      {(['top','bottom','left','right'] as const).map(side => {
-        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
-        return (
-          <div key={side}>
-            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: '#3b82f6', width: 8, height: 8 }} />
-            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: '#3b82f6', width: 8, height: 8, opacity: 0 }} />
-          </div>
-        )
-      })}
+      {/* Texto: sem handles (não conectável) */}
     </>
   )
 }
