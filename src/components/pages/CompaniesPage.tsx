@@ -87,6 +87,22 @@ export function CompaniesPage() {
 
   useEffect(() => { load() }, [])
 
+  // Abrir automaticamente uma empresa quando vinda do Organograma
+  useEffect(() => {
+    if (empresas.length === 0) return
+    let pendingId: number | null = null
+    try {
+      const raw = localStorage.getItem('open-empresa-id')
+      if (raw) pendingId = Number(raw)
+    } catch { /* noop */ }
+    if (pendingId && !Number.isNaN(pendingId)) {
+      const target = empresas.find(e => e.id === pendingId)
+      if (target) openDetail(target)
+      try { localStorage.removeItem('open-empresa-id') } catch { /* noop */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empresas])
+
   async function load() {
     setEmpresas(await db.empresas.toArray())
   }
