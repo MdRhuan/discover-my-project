@@ -9,6 +9,7 @@ import ReactFlow, {
   Position,
   ReactFlowProvider,
   useReactFlow,
+  useViewport,
   NodeResizer,
   MarkerType,
   type Node,
