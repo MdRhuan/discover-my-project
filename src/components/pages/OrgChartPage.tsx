@@ -1283,12 +1283,19 @@ function OrgChartEditor() {
     if (!editNodeId) return
     const { dbId } = parseId(editNodeId)
     try {
-      await db.orgNodes.update(dbId, {
-        nome: patch.label, cargo: patch.cargo, icon: patch.icon,
+      const dbPatch: Partial<OrgNode> = {
+        cargo: patch.cargo, icon: patch.icon,
         corBorda: patch.corBorda, corFundo: patch.corFundo,
         espessuraBorda: patch.espessuraBorda, estiloBorda: patch.estiloBorda,
-      } as Partial<OrgNode>)
-      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...patch } } : n))
+      }
+      if (typeof patch.label === 'string') dbPatch.nome = patch.label
+      await db.orgNodes.update(dbId, dbPatch)
+      // Build a clean data patch without undefined values (avoid wiping label)
+      const dataPatch: Partial<CompanyNodeData> = {}
+      ;(Object.keys(patch) as (keyof typeof patch)[]).forEach(k => {
+        if (patch[k] !== undefined) (dataPatch as Record<string, unknown>)[k as string] = patch[k]
+      })
+      setNodes(c => c.map(n => n.id === editNodeId ? { ...n, data: { ...n.data, ...dataPatch } } : n))
       setEditNodeId(null); toast('Bloco atualizado', 'success')
     } catch (err) { console.error(err); toast('Erro ao salvar', 'error') }
   }
