@@ -64,6 +64,7 @@ interface CompanyNodeData {
   estiloBorda?: string
   onOpenEmpresa?: (id: number) => void
   onEdit?: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
 }
 
 function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
@@ -79,9 +80,20 @@ function CompanyNode({ id, data, selected }: NodeProps<CompanyNodeData>) {
         borderRadius: 12,
         padding: '12px 16px',
         minWidth: 200,
+        width: '100%',
+        height: '100%',
+        boxSizing: 'border-box',
         boxShadow: selected ? '0 0 0 2px hsl(var(--ring))' : '0 2px 8px rgba(0,0,0,0.08)',
       }}
     >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={160}
+        minHeight={70}
+        onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
+        lineStyle={{ borderColor: borda }}
+        handleStyle={{ background: borda, width: 8, height: 8 }}
+      />
       {/* Handles em todos os lados — cada um funciona como source E target */}
       {(['top','bottom','left','right'] as const).map(side => {
         const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
