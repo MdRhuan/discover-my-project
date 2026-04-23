@@ -577,22 +577,47 @@ function OrgChartEditor() {
 
   const wrappedEdgesChange = useCallback((changes: EdgeChange[]) => { onEdgesChange(changes) }, [onEdgesChange])
 
-  // Edges com destaque ao passar o mouse
+  // Edges com destaque ao passar o mouse + roteamento dinâmico (handles mais próximos)
   const displayedEdges = useMemo<Edge[]>(() => {
     const HOVER_COLOR = '#2563eb'
+    const nodeMap = new Map<string, Node>()
+    nodes.forEach(n => nodeMap.set(n.id, n))
+
+    function pickHandles(srcId: string, tgtId: string): { sourceHandle: string; targetHandle: string } {
+      const s = nodeMap.get(srcId); const t = nodeMap.get(tgtId)
+      if (!s || !t) return { sourceHandle: 'bottom-s', targetHandle: 'top-t' }
+      const sw = (s.width ?? 200); const sh = (s.height ?? 80)
+      const tw = (t.width ?? 200); const th = (t.height ?? 80)
+      const scx = s.position.x + sw / 2; const scy = s.position.y + sh / 2
+      const tcx = t.position.x + tw / 2; const tcy = t.position.y + th / 2
+      const dx = tcx - scx; const dy = tcy - scy
+      let srcSide: 'top' | 'bottom' | 'left' | 'right'
+      let tgtSide: 'top' | 'bottom' | 'left' | 'right'
+      if (Math.abs(dx) > Math.abs(dy)) {
+        srcSide = dx > 0 ? 'right' : 'left'
+        tgtSide = dx > 0 ? 'left' : 'right'
+      } else {
+        srcSide = dy > 0 ? 'bottom' : 'top'
+        tgtSide = dy > 0 ? 'top' : 'bottom'
+      }
+      return { sourceHandle: `${srcSide}-s`, targetHandle: `${tgtSide}-t` }
+    }
+
     return edges.map(ed => {
-      if (ed.id !== hoveredEdgeId) return ed
-      const baseStroke = (ed.style?.strokeWidth as number) || 2
+      const { sourceHandle, targetHandle } = pickHandles(ed.source, ed.target)
+      const routed: Edge = { ...ed, sourceHandle, targetHandle }
+      if (routed.id !== hoveredEdgeId) return routed
+      const baseStroke = (routed.style?.strokeWidth as number) || 2
       return {
-        ...ed,
+        ...routed,
         zIndex: 10,
-        style: { ...ed.style, stroke: HOVER_COLOR, strokeWidth: baseStroke + 1.5 },
+        style: { ...routed.style, stroke: HOVER_COLOR, strokeWidth: baseStroke + 1.5 },
         markerEnd: { type: MarkerType.ArrowClosed, color: HOVER_COLOR, width: 20, height: 20 },
-        labelBgStyle: { ...(ed.labelBgStyle || {}), stroke: HOVER_COLOR },
-        labelStyle: { ...(ed.labelStyle || {}), fill: HOVER_COLOR },
+        labelBgStyle: { ...(routed.labelBgStyle || {}), stroke: HOVER_COLOR },
+        labelStyle: { ...(routed.labelStyle || {}), fill: HOVER_COLOR },
       }
     })
-  }, [edges, hoveredEdgeId])
+  }, [edges, hoveredEdgeId, nodes])
 
   // Realça nó de origem no modo Conectar
   const displayedNodes = useMemo<Node[]>(() => {
