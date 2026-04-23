@@ -205,6 +205,17 @@ function ShapeNode({ id, data, selected }: NodeProps<ShapeNodeData>) {
       >
         {data.rotulo}
       </div>
+      {/* Handles em todos os lados — permite conectar linhas à caixa */}
+      {(['top','bottom','left','right'] as const).map(side => {
+        const pos = side === 'top' ? Position.Top : side === 'bottom' ? Position.Bottom : side === 'left' ? Position.Left : Position.Right
+        const borda = data.corBorda || '#94a3b8'
+        return (
+          <div key={side}>
+            <Handle id={`${side}-s`} type="source" position={pos} style={{ background: borda, width: 10, height: 10 }} />
+            <Handle id={`${side}-t`} type="target" position={pos} style={{ background: borda, width: 10, height: 10, opacity: 0 }} />
+          </div>
+        )
+      })}
     </>
   )
 }
