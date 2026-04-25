@@ -22,6 +22,7 @@
   --gold:    #b45309;
   --gray:    #64748b;
   --sidebar-w: 240px;
+  --sidebar-w-collapsed: 64px;
   --topbar-h:  58px;
   --theme-toggle-bg: #e2e8f0;
   --theme-shadow: 0 1px 4px rgba(0,0,0,.08);
@@ -92,7 +93,27 @@ body {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 50;
-  transition: transform .25s ease;
+  transition: transform .25s ease, width .2s ease;
+}
+
+/* ── Sidebar collapsed (desktop only) ── */
+@media (min-width: 769px) {
+  html[data-sidebar="collapsed"] { --sidebar-w: var(--sidebar-w-collapsed); }
+  html[data-sidebar="collapsed"] .sidebar { width: var(--sidebar-w-collapsed); overflow: hidden; }
+  html[data-sidebar="collapsed"] .sidebar-logo small,
+  html[data-sidebar="collapsed"] .sidebar-section,
+  html[data-sidebar="collapsed"] .nav-item span,
+  html[data-sidebar="collapsed"] .nav-item .fa-chevron-down,
+  html[data-sidebar="collapsed"] .nav-item .fa-chevron-right { display: none; }
+  html[data-sidebar="collapsed"] .sidebar-logo { padding: 20px 0 16px; text-align: center; font-size: 16px; }
+  html[data-sidebar="collapsed"] .nav-item {
+    justify-content: center;
+    padding: 10px 0;
+    margin: 2px 8px;
+    width: calc(100% - 16px);
+  }
+  html[data-sidebar="collapsed"] .nav-item i { width: auto; font-size: 14px !important; }
+  html[data-sidebar="collapsed"] .nav-submenu { display: none; }
 }
 
 .sidebar-logo {
@@ -514,6 +535,20 @@ html[data-theme="dark"] .theme-toggle-thumb {
   -webkit-tap-highlight-color: transparent;
 }
 .hamburger:hover { border-color: var(--brand); color: var(--text-primary); }
+
+.sidebar-collapse-btn {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-hover); color: var(--text-secondary);
+  cursor: pointer; flex-shrink: 0;
+  margin-right: 4px;
+}
+.sidebar-collapse-btn:hover { border-color: var(--brand); color: var(--brand); }
+@media (max-width: 768px) {
+  .sidebar-collapse-btn { display: none; }
+}
 
 .sidebar-overlay {
   display: none; position: fixed; inset: 0;
