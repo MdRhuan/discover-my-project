@@ -24,6 +24,8 @@ interface AppContextValue {
   setPage: (p: PageKey) => void
   sidebarOpen: boolean
   setSidebarOpen: (v: boolean) => void
+  sidebarCollapsed: boolean
+  toggleSidebarCollapsed: () => void
   theme: string
   toggleTheme: () => void
   toasts: Toast[]
@@ -44,6 +46,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>('BRL')
   const [toasts, setToasts] = useState<Toast[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('hub-sidebar-collapsed') === '1'
+  })
   const [theme, setTheme] = useState('light')
   const [role, setRole] = useState<AppRole>(null)
 
@@ -102,6 +108,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-sidebar', sidebarCollapsed ? 'collapsed' : 'expanded')
+    localStorage.setItem('hub-sidebar-collapsed', sidebarCollapsed ? '1' : '0')
+  }, [sidebarCollapsed])
+
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed(v => !v)
+  }, [])
+
   const toggleTheme = useCallback(() => {
     const next = theme === 'light' ? 'dark' : 'light'
     document.documentElement.setAttribute('data-theme', next)
@@ -116,7 +131,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       t, lang, setLang, currency, setCurrency, toast,
       user, setUser, role, isAdmin: role === 'admin',
       page, setPage,
-      sidebarOpen, setSidebarOpen, theme, toggleTheme, toasts,
+      sidebarOpen, setSidebarOpen,
+      sidebarCollapsed, toggleSidebarCollapsed,
+      theme, toggleTheme, toasts,
     }}>
       {children}
     </AppContext.Provider>
