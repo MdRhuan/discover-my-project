@@ -30,7 +30,7 @@ const PAGE_TITLES: Partial<Record<PageKey, string>> = {
 }
 
 export function Topbar() {
-  const { page, lang, setLang, currency, setCurrency, theme, toggleTheme, setSidebarOpen } = useApp()
+  const { page, lang, setLang, currency, setCurrency, theme, toggleTheme, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapsed } = useApp()
 
   const now = new Date()
   const tzBR = now.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
@@ -41,6 +41,14 @@ export function Topbar() {
     <header className="topbar">
       <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
         <i className="fas fa-bars" style={{ fontSize: 15 }} />
+      </button>
+      <button
+        className="sidebar-collapse-btn"
+        onClick={toggleSidebarCollapsed}
+        aria-label={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+        title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+      >
+        <i className={`fas ${sidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'}`} style={{ fontSize: 13 }} />
       </button>
       <span className="topbar-title">{PAGE_TITLES[page] || 'Dashboard'}</span>
       <span className="topbar-tz" style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', gap: 10, alignItems: 'center' }}>
