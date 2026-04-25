@@ -1335,15 +1335,15 @@ function OrgChartEditor() {
   }
 
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
-      <div className="page-header">
+    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)', paddingTop: 8, gap: 8 }}>
+      <div className="page-header" style={{ marginBottom: 0, alignItems: 'center' }}>
         <div className="page-header-info">
-          <div className="page-header-title">Organograma Societário</div>
-          <div className="page-header-sub">
-            {connectMode
-              ? (connectSourceId ? '🔗 Modo Conectar · clique no nó de DESTINO (ESC para cancelar)' : '🔗 Modo Conectar · clique no nó de ORIGEM (ESC para cancelar)')
-              : 'Arraste das bordas para conectar · Shift = caixa de seleção · Setas = mover · Ctrl+D duplicar · Ctrl+C/V copiar/colar · Ctrl+0 ajustar'}
-          </div>
+          <div className="page-header-title" style={{ fontSize: 18, lineHeight: 1.2 }}>Organograma Societário</div>
+          {connectMode && (
+            <div className="page-header-sub">
+              {connectSourceId ? '🔗 Modo Conectar · clique no nó de DESTINO (ESC para cancelar)' : '🔗 Modo Conectar · clique no nó de ORIGEM (ESC para cancelar)'}
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => setAddEmpresaModal(true)} title="Adicionar bloco de empresa cadastrada">
