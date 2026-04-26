@@ -575,8 +575,8 @@ function OrgChartEditor() {
           url,
           nome: im.nome,
           rotacao: Number(im.rotacao) || 0,
-          opacidade: im.opacidade ?? 1,
-          raio: im.raio ?? 0,
+          opacidade: im.opacidade != null ? Number(im.opacidade) : 1,
+          raio: im.raio != null ? Number(im.raio) : 0,
         },
       } as Node
     }))
