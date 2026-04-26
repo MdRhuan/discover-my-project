@@ -43,6 +43,18 @@ if (!('createObjectURL' in URL)) {
   ;(URL as any).createObjectURL = () => 'blob:mock'
 }
 
+// Global fetch stub — prevents real network calls (e.g. currency API in
+// FixedExpensesPage) from hanging the test environment.
+;(globalThis as any).fetch = vi.fn(async () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({}),
+  text: async () => '',
+  blob: async () => new Blob(),
+  arrayBuffer: async () => new ArrayBuffer(0),
+  headers: new Headers(),
+})) as unknown as typeof fetch
+
 // Keep console.error visible so test failures show real stack traces.
 // Silence only React's noisy "not wrapped in act" / lifecycle warnings.
 const _origWarn = console.warn
