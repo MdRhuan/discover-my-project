@@ -203,30 +203,29 @@ describe('Sequential page navigation smoke test', () => {
   })
 
   it('mounts every page in sequence without triggering the ErrorBoundary', async () => {
-    const { container } = render(<TestTree />)
-
-    // Wait for the driver to mount and the first page to render
-    await waitFor(() => expect(driver).not.toBeNull(), { timeout: 5000 })
-
     const failures: string[] = []
 
     for (const pageKey of ALL_PAGES) {
       const startedAt = Date.now()
+      // Fresh mount per page so heavy pages (OrgChart/ReactFlow) cannot leak
+      // pending effects/timers into the next iteration.
+      const { container, unmount } = render(<TestTree />)
       try {
+        await waitFor(() => expect(driver).not.toBeNull(), { timeout: 3000 })
+
         await act(async () => {
           driver!.setPage(pageKey)
         })
 
-        // Wait for Suspense lazy chunk to resolve (max 1.5s per page)
         await waitFor(
           () => {
             const fallback = container.querySelector('[data-testid="suspense-fallback"]')
             expect(fallback).toBeNull()
           },
-          { timeout: 1500 }
+          { timeout: 3000 }
         )
 
-        // Brief settle to let initial effects flush
+        // Brief settle so initial effects flush
         await act(async () => {
           await new Promise(r => setTimeout(r, 10))
         })
@@ -241,6 +240,15 @@ describe('Sequential page navigation smoke test', () => {
         // eslint-disable-next-line no-console
         console.log(`[smoke] ${pageKey} TIMEOUT after ${Date.now() - startedAt}ms`)
         failures.push(`${pageKey} (timeout/exception)`)
+      } finally {
+        // Unmount synchronously inside act so React runs cleanup effects
+        // (clearTimeout, removeChannel, removeEventListener, ...) before we
+        // move to the next page. This is what prevents the suite from
+        // accumulating dangling timers across iterations.
+        await act(async () => {
+          unmount()
+        })
+        driver = null
       }
     }
 
