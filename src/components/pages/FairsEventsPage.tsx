@@ -100,9 +100,10 @@ export function FairsEventsPage() {
         const ins = await supabase.from('fair_notes')
           .insert({ data: { notas: [], feiras: [], tags: [] } as never })
           .select('id, data').single()
-        if (ins.error) { console.error(ins.error); setLoaded(true); return }
+        if (ins.error || !ins.data) { console.error(ins.error); setLoaded(true); return }
         row = ins.data
       }
+      if (!row) { setLoaded(true); return }
       setRowId(row.id as number)
       setData((row.data || { notas: [], feiras: [], tags: [] }) as unknown as FairnotesData)
       setLoaded(true)
