@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useApp } from '@/context/AppContext'
 import { db } from '@/lib/db'
 
@@ -10,6 +10,18 @@ export function BackupPage() {
   const [confirmReset, setConfirmReset] = useState(false)
   const [resetting, setResetting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  // Track the post-reset reload timer so unmount cancels it (prevents
+  // dangling timers in tests / fast unmount).
+  const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (reloadTimerRef.current) {
+        clearTimeout(reloadTimerRef.current)
+        reloadTimerRef.current = null
+      }
+    }
+  }, [])
 
   async function exportJSON() {
     const [empresas, funcionarios, documentos, transacoes, orgNodes, auditLog] = await Promise.all([
@@ -57,7 +69,7 @@ export function BackupPage() {
       ])
       toast('Todos os dados foram apagados.', 'success')
       setConfirmReset(false)
-      setTimeout(() => window.location.reload(), 800)
+      reloadTimerRef.current = setTimeout(() => window.location.reload(), 800)
     } catch { toast('Erro ao apagar dados.', 'error') }
     setResetting(false)
   }
