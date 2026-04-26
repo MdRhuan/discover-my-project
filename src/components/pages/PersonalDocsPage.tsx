@@ -217,7 +217,7 @@ export function PersonalDocsPage() {
       <div className="page-header">
         <div className="page-header-info">
           <div className="page-header-title">Documentos Pessoais</div>
-          <div className="page-header-sub">{docs.length} documento{docs.length !== 1 ? 's' : ''}</div>
+          <div className="page-header-sub">{`${docs.length} ${docs.length === 1 ? 'documento' : 'documentos'}`}</div>
         </div>
         <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY_DOC, pessoa: activePerson || EMPTY_DOC.pessoa, dataUpload: today }); setDocModal(true) }}>
           <i className="fas fa-plus" />Novo Documento
@@ -226,8 +226,6 @@ export function PersonalDocsPage() {
 
       {/* Pessoas (abas) */}
       <PeopleTabs activePersonName={activePerson} onActivePersonChange={setActivePerson} />
-
-      
 
       {/* Subcategory chips */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 18 }}>
