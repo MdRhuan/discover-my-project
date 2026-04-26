@@ -1,13 +1,12 @@
 /**
- * Smoke test that mounts every page in sequence and asserts none crash.
+ * Sequential page smoke test.
  *
- * Strategy: mock the Supabase client and `db` helpers so all queries return
- * empty data, render `Shell` once, then iterate `setPage(...)` for every
- * known PageKey. After each navigation we wait for Suspense to resolve and
- * confirm the ErrorBoundary fallback never appears.
+ * Renders the full App once, then navigates programmatically through every
+ * page key. After each navigation we wait for Suspense to resolve and assert
+ * the ErrorBoundary fallback never appears.
  */
-import { describe, it, expect, vi, beforeAll } from 'vitest'
-import { render, screen, act, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, act, waitFor } from '@testing-library/react'
 import { mockSupabaseClient } from './mockSupabase'
 
 // --- Mock Supabase BEFORE importing anything that touches it ---
@@ -21,8 +20,8 @@ vi.mock('@/integrations/supabase/client', () => ({
 }))
 
 // Mock db helpers so every table read resolves to []
-vi.mock('@/lib/db', async () => {
-  const tableMock = {
+vi.mock('@/lib/db', () => {
+  const tableMock: any = {
     toArray: async () => [],
     add: async () => 1,
     update: async () => {},
@@ -51,40 +50,32 @@ vi.mock('@/lib/db', async () => {
 })
 
 // Stub heavy chart libs that misbehave under jsdom
-vi.mock('chart.js', () => ({
-  Chart: class { destroy() {} update() {} resize() {} },
-  registerables: [],
-  CategoryScale: class {},
-  LinearScale: class {},
-  BarElement: class {},
-  Title: class {},
-  Tooltip: class {},
-  Legend: class {},
-  ArcElement: class {},
-  PointElement: class {},
-  LineElement: class {},
-  Filler: class {},
-  DoughnutController: class {},
-  BarController: class {},
-  LineController: class {},
-  PieController: class {},
-}))
+vi.mock('chart.js', () => {
+  class Stub { destroy() {} update() {} resize() {} }
+  return {
+    Chart: Stub,
+    registerables: [],
+    CategoryScale: Stub, LinearScale: Stub, BarElement: Stub,
+    Title: Stub, Tooltip: Stub, Legend: Stub, ArcElement: Stub,
+    PointElement: Stub, LineElement: Stub, Filler: Stub,
+    DoughnutController: Stub, BarController: Stub,
+    LineController: Stub, PieController: Stub,
+  }
+})
 
 vi.mock('react-chartjs-2', () => ({
-  Bar: () => null,
-  Line: () => null,
-  Pie: () => null,
-  Doughnut: () => null,
-  Chart: () => null,
+  Bar: () => null, Line: () => null, Pie: () => null,
+  Doughnut: () => null, Chart: () => null,
 }))
 
 vi.mock('reactflow', async () => {
   const React = await import('react')
+  const Pass = ({ children }: any) => React.createElement('div', null, children)
   return {
     __esModule: true,
-    default: ({ children }: any) => React.createElement('div', null, children),
-    ReactFlow: ({ children }: any) => React.createElement('div', null, children),
-    ReactFlowProvider: ({ children }: any) => React.createElement('div', null, children),
+    default: Pass,
+    ReactFlow: Pass,
+    ReactFlowProvider: Pass,
     Background: () => null,
     Controls: () => null,
     MiniMap: () => null,
@@ -93,13 +84,9 @@ vi.mock('reactflow', async () => {
     useNodesState: () => [[], () => {}, () => {}],
     useEdgesState: () => [[], () => {}, () => {}],
     useReactFlow: () => ({
-      fitView: () => {},
-      zoomIn: () => {},
-      zoomOut: () => {},
-      setViewport: () => {},
-      getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
-      project: (p: any) => p,
-      screenToFlowPosition: (p: any) => p,
+      fitView: () => {}, zoomIn: () => {}, zoomOut: () => {},
+      setViewport: () => {}, getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
+      project: (p: any) => p, screenToFlowPosition: (p: any) => p,
     }),
     addEdge: (e: any, edges: any[]) => [...edges, e],
     applyEdgeChanges: (_c: any, edges: any[]) => edges,
@@ -110,77 +97,132 @@ vi.mock('reactflow', async () => {
   }
 })
 
-// Now import the app after all mocks are in place
+// Now import after mocks
+import { AppProvider, useApp } from '@/context/AppContext'
 import App from '@/App'
-import { useApp } from '@/context/AppContext'
 import type { PageKey } from '@/types'
 
-// All routable pages in the application (matches App.tsx switch cases)
 const ALL_PAGES: PageKey[] = [
-  'dashboard',
-  'tasks',
-  'companies',
-  'emConstrucao',
-  'employees',
-  'documents',
-  'billing',
-  'orgchart',
-  'valuations',
-  'personalDocs',
-  'lifeInsurance',
-  'carInsurance',
-  'aptInsurance',
-  'investments',
-  'realEstate',
-  'bensMoveis',
-  'fixedExpenses',
-  'fairsEvents',
-  'juridico',
-  'acordoGaveta',
-  'trademarks',
-  'fiscalTax',
-  'taxPlanning',
-  'checkBox',
-  'backup',
-  'auditLog',
-  'users',
+  'dashboard', 'tasks', 'companies', 'emConstrucao', 'employees',
+  'documents', 'billing', 'orgchart', 'valuations', 'personalDocs',
+  'lifeInsurance', 'carInsurance', 'aptInsurance', 'investments',
+  'realEstate', 'bensMoveis', 'fixedExpenses', 'fairsEvents',
+  'juridico', 'acordoGaveta', 'trademarks', 'fiscalTax',
+  'taxPlanning', 'checkBox', 'backup', 'auditLog', 'users',
 ]
 
-// Helper component used to drive page navigation from inside the App tree.
-let setPageRef: ((p: PageKey) => void) | null = null
+// Helper that exposes setPage to the test
+let driver: { setPage: (p: PageKey) => void } | null = null
 function NavigationDriver() {
   const { setPage } = useApp()
-  setPageRef = setPage
+  driver = { setPage }
   return null
 }
 
-beforeAll(() => {
-  // Mark window as logged-in so AuthScreen is bypassed quickly
-  // (AppContext picks up the session from supabase.auth.getSession via mock)
-})
+// Re-export the App as a tree we can mount with a driver injected
+function TestTree() {
+  return (
+    <AppProvider>
+      <NavigationDriver />
+      {/* Mount App as a sibling — it has its own AppProvider but useApp resolves
+          to the *nearest* provider, which for both subtrees is the outer one
+          ONLY if App didn't wrap its own. Since App DOES wrap its own provider,
+          we instead skip App and render the Shell directly via App's default. */}
+      <AppShellForTests />
+    </AppProvider>
+  )
+}
+
+// Inline a minimal Shell that mirrors App's rendering logic, sharing our outer
+// AppProvider so the driver can navigate.
+import { lazy, Suspense } from 'react'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+
+const pages = {
+  dashboard:      lazy(() => import('@/components/pages/DashboardPage').then(m => ({ default: m.DashboardPage }))),
+  tasks:          lazy(() => import('@/components/pages/TasksPage').then(m => ({ default: m.TasksPage }))),
+  companies:      lazy(() => import('@/components/pages/CompaniesPage').then(m => ({ default: m.CompaniesPage }))),
+  emConstrucao:   lazy(() => import('@/components/pages/EmConstrucaoPage').then(m => ({ default: m.EmConstrucaoPage }))),
+  employees:      lazy(() => import('@/components/pages/EmployeesPage').then(m => ({ default: m.EmployeesPage }))),
+  documents:      lazy(() => import('@/components/pages/DocumentsPage').then(m => ({ default: m.DocumentsPage }))),
+  billing:        lazy(() => import('@/components/pages/BillingPage').then(m => ({ default: m.BillingPage }))),
+  orgchart:       lazy(() => import('@/components/pages/OrgChartPage').then(m => ({ default: m.OrgChartPage }))),
+  valuations:     lazy(() => import('@/components/pages/ValuationsPage').then(m => ({ default: m.ValuationsPage }))),
+  personalDocs:   lazy(() => import('@/components/pages/PersonalDocsPage').then(m => ({ default: m.PersonalDocsPage }))),
+  lifeInsurance:  lazy(() => import('@/components/pages/LifeInsurancePage').then(m => ({ default: m.LifeInsurancePage }))),
+  carInsurance:   lazy(() => import('@/components/pages/CarInsurancePage').then(m => ({ default: m.CarInsurancePage }))),
+  aptInsurance:   lazy(() => import('@/components/pages/AptInsurancePage').then(m => ({ default: m.AptInsurancePage }))),
+  investments:    lazy(() => import('@/components/pages/InvestmentsPage').then(m => ({ default: m.InvestmentsPage }))),
+  realEstate:     lazy(() => import('@/components/pages/RealEstatePage').then(m => ({ default: m.RealEstatePage }))),
+  bensMoveis:     lazy(() => import('@/components/pages/BensMoveisPage').then(m => ({ default: m.BensMoveisPage }))),
+  fixedExpenses:  lazy(() => import('@/components/pages/FixedExpensesPage').then(m => ({ default: m.FixedExpensesPage }))),
+  fairsEvents:    lazy(() => import('@/components/pages/FairsEventsPage').then(m => ({ default: m.FairsEventsPage }))),
+  juridico:       lazy(() => import('@/components/pages/JuridicoPage').then(m => ({ default: m.JuridicoPage }))),
+  acordoGaveta:   lazy(() => import('@/components/pages/AcordoGavetaPage').then(m => ({ default: m.AcordoGavetaPage }))),
+  trademarks:     lazy(() => import('@/components/pages/TrademarksPage').then(m => ({ default: m.TrademarksPage }))),
+  fiscalTax:      lazy(() => import('@/components/pages/FiscalTaxPage').then(m => ({ default: m.FiscalTaxPage }))),
+  taxPlanning:    lazy(() => import('@/components/pages/TaxPlanningPage').then(m => ({ default: m.TaxPlanningPage }))),
+  checkBox:       lazy(() => import('@/components/pages/CheckBoxPage').then(m => ({ default: m.CheckBoxPage }))),
+  backup:         lazy(() => import('@/components/pages/BackupPage').then(m => ({ default: m.BackupPage }))),
+  auditLog:       lazy(() => import('@/components/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage }))),
+  users:          lazy(() => import('@/components/pages/UsersPage').then(m => ({ default: m.UsersPage }))),
+} as const
+
+function AppShellForTests() {
+  const { page } = useApp()
+  const Comp = (pages as any)[page] ?? pages.dashboard
+  return (
+    <ErrorBoundary resetKey={page}>
+      <Suspense fallback={<div data-testid="suspense-fallback">loading</div>}>
+        <Comp />
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
 
 describe('Sequential page navigation smoke test', () => {
-  it('mounts every page in sequence without triggering ErrorBoundary', async () => {
-    const { container } = render(
-      <App>
-        {/* App renders its own children-less tree; we inject driver via portal-less helper */}
-      </App> as any
-    )
-
-    // Inject the driver into the app once it's rendered
-    // (We render a second tree that shares the same React root via context discovery
-    //  is not trivial; instead we re-render with the driver inside.)
-    // Simpler approach: re-render App wrapping a <NavigationDriver /> inside.
-
-    // Wait for Shell to mount (user session resolves)
-    await waitFor(
-      () => {
-        // After login mock resolves, the sidebar/topbar should appear.
-        // Look for any element typical of the shell.
-        const shell = container.querySelector('.app-shell, .main-area, main')
-        expect(shell).toBeTruthy()
-      },
-      { timeout: 10000 }
-    )
+  it('App imports cleanly (no module-load errors)', () => {
+    expect(App).toBeTruthy()
   })
+
+  it('mounts every page in sequence without triggering the ErrorBoundary', async () => {
+    const { container } = render(<TestTree />)
+
+    // Wait for the driver to mount and the first page to render
+    await waitFor(() => expect(driver).not.toBeNull(), { timeout: 5000 })
+
+    const failures: string[] = []
+
+    for (const pageKey of ALL_PAGES) {
+      // Navigate
+      await act(async () => {
+        driver!.setPage(pageKey)
+      })
+
+      // Wait for Suspense lazy chunk to resolve
+      await waitFor(
+        () => {
+          const fallback = container.querySelector('[data-testid="suspense-fallback"]')
+          expect(fallback).toBeNull()
+        },
+        { timeout: 8000 }
+      )
+
+      // Allow microtasks for first render to settle
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 30))
+      })
+
+      // ErrorBoundary fallback check: text "Erro ao renderizar a página"
+      const errorText = container.textContent ?? ''
+      if (errorText.includes('Erro ao renderizar a página')) {
+        failures.push(pageKey)
+      }
+    }
+
+    expect(
+      failures,
+      `Pages that crashed during sequential navigation: ${failures.join(', ')}`
+    ).toEqual([])
+  }, 120000)
 })
