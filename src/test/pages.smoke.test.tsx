@@ -60,8 +60,13 @@ vi.mock('@/lib/db', () => {
 // Stub heavy chart libs that misbehave under jsdom
 vi.mock('chart.js', () => {
   class Stub { destroy() {} update() {} resize() {} }
+  const ChartCtor: any = function () { return new Stub() }
+  ChartCtor.register = () => {}
+  ChartCtor.unregister = () => {}
+  ChartCtor.defaults = { font: {}, color: '', plugins: {} }
   return {
-    Chart: Stub,
+    Chart: ChartCtor,
+    default: ChartCtor,
     registerables: [],
     CategoryScale: Stub, LinearScale: Stub, BarElement: Stub,
     Title: Stub, Tooltip: Stub, Legend: Stub, ArcElement: Stub,
@@ -91,6 +96,10 @@ vi.mock('reactflow', async () => {
     Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
     useNodesState: () => [[], () => {}, () => {}],
     useEdgesState: () => [[], () => {}, () => {}],
+    useViewport: () => ({ x: 0, y: 0, zoom: 1 }),
+    useStore: () => ({}),
+    useStoreApi: () => ({ getState: () => ({}), setState: () => {}, subscribe: () => () => {} }),
+    useOnViewportChange: () => {},
     useReactFlow: () => ({
       fitView: () => {}, zoomIn: () => {}, zoomOut: () => {},
       setViewport: () => {}, getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
