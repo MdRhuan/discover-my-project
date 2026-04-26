@@ -152,7 +152,7 @@ export function InsuranceDocsManager({ insuranceType, apoliceId = null, apoliceL
     }
   }
 
-  const cats = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
+  const cats = Array.from(new Set(docs.map(d => d.categoria).filter(Boolean))) as string[]
   const filtered = docs.filter(d =>
     (!filterCat || d.categoria === filterCat) &&
     (!search || d.nome.toLowerCase().includes(search.toLowerCase()) || (d.apolice_label || '').toLowerCase().includes(search.toLowerCase()))

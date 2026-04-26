@@ -71,7 +71,7 @@ export function GenericDocPage({ title, subtitle, docType, defaultSubcat = '', s
     return <span className="badge badge-green" style={{ fontSize: 10 }}>Válido</span>
   }
 
-  const allSubcats = subcats.length ? subcats : [...new Set(docs.map(d => d.subcategoria).filter(Boolean))]
+  const allSubcats = subcats.length ? subcats : Array.from(new Set(docs.map(d => d.subcategoria).filter(Boolean)))
 
   return (
     <div className="page-content">
