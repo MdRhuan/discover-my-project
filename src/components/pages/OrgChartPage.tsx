@@ -507,7 +507,7 @@ function OrgChartEditor() {
           icon: node.icon || 'empresa',
           corBorda: node.corBorda,
           corFundo: node.corFundo,
-          espessuraBorda: node.espessuraBorda,
+          espessuraBorda: node.espessuraBorda != null ? Number(node.espessuraBorda) : undefined,
           estiloBorda: node.estiloBorda,
         },
       }
@@ -521,12 +521,12 @@ function OrgChartEditor() {
       data: {
         conteudo: t.conteudo,
         fonte: t.fonte,
-        tamanho: t.tamanho,
+        tamanho: t.tamanho != null ? Number(t.tamanho) : undefined,
         cor: t.cor,
         alinhamento: (t.alinhamento || 'left') as 'left' | 'center' | 'right',
         negrito: t.negrito,
         italico: t.italico,
-        largura: t.largura,
+        largura: t.largura != null ? Number(t.largura) : undefined,
       },
     }))
 
@@ -540,10 +540,11 @@ function OrgChartEditor() {
         rotulo: s.rotulo,
         corBorda: s.corBorda,
         corFundo: s.corFundo,
-        espessuraBorda: s.espessuraBorda,
+        // Postgres numeric columns return strings via supabase-js; coerce to numbers
+        espessuraBorda: s.espessuraBorda != null ? Number(s.espessuraBorda) : undefined,
         estiloBorda: s.estiloBorda,
-        raio: s.raio,
-        opacidade: s.opacidade,
+        raio: s.raio != null ? Number(s.raio) : undefined,
+        opacidade: s.opacidade != null ? Number(s.opacidade) : undefined,
       },
     }))
 
@@ -574,8 +575,8 @@ function OrgChartEditor() {
           url,
           nome: im.nome,
           rotacao: Number(im.rotacao) || 0,
-          opacidade: im.opacidade ?? 1,
-          raio: im.raio ?? 0,
+          opacidade: im.opacidade != null ? Number(im.opacidade) : 1,
+          raio: im.raio != null ? Number(im.raio) : 0,
         },
       } as Node
     }))
