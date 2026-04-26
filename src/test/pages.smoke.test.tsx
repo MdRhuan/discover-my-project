@@ -21,24 +21,32 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 // Mock db helpers so every table read resolves to []
 vi.mock('@/lib/db', () => {
-  const tableMock: any = {
-    toArray: async () => [],
-    add: async () => 1,
-    update: async () => {},
-    delete: async () => {},
-    get: async () => null,
-    put: async () => {},
-    where: () => ({
-      equals: () => ({
-        toArray: async () => [],
-        delete: async () => {},
-        first: async () => null,
-      }),
-    }),
-    bulkAdd: async () => [],
-    clear: async () => {},
-    count: async () => 0,
-  }
+  const chain: any = new Proxy(function () {}, {
+    get(_t, prop) {
+      if (prop === 'then') return (r: any) => Promise.resolve([]).then(r)
+      if (prop === 'toArray') return async () => []
+      if (prop === 'first') return async () => null
+      if (prop === 'count') return async () => 0
+      if (prop === 'delete') return async () => {}
+      return () => chain
+    },
+    apply: () => chain,
+  })
+  const tableMock: any = new Proxy({}, {
+    get(_t, prop) {
+      if (prop === 'toArray') return async () => []
+      if (prop === 'add') return async () => 1
+      if (prop === 'update') return async () => {}
+      if (prop === 'delete') return async () => {}
+      if (prop === 'get') return async () => null
+      if (prop === 'put') return async () => {}
+      if (prop === 'bulkAdd') return async () => []
+      if (prop === 'clear') return async () => {}
+      if (prop === 'count') return async () => 0
+      // any chainable method (where, orderBy, filter, ...) returns the chain
+      return () => chain
+    },
+  })
   return {
     db: new Proxy({}, { get: () => tableMock }),
     supabaseSignOut: async () => {},
