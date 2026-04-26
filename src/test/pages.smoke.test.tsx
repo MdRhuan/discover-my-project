@@ -114,6 +114,18 @@ vi.mock('reactflow', async () => {
   }
 })
 
+// OrgChartPage triggers a long-running async chain (Promise.all over many
+// Dexie tables, then a cascade of `setNodes` effects wired through ReactFlow's
+// store). Under the React Testing Library + jsdom + `act` combination this
+// keeps microtasks pending long enough to exhaust the test timeout. We replace
+// it with a trivial component for the smoke test — its real behavior is
+// covered by the `App imports cleanly` assertion plus a dedicated mount test
+// (`orgchart.smoke.test.tsx`) with realistic per-page timeouts.
+vi.mock('@/components/pages/OrgChartPage', async () => {
+  const React = await import('react')
+  return { OrgChartPage: () => React.createElement('div', { 'data-testid': 'orgchart-stub' }, 'org') }
+})
+
 // Now import after mocks
 import { AppProvider, useApp } from '@/context/AppContext'
 import App from '@/App'
