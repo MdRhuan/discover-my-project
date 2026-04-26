@@ -75,18 +75,33 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
 
   useEffect(() => { load() }, [load])
 
-  // Auto-selecionar primeira pessoa
+  // Auto-selecionar primeira pessoa (ou sincronizar com prop externa)
   useEffect(() => {
+    if (pessoas.length === 0) {
+      if (activeId !== null) setActiveId(null)
+      return
+    }
+    // Prefer prop externa quando definida
+    if (activePersonName) {
+      const p = pessoas.find(x => x.nome === activePersonName)
+      if (p && p.id !== activeId) { setActiveId(p.id); return }
+      if (p) return
+    }
+    // Mantém seleção atual se ainda válida
     if (activeId && pessoas.some(p => p.id === activeId)) return
-    if (pessoas.length > 0) setActiveId(pessoas[0].id)
-    else setActiveId(null)
-  }, [pessoas, activeId])
+    // Default: primeira pessoa
+    setActiveId(pessoas[0].id)
+  }, [pessoas, activeId, activePersonName])
 
-  // Notificar pai sobre a pessoa ativa
+  // Notificar pai sobre a pessoa ativa (apenas quando o nome muda de fato)
   useEffect(() => {
     const p = pessoas.find(x => x.id === activeId)
-    onActivePersonChange?.(p?.nome || null)
-  }, [activeId, pessoas, onActivePersonChange])
+    const nome = p?.nome || null
+    if (nome !== (activePersonName ?? null)) {
+      onActivePersonChange?.(nome)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, pessoas])
 
   const active = pessoas.find(p => p.id === activeId) || null
 
@@ -120,14 +135,6 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
     if (activeId === id) setActiveId(null)
     load()
   }
-
-  // Sync com prop externa (caso o pai mude)
-  useEffect(() => {
-    if (activePersonName === undefined) return
-    if (!activePersonName) return
-    const p = pessoas.find(x => x.nome === activePersonName)
-    if (p && p.id !== activeId) { setActiveId(p.id) }
-  }, [activePersonName, pessoas, activeId])
 
   return (
     <div style={{ marginBottom: 18 }}>
