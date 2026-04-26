@@ -43,6 +43,11 @@ if (!('createObjectURL' in URL)) {
   ;(URL as any).createObjectURL = () => 'blob:mock'
 }
 
-// Silence noisy logs in CI
-vi.spyOn(console, 'error').mockImplementation(() => {})
-vi.spyOn(console, 'warn').mockImplementation(() => {})
+// Keep console.error visible so test failures show real stack traces.
+// Silence only React's noisy "not wrapped in act" / lifecycle warnings.
+const _origWarn = console.warn
+vi.spyOn(console, 'warn').mockImplementation((...args: any[]) => {
+  const msg = String(args[0] ?? '')
+  if (msg.includes('not wrapped in act') || msg.includes('componentWillMount')) return
+  _origWarn(...args)
+})
