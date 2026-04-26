@@ -540,10 +540,11 @@ function OrgChartEditor() {
         rotulo: s.rotulo,
         corBorda: s.corBorda,
         corFundo: s.corFundo,
-        espessuraBorda: s.espessuraBorda,
+        // Postgres numeric columns return strings via supabase-js; coerce to numbers
+        espessuraBorda: s.espessuraBorda != null ? Number(s.espessuraBorda) : undefined,
         estiloBorda: s.estiloBorda,
-        raio: s.raio,
-        opacidade: s.opacidade,
+        raio: s.raio != null ? Number(s.raio) : undefined,
+        opacidade: s.opacidade != null ? Number(s.opacidade) : undefined,
       },
     }))
 
