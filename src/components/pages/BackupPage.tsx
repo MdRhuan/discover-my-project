@@ -106,7 +106,7 @@ export function BackupPage() {
 
       <div className="alert alert-warning" style={{ marginTop:20, maxWidth:700 }}>
         <i className="fas fa-triangle-exclamation" />
-        <div><strong>Dados armazenados na nuvem via Supabase.</strong> Faça backups regulares em JSON para ter uma cópia local de segurança.</div>
+        <div><strong>Dados armazenados na nuvem via Lovable Cloud.</strong> Faça backups regulares em JSON para ter uma cópia local de segurança.</div>
       </div>
 
       {confirmReset && (
