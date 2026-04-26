@@ -211,29 +211,35 @@ describe('Sequential page navigation smoke test', () => {
     const failures: string[] = []
 
     for (const pageKey of ALL_PAGES) {
+      const startedAt = Date.now()
       try {
         await act(async () => {
           driver!.setPage(pageKey)
         })
 
-        // Wait for Suspense lazy chunk to resolve (max 3s per page)
+        // Wait for Suspense lazy chunk to resolve (max 1.5s per page)
         await waitFor(
           () => {
             const fallback = container.querySelector('[data-testid="suspense-fallback"]')
             expect(fallback).toBeNull()
           },
-          { timeout: 3000 }
+          { timeout: 1500 }
         )
 
+        // Brief settle to let initial effects flush
         await act(async () => {
-          await new Promise(r => setTimeout(r, 20))
+          await new Promise(r => setTimeout(r, 10))
         })
 
         const errorText = container.textContent ?? ''
         if (errorText.includes('Erro ao renderizar a página')) {
           failures.push(pageKey)
         }
+        // eslint-disable-next-line no-console
+        console.log(`[smoke] ${pageKey} ok in ${Date.now() - startedAt}ms`)
       } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log(`[smoke] ${pageKey} TIMEOUT after ${Date.now() - startedAt}ms`)
         failures.push(`${pageKey} (timeout/exception)`)
       }
     }
@@ -242,5 +248,5 @@ describe('Sequential page navigation smoke test', () => {
       failures,
       `Pages that crashed during sequential navigation: ${failures.join(', ')}`
     ).toEqual([])
-  }, 180000)
+  }, 120000)
 })
