@@ -142,7 +142,7 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
         {pessoas.map(p => {
           const isActive = p.id === activeId
           return (
-            <button key={p.id} onClick={() => { setActiveId(p.id) }}
+            <button key={p.id} onClick={() => { setActive(p.id) }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px',
                 background: 'transparent', border: 0,
