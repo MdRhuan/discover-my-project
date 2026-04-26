@@ -56,7 +56,6 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
   const { toast, isAdmin } = useApp()
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeId, setActiveId] = useState<number | null>(null)
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState<Partial<Pessoa>>(EMPTY_FORM)
   const [confirmId, setConfirmId] = useState<number | null>(null)
@@ -75,33 +74,33 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
 
   useEffect(() => { load() }, [load])
 
-  // Auto-selecionar primeira pessoa (ou sincronizar com prop externa)
-  useEffect(() => {
-    if (pessoas.length === 0) {
-      if (activeId !== null) setActiveId(null)
-      return
-    }
-    // Prefer prop externa quando definida
+  // Componente totalmente CONTROLADO pelo pai via activePersonName.
+  // activeId deriva apenas de pessoas + activePersonName (sem state local duplicado).
+  const activeId: number | null = (() => {
+    if (pessoas.length === 0) return null
     if (activePersonName) {
       const p = pessoas.find(x => x.nome === activePersonName)
-      if (p && p.id !== activeId) { setActiveId(p.id); return }
-      if (p) return
+      if (p) return p.id
     }
-    // Mantém seleção atual se ainda válida
-    if (activeId && pessoas.some(p => p.id === activeId)) return
-    // Default: primeira pessoa
-    setActiveId(pessoas[0].id)
-  }, [pessoas, activeId, activePersonName])
+    return pessoas[0].id
+  })()
 
-  // Notificar pai sobre a pessoa ativa (apenas quando o nome muda de fato)
+  // Notifica o pai uma única vez quando pessoas carregam pela 1ª vez
+  // ou quando a pessoa selecionada externamente desaparece da lista.
   useEffect(() => {
-    const p = pessoas.find(x => x.id === activeId)
-    const nome = p?.nome || null
+    if (pessoas.length === 0) return
+    const current = pessoas.find(p => p.id === activeId)
+    const nome = current?.nome || null
     if (nome !== (activePersonName ?? null)) {
       onActivePersonChange?.(nome)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeId, pessoas])
+  }, [pessoas])
+
+  const setActive = (id: number) => {
+    const p = pessoas.find(x => x.id === id)
+    onActivePersonChange?.(p?.nome || null)
+  }
 
   const active = pessoas.find(p => p.id === activeId) || null
 
@@ -119,7 +118,7 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
         const ordem = pessoas.length
         const { data, error } = await supabase.from('pessoas').insert({ ...payload, nome: payload.nome!, ordem }).select().single()
         if (error) throw error
-        if (data) setActiveId((data as Pessoa).id)
+        if (data) onActivePersonChange?.((data as Pessoa).nome)
         toast('Pessoa criada.', 'success')
       }
       setModal(false); setForm(EMPTY_FORM); load()
@@ -132,7 +131,7 @@ export function PeopleTabs({ onActivePersonChange, activePersonName }: Props) {
     const { error } = await supabase.from('pessoas').delete().eq('id', id)
     if (error) { toast(error.message, 'error'); return }
     toast('Pessoa removida.', 'success'); setConfirmId(null)
-    if (activeId === id) setActiveId(null)
+    if (activeId === id) onActivePersonChange?.(null)
     load()
   }
 
