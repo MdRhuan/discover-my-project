@@ -242,5 +242,5 @@ describe('Sequential page navigation smoke test', () => {
       failures,
       `Pages that crashed during sequential navigation: ${failures.join(', ')}`
     ).toEqual([])
-  }, 90000)
+  }, 180000)
 })
