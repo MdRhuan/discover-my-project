@@ -4,6 +4,7 @@ import { AuthScreen } from '@/components/layout/AuthScreen'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
 import { ToastContainer } from '@/components/ui/Toast'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 const DashboardPage     = lazy(() => import('@/components/pages/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const TasksPage         = lazy(() => import('@/components/pages/TasksPage').then(m => ({ default: m.TasksPage })))
@@ -107,7 +108,9 @@ function Shell() {
       <div className="main-area">
         <Topbar />
         <main className="page-content">
-          <Suspense fallback={fallback}>{content}</Suspense>
+          <ErrorBoundary resetKey={effectivePage}>
+            <Suspense fallback={fallback}>{content}</Suspense>
+          </ErrorBoundary>
         </main>
       </div>
       <ToastContainer />
