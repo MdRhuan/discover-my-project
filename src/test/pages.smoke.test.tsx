@@ -211,29 +211,30 @@ describe('Sequential page navigation smoke test', () => {
     const failures: string[] = []
 
     for (const pageKey of ALL_PAGES) {
-      // Navigate
-      await act(async () => {
-        driver!.setPage(pageKey)
-      })
+      try {
+        await act(async () => {
+          driver!.setPage(pageKey)
+        })
 
-      // Wait for Suspense lazy chunk to resolve
-      await waitFor(
-        () => {
-          const fallback = container.querySelector('[data-testid="suspense-fallback"]')
-          expect(fallback).toBeNull()
-        },
-        { timeout: 8000 }
-      )
+        // Wait for Suspense lazy chunk to resolve (max 3s per page)
+        await waitFor(
+          () => {
+            const fallback = container.querySelector('[data-testid="suspense-fallback"]')
+            expect(fallback).toBeNull()
+          },
+          { timeout: 3000 }
+        )
 
-      // Allow microtasks for first render to settle
-      await act(async () => {
-        await new Promise(r => setTimeout(r, 30))
-      })
+        await act(async () => {
+          await new Promise(r => setTimeout(r, 20))
+        })
 
-      // ErrorBoundary fallback check: text "Erro ao renderizar a página"
-      const errorText = container.textContent ?? ''
-      if (errorText.includes('Erro ao renderizar a página')) {
-        failures.push(pageKey)
+        const errorText = container.textContent ?? ''
+        if (errorText.includes('Erro ao renderizar a página')) {
+          failures.push(pageKey)
+        }
+      } catch (e) {
+        failures.push(`${pageKey} (timeout/exception)`)
       }
     }
 
@@ -241,5 +242,5 @@ describe('Sequential page navigation smoke test', () => {
       failures,
       `Pages that crashed during sequential navigation: ${failures.join(', ')}`
     ).toEqual([])
-  }, 120000)
+  }, 90000)
 })
