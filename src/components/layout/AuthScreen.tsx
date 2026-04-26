@@ -15,12 +15,19 @@ export function AuthScreen() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    let mountTimer: ReturnType<typeof setTimeout> | null = null
+    let cancelled = false
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return
       if (!session) {
         setChecking(false)
-        setTimeout(() => setMounted(true), 30)
+        mountTimer = setTimeout(() => setMounted(true), 30)
       }
     })
+    return () => {
+      cancelled = true
+      if (mountTimer) clearTimeout(mountTimer)
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
