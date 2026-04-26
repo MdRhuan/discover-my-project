@@ -507,7 +507,7 @@ function OrgChartEditor() {
           icon: node.icon || 'empresa',
           corBorda: node.corBorda,
           corFundo: node.corFundo,
-          espessuraBorda: node.espessuraBorda,
+          espessuraBorda: node.espessuraBorda != null ? Number(node.espessuraBorda) : undefined,
           estiloBorda: node.estiloBorda,
         },
       }
