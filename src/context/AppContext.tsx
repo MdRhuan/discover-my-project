@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { Lang, Currency, Toast, PageKey } from '@/types'
 import { TRANSLATIONS, type Translations } from '@/lib/i18n'
 import { db, supabaseSignOut } from '@/lib/db'
@@ -102,10 +102,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     db.config.put({ chave: 'prefs', value: { lang, currency } }).catch(() => {})
   }, [lang, currency, user])
 
+  // Track pending toast timers so we can cancel them on unmount (prevents
+  // dangling timers in tests / fast unmount scenarios).
+  const toastTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
   const toast = useCallback((msg: string, type: Toast['type'] = 'success') => {
     const id = Date.now()
     setToasts(prev => [...prev, { id, msg, type }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500)
+    const timer = setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+      toastTimersRef.current.delete(timer)
+    }, 3500)
+    toastTimersRef.current.add(timer)
+  }, [])
+
+  useEffect(() => {
+    const timers = toastTimersRef.current
+    return () => {
+      timers.forEach(t => clearTimeout(t))
+      timers.clear()
+    }
   }, [])
 
   useEffect(() => {

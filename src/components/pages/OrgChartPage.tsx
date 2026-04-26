@@ -1223,6 +1223,16 @@ function OrgChartEditor() {
     if (updated.length) persistPositions(updated)
   }, [setNodes, persistPositions])
 
+  // ============ Cancel pending autosave timer on unmount ============
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        window.clearTimeout(saveTimer.current)
+        saveTimer.current = null
+      }
+    }
+  }, [])
+
   // ============ Keyboard shortcuts ============
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
