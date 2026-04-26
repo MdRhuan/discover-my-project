@@ -135,8 +135,8 @@ export function PersonalDocsPage() {
     }
   }
 
-  const pessoas = [...new Set(docs.map(d => d.pessoa).filter(Boolean))] as string[]
-  const categorias = [...new Set(docs.map(d => d.categoria).filter(Boolean))] as string[]
+  const pessoas = Array.from(new Set(docs.map(d => d.pessoa).filter(Boolean))) as string[]
+  const categorias = Array.from(new Set(docs.map(d => d.categoria).filter(Boolean))) as string[]
   const filtered = docs.filter(d =>
     (!activePerson || d.pessoa === activePerson) &&
     (!filterCat || d.categoria === filterCat) &&
