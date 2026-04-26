@@ -7,6 +7,7 @@ const PAGE_TITLES: Partial<Record<PageKey, string>> = {
   dashboard: 'Dashboard',
   tasks: 'Tasks & Deadlines',
   companies: 'Empresas',
+  emConstrucao: 'Em Construção',
   employees: 'Funcionários',
   documents: 'Documentos',
   billing: 'Faturamento',
@@ -19,7 +20,9 @@ const PAGE_TITLES: Partial<Record<PageKey, string>> = {
   aptInsurance: 'Seguro do Apartamento',
   investments: 'Investimentos',
   realEstate: 'Imóveis & Mortgage',
+  bensMoveis: 'Bens Móveis',
   fixedExpenses: 'Despesas Fixas',
+  fairsEvents: 'Feiras & Eventos',
   valuations: 'Valuations',
   juridico: 'Jurídico',
   acordoGaveta: 'Acordo de Gaveta',
@@ -27,6 +30,7 @@ const PAGE_TITLES: Partial<Record<PageKey, string>> = {
   fiscalTax: 'Tax Return – IRS',
   taxPlanning: 'Tax Planning',
   checkBox: 'Check-the-box',
+  users: 'Usuários',
 }
 
 export function Topbar() {
