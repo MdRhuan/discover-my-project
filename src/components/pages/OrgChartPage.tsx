@@ -521,12 +521,12 @@ function OrgChartEditor() {
       data: {
         conteudo: t.conteudo,
         fonte: t.fonte,
-        tamanho: t.tamanho,
+        tamanho: t.tamanho != null ? Number(t.tamanho) : undefined,
         cor: t.cor,
         alinhamento: (t.alinhamento || 'left') as 'left' | 'center' | 'right',
         negrito: t.negrito,
         italico: t.italico,
-        largura: t.largura,
+        largura: t.largura != null ? Number(t.largura) : undefined,
       },
     }))
 
