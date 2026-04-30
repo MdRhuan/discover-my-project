@@ -353,10 +353,51 @@ export interface BemMovelTransferencia {
   observacoes?: string
 }
 
+export interface Contato {
+  id?: number
+  nome: string
+  documento?: string
+  documentoTipo?: 'cpf' | 'cnpj'
+  tipo: 'cliente' | 'fornecedor' | 'parceiro' | 'funcionario' | 'consultor' | 'prestador' | 'pessoal' | 'outro'
+  tipoCustomizado?: string
+  empresaVinculada?: string
+  empresaId?: number | null
+  cargo?: string
+  telefonePrincipal?: string
+  telefoneSecundario?: string
+  emailPrincipal?: string
+  emailSecundario?: string
+  cep?: string
+  rua?: string
+  numero?: string
+  complemento?: string
+  bairro?: string
+  cidade?: string
+  estado?: string
+  pais?: string
+  observacoes?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface ContatoTag {
+  id?: number
+  nome: string
+  cor: string
+  createdAt?: string
+}
+
+export interface ContatoTagLink {
+  id?: number
+  contatoId: number
+  tagId: number
+}
+
 export type PageKey =
   | 'dashboard'
   | 'tasks'
   | 'companies'
+  | 'contatos'
   | 'emConstrucao'
   | 'employees'
   | 'documents'

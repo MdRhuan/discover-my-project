@@ -32,6 +32,12 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   setorResponsavel: 'setor_responsavel', colaboradorResponsavel: 'colaborador_responsavel',
   vidaUtil: 'vida_util', metodoDepreciacao: 'metodo_depreciacao', fotoPath: 'foto_path',
   bemId: 'bem_id', setorOrigem: 'setor_origem', setorDestino: 'setor_destino',
+  // Contatos
+  documentoTipo: 'documento_tipo', tipoCustomizado: 'tipo_customizado',
+  empresaVinculada: 'empresa_vinculada', telefonePrincipal: 'telefone_principal',
+  telefoneSecundario: 'telefone_secundario', emailPrincipal: 'email_principal',
+  emailSecundario: 'email_secundario',
+  contatoId: 'contato_id', tagId: 'tag_id',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
@@ -237,6 +243,7 @@ import type {
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog,
   ConstructionFolder, ConstructionDocument, ConstructionFile,
   BemMovel, BemMovelFile, BemMovelManutencao, BemMovelTransferencia,
+  Contato, ContatoTag, ContatoTagLink,
 } from '@/types'
 
 export const db = {
@@ -265,6 +272,9 @@ export const db = {
   bensMoveisFiles: makeTable<BemMovelFile>('bens_moveis_files'),
   bensMoveisManutencoes: makeTable<BemMovelManutencao>('bens_moveis_manutencoes'),
   bensMoveisTransferencias: makeTable<BemMovelTransferencia>('bens_moveis_transferencias'),
+  contatos: makeTable<Contato>('contatos'),
+  contatoTags: makeTable<ContatoTag>('contato_tags'),
+  contatoTagLinks: makeTable<ContatoTagLink>('contato_tag_links'),
   config: configTable,
 }
 
