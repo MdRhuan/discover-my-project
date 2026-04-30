@@ -272,6 +272,9 @@ export const db = {
   bensMoveisFiles: makeTable<BemMovelFile>('bens_moveis_files'),
   bensMoveisManutencoes: makeTable<BemMovelManutencao>('bens_moveis_manutencoes'),
   bensMoveisTransferencias: makeTable<BemMovelTransferencia>('bens_moveis_transferencias'),
+  contatos: makeTable<Contato>('contatos'),
+  contatoTags: makeTable<ContatoTag>('contato_tags'),
+  contatoTagLinks: makeTable<ContatoTagLink>('contato_tag_links'),
   config: configTable,
 }
 
