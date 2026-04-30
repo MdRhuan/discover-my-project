@@ -243,6 +243,7 @@ import type {
   Task, Alerta, DocPessoal, FiscalDoc, Trademark, TrademarkFile, AuditLog,
   ConstructionFolder, ConstructionDocument, ConstructionFile,
   BemMovel, BemMovelFile, BemMovelManutencao, BemMovelTransferencia,
+  Contato, ContatoTag, ContatoTagLink,
 } from '@/types'
 
 export const db = {
