@@ -32,6 +32,12 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   setorResponsavel: 'setor_responsavel', colaboradorResponsavel: 'colaborador_responsavel',
   vidaUtil: 'vida_util', metodoDepreciacao: 'metodo_depreciacao', fotoPath: 'foto_path',
   bemId: 'bem_id', setorOrigem: 'setor_origem', setorDestino: 'setor_destino',
+  // Contatos
+  documentoTipo: 'documento_tipo', tipoCustomizado: 'tipo_customizado',
+  empresaVinculada: 'empresa_vinculada', telefonePrincipal: 'telefone_principal',
+  telefoneSecundario: 'telefone_secundario', emailPrincipal: 'email_principal',
+  emailSecundario: 'email_secundario',
+  contatoId: 'contato_id', tagId: 'tag_id',
 }
 
 const SNAKE_TO_CAMEL: Record<string, string> = Object.fromEntries(
