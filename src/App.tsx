@@ -75,6 +75,7 @@ function Shell() {
     case 'dashboard':      content = <DashboardPage />; break
     case 'tasks':          content = <TasksPage />; break
     case 'companies':      content = <CompaniesPage />; break
+    case 'contatos':       content = <ContatosPage />; break
     case 'emConstrucao':   content = <EmConstrucaoPage />; break
     case 'employees':      content = <EmployeesPage />; break
     case 'documents':      content = <DocumentsPage />; break
