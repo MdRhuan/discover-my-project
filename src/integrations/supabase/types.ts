@@ -466,6 +466,156 @@ export type Database = {
           },
         ]
       }
+      contato_tag_links: {
+        Row: {
+          contato_id: number
+          created_at: string
+          id: number
+          owner_id: string
+          tag_id: number
+        }
+        Insert: {
+          contato_id: number
+          created_at?: string
+          id?: number
+          owner_id?: string
+          tag_id: number
+        }
+        Update: {
+          contato_id?: number
+          created_at?: string
+          id?: number
+          owner_id?: string
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contato_tag_links_contato_id_fkey"
+            columns: ["contato_id"]
+            isOneToOne: false
+            referencedRelation: "contatos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contato_tag_links_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "contato_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contato_tags: {
+        Row: {
+          cor: string
+          created_at: string
+          id: number
+          nome: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          id?: number
+          nome: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: number
+          nome?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contatos: {
+        Row: {
+          bairro: string | null
+          cargo: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          created_at: string
+          documento: string | null
+          documento_tipo: string | null
+          email_principal: string | null
+          email_secundario: string | null
+          empresa_id: number | null
+          empresa_vinculada: string | null
+          estado: string | null
+          id: number
+          nome: string
+          numero: string | null
+          observacoes: string | null
+          owner_id: string
+          pais: string | null
+          rua: string | null
+          telefone_principal: string | null
+          telefone_secundario: string | null
+          tipo: string
+          tipo_customizado: string | null
+          updated_at: string
+        }
+        Insert: {
+          bairro?: string | null
+          cargo?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          documento?: string | null
+          documento_tipo?: string | null
+          email_principal?: string | null
+          email_secundario?: string | null
+          empresa_id?: number | null
+          empresa_vinculada?: string | null
+          estado?: string | null
+          id?: number
+          nome: string
+          numero?: string | null
+          observacoes?: string | null
+          owner_id?: string
+          pais?: string | null
+          rua?: string | null
+          telefone_principal?: string | null
+          telefone_secundario?: string | null
+          tipo?: string
+          tipo_customizado?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bairro?: string | null
+          cargo?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          documento?: string | null
+          documento_tipo?: string | null
+          email_principal?: string | null
+          email_secundario?: string | null
+          empresa_id?: number | null
+          empresa_vinculada?: string | null
+          estado?: string | null
+          id?: number
+          nome?: string
+          numero?: string | null
+          observacoes?: string | null
+          owner_id?: string
+          pais?: string | null
+          rua?: string | null
+          telefone_principal?: string | null
+          telefone_secundario?: string | null
+          tipo?: string
+          tipo_customizado?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       docs_pessoais: {
         Row: {
           categoria: string
