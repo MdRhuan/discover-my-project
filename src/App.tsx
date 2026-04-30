@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 const DashboardPage     = lazy(() => import('@/components/pages/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const TasksPage         = lazy(() => import('@/components/pages/TasksPage').then(m => ({ default: m.TasksPage })))
 const CompaniesPage     = lazy(() => import('@/components/pages/CompaniesPage').then(m => ({ default: m.CompaniesPage })))
+const ContatosPage      = lazy(() => import('@/components/pages/ContatosPage').then(m => ({ default: m.ContatosPage })))
 const EmConstrucaoPage  = lazy(() => import('@/components/pages/EmConstrucaoPage').then(m => ({ default: m.EmConstrucaoPage })))
 const EmployeesPage     = lazy(() => import('@/components/pages/EmployeesPage').then(m => ({ default: m.EmployeesPage })))
 const DocumentsPage     = lazy(() => import('@/components/pages/DocumentsPage').then(m => ({ default: m.DocumentsPage })))
